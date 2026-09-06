@@ -2,6 +2,12 @@ import re
 import os
 from typing import List, Dict, Any, Optional
 
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
 class MultiAngleOcrExtractor:
     """
     Multi-Angle Packaging OCR & Attribute Extractor
