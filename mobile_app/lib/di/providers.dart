@@ -33,13 +33,14 @@ import '../services/signature_service.dart';
 /// migrate to the live backend one at a time during integration.
 /// ============================================================================
 
-const bool useMockData = bool.fromEnvironment('USE_MOCK_DATA', defaultValue: true);
+const bool useMockData = bool.fromEnvironment('USE_MOCK_DATA', defaultValue: false);
 
 /// Per-repository overrides during incremental backend integration.
-/// Example: launch with real auth but everything else mocked —
-///   flutter run --dart-define=REAL_AUTH=true
+/// Defaults to true so live FastAPI OCR, PostgreSQL business search & inspections are active.
 const bool useRealAuth = bool.fromEnvironment('REAL_AUTH', defaultValue: false);
-const bool useRealOcr = bool.fromEnvironment('REAL_OCR', defaultValue: false);
+const bool useRealOcr = bool.fromEnvironment('REAL_OCR', defaultValue: true);
+const bool useRealBusiness = bool.fromEnvironment('REAL_BUSINESS', defaultValue: true);
+const bool useRealInspection = bool.fromEnvironment('REAL_INSPECTION', defaultValue: true);
 
 // ---------------------------------------------------------------------------
 // Core
@@ -59,12 +60,12 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
 });
 
 final businessRepositoryProvider = Provider<BusinessRepository>((ref) {
-  if (useMockData) return MockBusinessRepository(ref.watch(mockBackendProvider));
+  if (!useRealBusiness && useMockData) return MockBusinessRepository(ref.watch(mockBackendProvider));
   return RealBusinessRepository(ref.watch(apiClientProvider));
 });
 
 final inspectionRepositoryProvider = Provider<InspectionRepository>((ref) {
-  if (useMockData) return MockInspectionRepository(ref.watch(mockBackendProvider));
+  if (!useRealInspection && useMockData) return MockInspectionRepository(ref.watch(mockBackendProvider));
   return RealInspectionRepository(ref.watch(apiClientProvider));
 });
 
@@ -74,7 +75,7 @@ final evidenceRepositoryProvider = Provider<EvidenceRepository>((ref) {
 });
 
 final ocrRepositoryProvider = Provider<OcrRepository>((ref) {
-  if (useMockData || !useRealOcr) {
+  if (!useRealOcr) {
     return MockOcrRepository(ref.watch(mockBackendProvider));
   }
   return RealOcrRepository(ref.watch(apiClientProvider));

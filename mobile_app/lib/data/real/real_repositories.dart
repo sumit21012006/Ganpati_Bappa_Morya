@@ -9,6 +9,8 @@
 library;
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:image_picker/image_picker.dart' show XFile;
 
 import '../../core/errors/error_mapper.dart';
 import '../../core/network/api_client.dart';
@@ -369,10 +371,22 @@ class RealOcrRepository implements OcrRepository {
     try {
       final form = FormData();
       for (final image in images) {
-        form.files.add(MapEntry(
-          'images',
-          await MultipartFile.fromFile(image.filePath),
-        ));
+        if (kIsWeb) {
+          final xfile = XFile(image.filePath);
+          final bytes = await xfile.readAsBytes();
+          form.files.add(MapEntry(
+            'images',
+            MultipartFile.fromBytes(
+              bytes,
+              filename: xfile.name.isNotEmpty ? xfile.name : 'image_${DateTime.now().millisecondsSinceEpoch}.jpg',
+            ),
+          ));
+        } else {
+          form.files.add(MapEntry(
+            'images',
+            await MultipartFile.fromFile(image.filePath),
+          ));
+        }
       }
       final res = await _client.dio.post('/ocr/analyze', data: form);
       return _map(res.data)['jobId'] as String;
