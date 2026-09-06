@@ -83,36 +83,47 @@ Return ONLY a valid JSON object with this exact structure:
   "legal_notes": [list of string observations]
 }}"""
 
-        payload = {
-            "model": "llama-3.3-70b-versatile",
-            "messages": [
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": f"Packaging Raw OCR Text:\n---\n{text}\n---"}
-            ],
-            "response_format": {"type": "json_object"},
-            "temperature": 0.1,
-            "max_tokens": 1000
-        }
+        candidate_models = [
+            "qwen/qwen3.8-27b",
+            "llama-3.3-70b-versatile",
+            "llama-3.1-8b-instant",
+            "openai/gpt-oss-120b",
+            "groq/compound-mini"
+        ]
 
-        req = urllib.request.Request(
-            "https://api.groq.com/openai/v1/chat/completions",
-            data=json.dumps(payload).encode("utf-8"),
-            headers={
-                "Authorization": f"Bearer {api_key}",
-                "Content-Type": "application/json",
-                "User-Agent": "LegalMetrologyComplianceEngine/1.0"
+        for model_id in candidate_models:
+            payload = {
+                "model": model_id,
+                "messages": [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": f"Packaging Raw OCR Text:\n---\n{text}\n---"}
+                ],
+                "response_format": {"type": "json_object"},
+                "temperature": 0.1,
+                "max_tokens": 1000
             }
-        )
 
-        try:
-            with urllib.request.urlopen(req, timeout=8) as response:
-                res_data = json.loads(response.read().decode("utf-8"))
-                content = res_data["choices"][0]["message"]["content"]
-                parsed = json.loads(content)
-                return parsed
-        except Exception as e:
-            # Silently handle network/API errors and return None to trigger regex fallback
-            return None
+            req = urllib.request.Request(
+                "https://api.groq.com/openai/v1/chat/completions",
+                data=json.dumps(payload).encode("utf-8"),
+                headers={
+                    "Authorization": f"Bearer {api_key}",
+                    "Content-Type": "application/json",
+                    "User-Agent": "LegalMetrologyComplianceEngine/1.0"
+                }
+            )
+
+            try:
+                with urllib.request.urlopen(req, timeout=10) as response:
+                    res_data = json.loads(response.read().decode("utf-8"))
+                    content = res_data["choices"][0]["message"]["content"]
+                    parsed = json.loads(content)
+                    parsed["_model_used"] = model_id
+                    return parsed
+            except Exception:
+                continue
+
+        return None
 
     def extract_from_text(self, text: str) -> Dict[str, Any]:
         """
