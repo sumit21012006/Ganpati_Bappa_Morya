@@ -1,0 +1,127 @@
+[
+  {
+    "exemption_id": "LM-EX-001",
+    "category": "small_packages",
+    "description": "Packages containing net quantity 10g or 10ml or less are exempt from declaring individual mandatory details on the small package if displayed on multi-piece outer package.",
+    "condition": "Net quantity <= 10g or 10ml",
+    "applicable_products": [
+      "general_packaged_commodity",
+      "cosmetics",
+      "confectionery",
+      "spices"
+    ],
+    "excluded_products": [
+      "tobacco_products"
+    ],
+    "legal_reference": {
+      "act": "Legal Metrology Act, 2009",
+      "rule": "Legal Metrology (Packaged Commodities) Rules, 2011",
+      "section": "Section 18",
+      "sub_rule": "Rule 26(a)"
+    },
+    "verification_status": "verified"
+  },
+  {
+    "exemption_id": "LM-EX-002",
+    "category": "wholesale_packages",
+    "description": "Wholesale packages are exempt from retail price (MRP) declaration requirements specified for retail packages under Chapter II.",
+    "condition": "Package intended strictly for wholesale trade or distribution",
+    "applicable_products": [
+      "wholesale_packages",
+      "bulk_cartons"
+    ],
+    "excluded_products": [
+      "retail_packages"
+    ],
+    "legal_reference": {
+      "act": "Legal Metrology Act, 2009",
+      "rule": "Legal Metrology (Packaged Commodities) Rules, 2011",
+      "section": "Section 18",
+      "sub_rule": "Rule 26(b) & Chapter III"
+    },
+    "verification_status": "verified"
+  },
+  {
+    "exemption_id": "LM-EX-003",
+    "category": "industrial_consumer",
+    "description": "Packages sold directly to industrial consumers (e.g. raw material drums, industrial chemicals) are exempt from Chapter II retail packaging rules.",
+    "condition": "Direct supply to industrial consumer for use in manufacturing or processing",
+    "applicable_products": [
+      "industrial_raw_materials",
+      "bulk_chemicals"
+    ],
+    "excluded_products": [
+      "retail_consumer_goods"
+    ],
+    "legal_reference": {
+      "act": "Legal Metrology Act, 2009",
+      "rule": "Legal Metrology (Packaged Commodities) Rules, 2011",
+      "section": "Section 18",
+      "sub_rule": "Rule 3"
+    },
+    "verification_status": "verified"
+  },
+  {
+    "exemption_id": "LM-EX-004",
+    "category": "fast_food",
+    "description": "Unpackaged food items prepared for immediate consumption served at hotels or restaurants are exempt from packaged commodity declarations.",
+    "condition": "Unpackaged hot food or fast food served for immediate consumption",
+    "applicable_products": [
+      "restaurant_food",
+      "hotel_catering"
+    ],
+    "excluded_products": [
+      "pre_packaged_processed_food"
+    ],
+    "legal_reference": {
+      "act": "Legal Metrology Act, 2009",
+      "rule": "Legal Metrology (Packaged Commodities) Rules, 2011",
+      "section": "Section 18",
+      "sub_rule": "Rule 26(c)"
+    },
+    "verification_status": "verified"
+  },
+  {
+    "exemption_id": "LM-EX-005",
+    "category": "agricultural_produce",
+    "description": "Agricultural produce packed in packages of quantity exceeding 50 kg is exempt from retail packaged commodity rules.",
+    "condition": "Package quantity > 50 kg for agricultural produce",
+    "applicable_products": [
+      "grains",
+      "pulses",
+      "raw_produce"
+    ],
+    "excluded_products": [
+      "processed_retail_food"
+    ],
+    "legal_reference": {
+      "act": "Legal Metrology Act, 2009",
+      "rule": "Legal Metrology (Packaged Commodities) Rules, 2011",
+      "section": "Section 18",
+      "sub_rule": "Rule 26(d)"
+    },
+    "verification_status": "verified"
+  },
+  {
+    "exemption_id": "LM-PC-003",
+    "category": "bulk_heavy_packages",
+    "description": "Packages containing quantity more than 25 kg or 25 litre (or bags containing more than 50 kg for cement, fertilizer, and agricultural produce) are exempt from retail packaging declaration rules.",
+    "condition": "Package containing > 25 kg or 25 L (or bags > 50 kg for cement, fertilizer, and agricultural produce)",
+    "applicable_products": [
+      "cement_bags",
+      "fertilizer_bags",
+      "bulk_agricultural_produce",
+      "industrial_drums"
+    ],
+    "excluded_products": [
+      "retail_packages_le_25kg"
+    ],
+    "legal_reference": {
+      "act": "Legal Metrology Act, 2009",
+      "rule": "Legal Metrology (Packaged Commodities) Rules, 2011",
+      "section": "Section 18",
+      "sub_rule": "Rule 26"
+    },
+    "verification_status": "verified"
+  }
+]

@@ -1,0 +1,809 @@
+{
+  "metadata": {
+    "title": "Legal Metrology Master Rulebook (Automated Enforcement & Compliance Engine)",
+    "source_act": "Legal Metrology Act, 2009 (Act No. 1 of 2010)",
+    "source_rules": "The Legal Metrology (Packaged Commodities) Rules, 2011 (With All Amendments up to 9th May 2022)",
+    "version": "2.0.0",
+    "last_updated": "2026-09-06",
+    "jurisdiction": "Central Government of India / State Legal Metrology Enforcement",
+    "official_source_pdf": "THE LEGAL METROLOGY (PACKAGED COMMODITIES) RULES, 2011 With All Amendment (Department of Consumer Affairs, New Delhi, 9th May 2022)",
+    "verification_status": "Strictly audited and rebuilt from official 2022 Gazette notifications"
+  },
+  "mandatory_fields": [
+    {
+      "rule_id": "LM-PC-011",
+      "field_key": "mrp",
+      "field_label": "Maximum Retail Price (MRP)",
+      "requirement": "The retail sale price of the package shall clearly indicate that it is the maximum retail price inclusive of all taxes in Indian currency (e.g. 'MRP Rs. xx.xx' or '₹ xx.xx (inclusive of all taxes)'). Price must be in Indian currency. No individual stickers may alter or cover the MRP except for reducing the price. Selling above printed MRP, dual MRP on identical goods, or smudging/altering MRP is strictly prohibited.",
+      "act_section": "Section 18(1) read with Section 36(1) & Section 36(2) of Legal Metrology Act, 2009; Rule 6(1)(e), Rule 2(m), and Rule 18(2), 18(2A), 18(5) of Legal Metrology (Packaged Commodities) Rules, 2011",
+      "rule_reference": "Rule 6(1)(e) & Rule 18(2)",
+      "penalty_first_offence": "Fine up to ₹25,000 for non-declaration or improper declaration under Section 36(1) of Legal Metrology Act, 2009 (Compounding under Rule 32A Table: ₹5,000 for retailers/wholesalers, ₹25,000 for manufacturers/importers); Fine up to ₹2,000 for selling above MRP under Section 36(2) (Compounding under Rule 32A Table: ₹10,000 for retailers/wholesalers, ₹50,000 for manufacturers/importers); or fine up to ₹5,000 under Rule 32 where no punishment is provided in the Act.",
+      "penalty_second_offence": "Fine up to ₹50,000 under Section 36(1) of Legal Metrology Act, 2009 (and for subsequent offences, fine from ₹50,000 to ₹1,00,000 or imprisonment up to 1 year, or both); Fine up to ₹5,000 for selling above MRP under Section 36(2); or fine up to ₹5,000 under Rule 32."
+    },
+    {
+      "rule_id": "LM-PC-009",
+      "field_key": "net_quantity",
+      "field_label": "Net Quantity / Weight",
+      "requirement": "The net quantity, in terms of the standard unit of weight or measure, of the commodity contained in the package or where the commodity is packed or sold by number, the number of the commodity contained in the package shall be mentioned. Tare weight of wrappers and packaging material must be excluded. Units must be in standard metric SI units: gram (g) for < 1kg, kilogram (kg) for >= 1kg; millilitre (ml) for < 1L, litre (L) for >= 1L; centimetre (cm) for < 1m, metre (m) for >= 1m. For items sold by number: number, unit, piece, pair, or set (symbol N or U). Prohibited terms include dozen, gross, and misleading qualifiers like 'approximate', 'when packed' (unless listed in Third Schedule). Net quantity deficiency must not exceed Maximum Permissible Error (MPE) specified in First Schedule Table I and Table II.",
+      "act_section": "Section 18(1) read with Section 36(1) of Legal Metrology Act, 2009; Rule 6(1)(c), Rule 11, Rule 12, Rule 13, and First Schedule of Legal Metrology (Packaged Commodities) Rules, 2011",
+      "rule_reference": "Rule 6(1)(c), Rule 11, Rule 12, Rule 13, First Schedule",
+      "penalty_first_offence": "Fine up to ₹25,000 under Section 36(1) of Legal Metrology Act, 2009 (Compounding sum under Rule 32A Table: ₹5,000 for retailers/wholesalers, ₹25,000 for manufacturers/importers); or fine up to ₹5,000 under Rule 32 where no punishment is provided in the Act.",
+      "penalty_second_offence": "Fine up to ₹50,000 under Section 36(1) of Legal Metrology Act, 2009 (for subsequent offence: fine from ₹50,000 up to ₹1,00,000, or imprisonment for a term up to 1 year, or both); or fine up to ₹5,000 under Rule 32."
+    },
+    {
+      "rule_id": "LM-PC-010",
+      "field_key": "manufacturing_date",
+      "field_label": "Month and Year of Manufacture",
+      "requirement": "The month and year in which the commodity is manufactured shall be mentioned on the package (the words 'or pre-packed or imported' omitted w.e.f. 01.10.2022 vide GSR 226(E)). Month and year may be expressed either in words, or by numerals indicating the month and the year, or by both (Explanation I). Exemptions: bidi, incense sticks, or domestic LPG cylinder (14.2kg or 5kg) marketed by public sector undertakings (Rule 6(1) Proviso A).",
+      "act_section": "Section 18(1) read with Section 36(1) of Legal Metrology Act, 2009; Rule 6(1)(d) of Legal Metrology (Packaged Commodities) Rules, 2011",
+      "rule_reference": "Rule 6(1)(d)",
+      "penalty_first_offence": "Fine up to ₹25,000 under Section 36(1) of Legal Metrology Act, 2009 (Compounding sum under Rule 32A Table: ₹5,000 for retailers/wholesalers, ₹25,000 for manufacturers/importers); or fine up to ₹5,000 under Rule 32 where no punishment is provided in the Act.",
+      "penalty_second_offence": "Fine up to ₹50,000 under Section 36(1) of Legal Metrology Act, 2009 (for subsequent offence: fine from ₹50,000 up to ₹1,00,000, or imprisonment for a term up to 1 year, or both); or fine up to ₹5,000 under Rule 32."
+    },
+    {
+      "rule_id": "LM-PC-010",
+      "field_key": "expiry_date",
+      "field_label": "Expiry Date / Best Before Date",
+      "requirement": "If a package contains a commodity which may become unfit for human consumption after a period of time, the 'best before or use by the date, month and year' shall also be mentioned on the label. 'Best before' signifies the end of the period under stated storage conditions during which the product remains fully marketable and retains any specific tacit or express claimed qualities (and beyond which the commodity may still be safe for consumption). 'Use by Date' signifies the end of the estimated period under stated storage conditions after which the product shall not have the quality attributes normally expected by consumers and should not be regarded as marketable. Exemption: does not apply if a provision in this regard is made in any other law (e.g., FSSAI).",
+      "act_section": "Section 18(1) read with Section 36(1) of Legal Metrology Act, 2009; Rule 6(1)(da) of Legal Metrology (Packaged Commodities) Rules, 2011",
+      "rule_reference": "Rule 6(1)(da)",
+      "penalty_first_offence": "Fine up to ₹25,000 under Section 36(1) of Legal Metrology Act, 2009 (Compounding sum under Rule 32A Table: ₹5,000 for retailers/wholesalers, ₹25,000 for manufacturers/importers); or fine up to ₹5,000 under Rule 32 where no punishment is provided in the Act.",
+      "penalty_second_offence": "Fine up to ₹50,000 under Section 36(1) of Legal Metrology Act, 2009 (for subsequent offence: fine from ₹50,000 up to ₹1,00,000, or imprisonment for a term up to 1 year, or both); or fine up to ₹5,000 under Rule 32."
+    },
+    {
+      "rule_id": "LM-PC-006",
+      "field_key": "manufacturer_packer_importer_details",
+      "field_label": "Name and Address of Manufacturer, Packer or Importer",
+      "requirement": "The name and complete address of the manufacturer, or where the manufacturer is not the packer, the name and address of the manufacturer and packer, and for any imported package the name and address of the importer shall be mentioned. 'Complete address' means the postal address at which the factory is situated or company/firm is registered, street name, premises number, city, State, and Postal Index Number (PIN) Code so that a consumer can identify and locate the entity (Rule 10 Explanation 1). If a name appears without qualifying words 'manufactured by' or 'packed by', it is presumed to be the manufacturer (Rule 6(1) Explanation I). Brand owners/marketers are deemed responsible as manufacturers (Explanation II). Name must be the actual corporate name or registered business name in India (Rule 10(2)).",
+      "act_section": "Section 18(1) read with Section 36(1) of Legal Metrology Act, 2009; Rule 6(1)(a) and Rule 10 of Legal Metrology (Packaged Commodities) Rules, 2011",
+      "rule_reference": "Rule 6(1)(a) & Rule 10",
+      "penalty_first_offence": "Fine up to ₹25,000 under Section 36(1) of Legal Metrology Act, 2009 (Compounding sum under Rule 32A Table: ₹5,000 for retailers/wholesalers, ₹25,000 for manufacturers/importers); or fine up to ₹5,000 under Rule 32 where no punishment is provided in the Act.",
+      "penalty_second_offence": "Fine up to ₹50,000 under Section 36(1) of Legal Metrology Act, 2009 (for subsequent offence: fine from ₹50,000 up to ₹1,00,000, or imprisonment for a term up to 1 year, or both); or fine up to ₹5,000 under Rule 32."
+    },
+    {
+      "rule_id": "LM-PC-012",
+      "field_key": "consumer_care_details",
+      "field_label": "Consumer Care / Grievance Redressal Details",
+      "requirement": "Every package shall bear the name, address, telephone number, and e-mail address of the person who can be or the office which can be contacted, in case of consumer complaints (Rule 6(2)). Numerical and letter heights must satisfy minimum height requirements on the principal display panel under Rule 7 Table-I.",
+      "act_section": "Section 18(1) read with Section 36(1) of Legal Metrology Act, 2009; Rule 6(2) and Rule 7(5) of Legal Metrology (Packaged Commodities) Rules, 2011",
+      "rule_reference": "Rule 6(2)",
+      "penalty_first_offence": "Fine up to ₹25,000 under Section 36(1) of Legal Metrology Act, 2009 (Compounding sum under Rule 32A Table: ₹5,000 for retailers/wholesalers, ₹25,000 for manufacturers/importers); or fine up to ₹5,000 under Rule 32 where no punishment is provided in the Act.",
+      "penalty_second_offence": "Fine up to ₹50,000 under Section 36(1) of Legal Metrology Act, 2009 (for subsequent offence: fine from ₹50,000 up to ₹1,00,000, or imprisonment for a term up to 1 year, or both); or fine up to ₹5,000 under Rule 32."
+    },
+    {
+      "rule_id": "LM-PC-007",
+      "field_key": "country_of_origin",
+      "field_label": "Country of Origin (for Imported Products)",
+      "requirement": "The name of the country of origin or manufacture or assembly in case of imported products shall be mentioned on the package (Rule 6(1)(aa)). Under Rule 6(9), it is permissible to affix a label on imported packages for making the mandatory declarations required under these rules.",
+      "act_section": "Section 18(1) read with Section 36(1) of Legal Metrology Act, 2009; Rule 6(1)(aa) & Rule 6(9) of Legal Metrology (Packaged Commodities) Rules, 2011",
+      "rule_reference": "Rule 6(1)(aa)",
+      "penalty_first_offence": "Fine up to ₹25,000 under Section 36(1) of Legal Metrology Act, 2009 (Compounding sum under Rule 32A Table: ₹5,000 for retailers/wholesalers, ₹25,000 for manufacturers/importers); or fine up to ₹5,000 under Rule 32 where no punishment is provided in the Act.",
+      "penalty_second_offence": "Fine up to ₹50,000 under Section 36(1) of Legal Metrology Act, 2009 (for subsequent offence: fine from ₹50,000 up to ₹1,00,000, or imprisonment for a term up to 1 year, or both); or fine up to ₹5,000 under Rule 32."
+    },
+    {
+      "rule_id": "LM-PC-016",
+      "field_key": "unit_sale_price",
+      "field_label": "Unit Sale Price (USP)",
+      "requirement": "The unit sale price in rupees, rounded off to the nearest two decimal places, shall be declared on every pre-packaged commodity in the following manner: (i) per gram where net quantity is less than one kilogram, and per kilogram where net quantity is more than one kilogram; (ii) per centimetre where net length is less than one metre, and per metre where net length is more than one metre; (iii) per millilitre where net volume is less than one litre, and per litre where net volume is more than one litre; (iv) per number or unit if any item is sold by number or unit. Exemption: Not required for pre-packaged commodities in which retail sale price is equal to the unit sale price. Alcoholic beverages and spirits are governed by State Excise laws (Rule 6(11) as substituted vide GSR 226(E) dated 28.03.2022 w.e.f. 01.10.2022).",
+      "act_section": "Section 18(1) read with Section 36(1) of Legal Metrology Act, 2009; Rule 6(11) of Legal Metrology (Packaged Commodities) Rules, 2011",
+      "rule_reference": "Rule 6(11)",
+      "penalty_first_offence": "Fine up to ₹25,000 under Section 36(1) of Legal Metrology Act, 2009 (Compounding sum under Rule 32A Table: ₹5,000 for retailers/wholesalers, ₹25,000 for manufacturers/importers); or fine up to ₹5,000 under Rule 32 where no punishment is provided in the Act.",
+      "penalty_second_offence": "Fine up to ₹50,000 under Section 36(1) of Legal Metrology Act, 2009 (for subsequent offence: fine from ₹50,000 up to ₹1,00,000, or imprisonment for a term up to 1 year, or both); or fine up to ₹5,000 under Rule 32."
+    },
+    {
+      "rule_id": "LM-PC-008",
+      "field_key": "generic_name",
+      "field_label": "Common or Generic Name of Commodity",
+      "requirement": "The common or generic names of the commodity contained in the package and in case of packages with more than one product, the name and number or quantity of each product shall be mentioned on the package (Rule 6(1)(b)).",
+      "act_section": "Section 18(1) read with Section 36(1) of Legal Metrology Act, 2009; Rule 6(1)(b) of Legal Metrology (Packaged Commodities) Rules, 2011",
+      "rule_reference": "Rule 6(1)(b)",
+      "penalty_first_offence": "Fine up to ₹25,000 under Section 36(1) of Legal Metrology Act, 2009 (Compounding sum under Rule 32A Table: ₹5,000 for retailers/wholesalers, ₹25,000 for manufacturers/importers); or fine up to ₹5,000 under Rule 32 where no punishment is provided in the Act.",
+      "penalty_second_offence": "Fine up to ₹50,000 under Section 36(1) of Legal Metrology Act, 2009 (for subsequent offence: fine from ₹50,000 up to ₹1,00,000, or imprisonment for a term up to 1 year, or both); or fine up to ₹5,000 under Rule 32."
+    },
+    {
+      "rule_id": "LM-PC-014",
+      "field_key": "veg_nonveg_gm_dots",
+      "field_label": "Veg / Non-Veg & GM Declarations",
+      "requirement": "Red/brown dot for non-veg or green dot for veg on cosmetics, soaps, and toiletries. Mandatory 'GM' mark at top of Principal Display Panel for Genetically Modified items (Rule 6(7) & 6(8)).",
+      "act_section": "Section 18(1) read with Section 36(1) of Legal Metrology Act, 2009; Rule 6(7) & Rule 6(8) of Legal Metrology (Packaged Commodities) Rules, 2011",
+      "rule_reference": "Rule 6(7) & 6(8)",
+      "penalty_first_offence": "Fine up to ₹25,000 under Section 36(1) of Legal Metrology Act, 2009; or fine up to ₹5,000 under Rule 32.",
+      "penalty_second_offence": "Fine up to ₹50,000 under Section 36(1) of Legal Metrology Act, 2009 (for subsequent offence: fine up to ₹1,00,000 or imprisonment up to 1 year); or fine up to ₹5,000 under Rule 32."
+    },
+    {
+      "rule_id": "LM-PC-015",
+      "field_key": "ecommerce_declarations",
+      "field_label": "E-Commerce Digital Marketplace Declarations",
+      "requirement": "E-commerce digital marketplaces must display all Rule 6(1) mandatory declarations (MRP, Net Quantity, Country of Origin, Manufacturer details, Expiry/Best Before) on product listing pages prior to consumer purchase (Rule 6(10)).",
+      "act_section": "Section 18(1) read with Section 36(1) of Legal Metrology Act, 2009; Rule 6(10) of Legal Metrology (Packaged Commodities) Rules, 2011",
+      "rule_reference": "Rule 6(10)",
+      "penalty_first_offence": "Fine up to ₹25,000 under Section 36(1) of Legal Metrology Act, 2009 against e-commerce entity/seller.",
+      "penalty_second_offence": "Fine up to ₹50,000 under Section 36(1) of Legal Metrology Act, 2009 (for subsequent offence: fine up to ₹1,00,000 or imprisonment up to 1 year)."
+    },
+    {
+      "rule_id": "LM-PC-017",
+      "field_key": "font_size_pdp_area",
+      "field_label": "Mandatory Font Size & Principal Display Panel (PDP) Scaling",
+      "requirement": "Numeral and letter heights must scale to PDP area: Area <= 50 cm2: 1.0mm; 50-100 cm2: 1.5mm; 100-500 cm2: 2.5mm; 500-2500 cm2: 4.0mm; >2500 cm2: 6.0mm (Rule 7 & Table-I).",
+      "act_section": "Section 18(1) read with Section 36(1) of Legal Metrology Act, 2009; Rule 7 & Table-I of Legal Metrology (Packaged Commodities) Rules, 2011",
+      "rule_reference": "Rule 7 & Table-I",
+      "penalty_first_offence": "Fine up to ₹25,000 under Section 36(1) of Legal Metrology Act, 2009; or fine up to ₹5,000 under Rule 32.",
+      "penalty_second_offence": "Fine up to ₹50,000 under Section 36(1) of Legal Metrology Act, 2009; or fine up to ₹5,000 under Rule 32."
+    },
+    {
+      "rule_id": "LM-PC-018",
+      "field_key": "language_and_placement",
+      "field_label": "Declaration Language & Surrounding Placement",
+      "requirement": "Declarations must be in English or Hindi (Devnagri script), contrasting conspicuously against background with required surround spacing around net quantity (Rules 8 & 9).",
+      "act_section": "Section 18(1) read with Section 36(1) of Legal Metrology Act, 2009; Rules 8 & 9 of Legal Metrology (Packaged Commodities) Rules, 2011",
+      "rule_reference": "Rules 8 & 9",
+      "penalty_first_offence": "Fine up to ₹25,000 under Section 36(1) of Legal Metrology Act, 2009; or fine up to ₹5,000 under Rule 32.",
+      "penalty_second_offence": "Fine up to ₹50,000 under Section 36(1) of Legal Metrology Act, 2009; or fine up to ₹5,000 under Rule 32."
+    },
+    {
+      "rule_id": "LM-PC-023",
+      "field_key": "market_practices_retailer_compliance",
+      "field_label": "Market Practices & Retailer Compliance (Overcharging, Dual MRP, Weighing Receipts)",
+      "requirement": "Selling pre-packaged commodities above declared MRP is strictly prohibited under Rule 18(1). Printing or declaring different MRPs on identical pre-packaged goods for different locations/buyers is prohibited under Rule 18(2). All GST-registered retail stores dealing in weight/measure goods must maintain Class-III electronic weighing scales with free printed consumer receipts under Rule 18(7).",
+      "act_section": "Section 18 read with Section 36(2) of Legal Metrology Act, 2009; Rule 18(1), 18(2), 18(7) of Legal Metrology (Packaged Commodities) Rules, 2011",
+      "rule_reference": "Rule 18(1), 18(2), 18(7)",
+      "penalty_first_offence": "Fine up to ₹2,000 for retail dealer under Section 36(2); Compounding fee under Rule 32A: ₹10,000 for retailers/wholesalers, ₹50,000 for manufacturers/importers.",
+      "penalty_second_offence": "Fine up to ₹5,000 under Section 36(2) of Legal Metrology Act, 2009."
+    },
+    {
+      "rule_id": "LM-PC-029",
+      "field_key": "mandatory_registration",
+      "field_label": "Mandatory Premises Registration",
+      "requirement": "Every manufacturer, packer, or importer must register premises with the Director/Controller of Legal Metrology within 90 days of business commencement (Rule 27-30).",
+      "act_section": "Section 18 read with Section 37 of Legal Metrology Act, 2009; Rule 27, 28, 29, 30 of Legal Metrology (Packaged Commodities) Rules, 2011",
+      "rule_reference": "Rules 27–30",
+      "penalty_first_offence": "Fine up to ₹4,000 under Section 37 of Legal Metrology Act, 2009 read with Rule 32.",
+      "penalty_second_offence": "Fine up to ₹10,000 under Section 37 of Legal Metrology Act, 2009."
+    }
+  ],
+  "deadline_days_config": {
+    "improvement_notice": {
+      "notice_type": "Improvement Notice / Demand for Rectification",
+      "statutory_basis": "NOT SPECIFIED — using configurable default",
+      "configurable_default_days": 15,
+      "governing_rules": "Rule 20(1)(ii), Rule 23(1) of PCR 2011 read with Section 15 and Section 18 of Legal Metrology Act, 2009",
+      "purpose": "Compliance window granted to rectify label deficiencies, repack or relabel commodities before judicial prosecution is initiated."
+    },
+    "seizure_notice": {
+      "notice_type": "Seizure Notice / Seizure Memorandum",
+      "statutory_basis": "NOT SPECIFIED — using configurable default",
+      "configurable_default_days": 7,
+      "governing_rules": "Rule 20(1)(i), Rule 21(3), Rule 23(1) of PCR 2011 read with Section 15(1)(b) and 15(2) of Legal Metrology Act, 2009",
+      "purpose": "Time window granted to person in possession / manufacturer to submit legal representation, contest seizure, or produce proof."
+    },
+    "spot_panchanama": {
+      "notice_type": "Spot Panchanama (Inspection & Seizure Record)",
+      "statutory_basis": "NOT SPECIFIED — using configurable default",
+      "configurable_default_days": 0,
+      "governing_rules": "Rule 19(2), Rule 20 of PCR 2011 read with Section 15(4) of Legal Metrology Act, 2009 and Section 100 of Code of Criminal Procedure, 1973",
+      "purpose": "Executed contemporaneous on-spot record drawn at time of inspection/seizure in presence of independent witnesses. Response deadline is a configurable default."
+    },
+    "compounding_order": {
+      "notice_type": "Compounding Order / Notice",
+      "statutory_basis": "NOT SPECIFIED — using configurable default",
+      "configurable_default_days": 30,
+      "governing_rules": "Rule 32A Table of PCR 2011 read with Section 48(1) of Legal Metrology Act, 2009",
+      "purpose": "Deadline window allowed to deposit compounding amount into the Government Treasury after order issuance."
+    }
+  },
+  "notice_templates": {
+    "improvement_notice": "================================================================================\nFORM LM-IN: NOTICE OF DEMAND FOR RECTIFICATION / IMPROVEMENT NOTICE\n[Issued under Section 15 & Section 18(1) of Legal Metrology Act, 2009 read with\n Rule 20(1)(ii) & Rule 23(1) of Legal Metrology (Packaged Commodities) Rules, 2011]\n================================================================================\n\nNotice Ref No: {{NOTICE_ID}}\nCase File Ref: {{CASE_ID}}\nDate of Issuance: {{DATE}}\nPlace of Issuance: {{PLACE}}\n\nTO:\nBusiness Entity: {{BUSINESS_NAME}}\nPremises Address: {{BUSINESS_ADDRESS}}\n\nSUBJECT: Statutory Improvement Notice for contravention of Legal Metrology (Packaged Commodities) Rules, 2011.\n\nWHEREAS on {{INSPECTION_DATE}}, an inspection of your premises situated at {{BUSINESS_ADDRESS}} was conducted by the undersigned Legal Metrology Officer ({{INSPECTOR_NAME}}, ID: {{INSPECTOR_ID}}, Designation: {{OFFICER_AUTHORITY}});\n\nAND WHEREAS during the said inspection, the following pre-packaged commodity was inspected and found non-compliant:\n- Commodity / Product Description: {{PRODUCT_NAME}}\n- Manufacturer / Packer / Importer: {{MANUFACTURER_NAME}}\n- Batch / Lot Reference Number: {{BATCH_NUMBER}}\n- Declared MRP: {{MRP}}\n- Declared Net Quantity: {{NET_QUANTITY}}\n\nOBSERVED STATUTORY VIOLATION:\n{{OBSERVED_VIOLATION}}\n\nAPPLICABLE STATUTORY PROVISIONS:\n- Act & Section: {{LEGAL_SECTION}} [Legal Metrology Act, 2009]\n- Rule & Sub-rule: {{LEGAL_RULE}} [Legal Metrology (Packaged Commodities) Rules, 2011]\n- Applicable Penalty: {{PENALTY}}\n\nMANDATORY DIRECTIVE & COMPLIANCE DEADLINE:\nIn accordance with Rule 20(1)(ii) and Rule 23(1), you are hereby directed to rectify the aforesaid non-compliance(s) and/or relabel/repack the non-conforming packages within {{DEADLINE}} days from the date of receipt of this notice, and submit a written compliance report to the undersigned.\n\nTAKE NOTICE that failure to comply within the stipulated time shall result in seizure of packages under Rule 20(1)(i) and the initiation of penal prosecution under Section 36(1) of the Legal Metrology Act, 2009 before the jurisdictional Court.\n\nIssued By:\nLegal Metrology Officer: {{INSPECTOR_NAME}}\nDesignation & Seal: {{OFFICER_AUTHORITY}}\nOfficer ID: {{INSPECTOR_ID}}\nSignature: _______________________________\n",
+    "seizure_notice": "================================================================================\nFORM LM-SN: SEIZURE MEMORANDUM / SEIZURE NOTICE\n[Issued under Section 15(1)(b) & Section 15(2) of Legal Metrology Act, 2009 read with\n Rule 20(1)(i), Rule 21(3) & Rule 23(1) of Legal Metrology (Packaged Commodities) Rules, 2011]\n================================================================================\n\nSeizure Memo Ref: {{NOTICE_ID}}\nCase File Ref: {{CASE_ID}}\nDate of Seizure: {{DATE}}\nPlace of Seizure: {{PLACE}}\n\nTO (PERSON IN POSSESSION / BUSINESS ENTITY):\nEntity Name: {{BUSINESS_NAME}}\nPremises Address: {{BUSINESS_ADDRESS}}\n\nSEIZURE ORDER UNDER SECTION 15 OF LEGAL METROLOGY ACT, 2009:\nWHEREAS on {{INSPECTION_DATE}}, during an inspection of the premises situated at {{BUSINESS_ADDRESS}}, the undersigned Legal Metrology Officer has reason to believe that the pre-packaged commodities specified below are non-compliant and violate the statutory requirements of the Legal Metrology Act, 2009 and the Legal Metrology (Packaged Commodities) Rules, 2011:\n\nSCHEDULE OF SEIZED PACKAGES / COMMODITIES:\n1. Commodity / Product Name: {{PRODUCT_NAME}}\n2. Manufacturer / Packer / Importer: {{MANUFACTURER_NAME}}\n3. Batch / Lot Number: {{BATCH_NUMBER}}\n4. Declared MRP & Net Quantity: {{MRP}} | {{NET_QUANTITY}}\n5. Nature of Contravention: {{OBSERVED_VIOLATION}}\n6. Contravention of Statutory Law: {{LEGAL_SECTION}} read with {{LEGAL_RULE}}\n7. Statutory Penal Provision: {{PENALTY}}\n8. Response / Representation Deadline: {{DEADLINE}} days\n\nCUSTODY DIRECTION UNDER RULE 20(1)(i) & RULE 20(2):\nThe aforesaid packages have been seized as material evidence under Section 15(1)(b) of the Act and Rule 20(1)(i) of the Rules. Representative sample packages have been drawn for production in Court or testing in accordance with Rule 19 and Rule 20(1). The disposal of seized packages shall be carried out in accordance with Section 15(3) of the Act and the provisions of the Code of Criminal Procedure, 1973 (2 of 1974). You are strictly prohibited from removing, altering, selling, or tampering with any part of the seized stock under custody.\n\nSeizing Authority:\nOfficer Name: {{INSPECTOR_NAME}}\nDesignation: {{OFFICER_AUTHORITY}}\nOfficer ID: {{INSPECTOR_ID}}\nSignature & Official Seal: _______________________________\n",
+    "spot_panchanama": "================================================================================\nFORM LM-PAN: CONTEMPORANEOUS SPOT PANCHANAMA (INSPECTION & SEIZURE RECORD)\n[Prepared under Section 15(4) of Legal Metrology Act, 2009 read with Rule 19(2) &\n Rule 20 of Legal Metrology (Packaged Commodities) Rules, 2011 and Section 100 of CrPC, 1973]\n================================================================================\n\nPanchanama Ref No: {{NOTICE_ID}}\nCase File Ref: {{CASE_ID}}\nInspection Date: {{INSPECTION_DATE}}\nTime & Date: {{DATE}}\nPlace of Inspection: {{PLACE}} (Premises: {{BUSINESS_ADDRESS}})\n\nATTENDING OFFICIALS & PARTIES:\n- Inspecting Legal Metrology Officer: {{INSPECTOR_NAME}} (ID: {{INSPECTOR_ID}}, Designation: {{OFFICER_AUTHORITY}})\n- Business Entity / Occupant: {{BUSINESS_NAME}}\n- Independent Panch Witness 1: _______________________________ R/o: _______________________________\n- Independent Panch Witness 2: _______________________________ R/o: _______________________________\n\nCONTEMPORANEOUS PROCEEDINGS & OBSERVATIONS:\nWe, the undersigned Panchas, were called upon by the Legal Metrology Officer to witness the inspection of pre-packaged commodities at the aforementioned premises. In our presence and sight, the officer examined the packages:\n- Commodity / Product Name: {{PRODUCT_NAME}}\n- Stated Manufacturer / Packer / Importer: {{MANUFACTURER_NAME}}\n- Lot / Batch Identification: {{BATCH_NUMBER}}\n- Stated Net Quantity & MRP: {{NET_QUANTITY}} | {{MRP}}\n\nOBSERVED DEFICIENCY & STATUTORY VIOLATION:\nThe inspecting officer demonstrated in our presence that the package violates {{LEGAL_SECTION}} of the Legal Metrology Act, 2009 and {{LEGAL_RULE}} of the Legal Metrology (Packaged Commodities) Rules, 2011 (Statutory Penalty: {{PENALTY}}):\n{{OBSERVED_VIOLATION}}\n\nACTION TAKEN ON SPOT:\nRepresentative samples were drawn and sealed in accordance with Rule 19 / Rule 20. Form A / Form B data sheet under Seventh Schedule was completed. The person in charge was granted {{DEADLINE}} days to submit formal representation.\n\nThe contents of this Panchanama were recorded on the spot and read over to all present in a language understood by them.\n\nPanch Witness 1 Signature: _______________________ Date: {{DATE}}\nPanch Witness 2 Signature: _______________________ Date: {{DATE}}\nOccupant / Representative Signature: ______________ Date: {{DATE}}\n\nAttesting Legal Metrology Officer:\nName: {{INSPECTOR_NAME}}\nDesignation: {{OFFICER_AUTHORITY}}\nSignature & Seal: _______________________________\n",
+    "compounding_order": "================================================================================\nFORM LM-CO: ORDER OF COMPOUNDING OF OFFENCE\n[Issued under Section 48(1) of Legal Metrology Act, 2009 read with Rule 32A Table\n of Legal Metrology (Packaged Commodities) Rules, 2011]\n================================================================================\n\nCompounding Order No: {{NOTICE_ID}}\nCase File Ref: {{CASE_ID}}\nDate of Order: {{DATE}}\nPlace of Order: {{PLACE}}\n\nBEFORE THE COMPOUNDING AUTHORITY:\nCompetent Authority / Officer: {{OFFICER_AUTHORITY}}\nOfficer Name: {{INSPECTOR_NAME}}\nOfficer ID: {{INSPECTOR_ID}}\n\nAPPLICANT / OFFENDER DETAILS:\nName of Offender / Entity: {{BUSINESS_NAME}}\nRegistered Address: {{BUSINESS_ADDRESS}}\n\nRECITALS & PARTICULARS OF CONTRAVENTION:\nWHEREAS on {{INSPECTION_DATE}}, during an inspection at {{BUSINESS_ADDRESS}}, the following contravention was detected:\n- Commodity Description: {{PRODUCT_NAME}}\n- Manufacturer / Packer / Importer: {{MANUFACTURER_NAME}}\n- Batch Reference: {{BATCH_NUMBER}}\n- Declared MRP & Net Quantity: {{MRP}} | {{NET_QUANTITY}}\n- Nature of Offence: {{OBSERVED_VIOLATION}}\n- Contravention of Statutory Act: {{LEGAL_SECTION}} [Legal Metrology Act, 2009]\n- Contravention of Statutory Rule: {{LEGAL_RULE}} [Legal Metrology (Packaged Commodities) Rules, 2011]\n- Applicable Regular Penal Section: {{PENALTY}}\n\nWHEREAS the applicant has submitted an application for compounding of the said offence under Section 48(1) of the Act;\nAND WHEREAS the undersigned Compounding Authority has verified from records that this is a FIRST OFFENCE, and that no previous offence of similar nature has been compounded within the preceding three years under Section 48(2);\n\nCOMPOUNDING DETERMINATION UNDER RULE 32A:\nNow, therefore, in exercise of powers conferred under Section 48(1) of the Legal Metrology Act, 2009 read with the Table under Rule 32A of the Legal Metrology (Packaged Commodities) Rules, 2011, the undersigned Authority compounds the said offence upon payment of the statutory compounding fee specified below:\n\n- Compounding Amount Payable: ₹{{COMPOUNDING_AMOUNT}}\n- Treasury Payment Head: 0435 - Other Agricultural Programmes / Legal Metrology Receipts\n- Payment Deadline: Within {{DEADLINE}} days from the date of this order\n\nEFFECT OF COMPOUNDING:\nUpon deposit of the aforesaid compounding amount and submission of proof of payment, no further prosecution proceedings shall be instituted against the offender in Court for the said offence, and any property seized in connection therewith shall be released in accordance with Section 48(3) of the Act.\n\nCompounding Authority Signature & Seal: _______________________________\nOfficer Name: {{INSPECTOR_NAME}}\nDesignation: {{OFFICER_AUTHORITY}}\n"
+  },
+  "compounding_table": [
+    {
+      "serial_no": 1,
+      "offence": "Contravention of section 29",
+      "compounding_retailers_wholesalers": 2000,
+      "compounding_manufacturers_importers": 10000,
+      "statutory_source": "Rule 32A Table (Item 1)"
+    },
+    {
+      "serial_no": 2,
+      "offence": "Contravention of sub-section (1) of section 36",
+      "compounding_retailers_wholesalers": 5000,
+      "compounding_manufacturers_importers": 25000,
+      "statutory_source": "Rule 32A Table (Item 2)"
+    },
+    {
+      "serial_no": 3,
+      "offence": "Contravention of sub-section (2) of section 36",
+      "compounding_retailers_wholesalers": 10000,
+      "compounding_manufacturers_importers": 50000,
+      "statutory_source": "Rule 32A Table (Item 3)"
+    }
+  ],
+  "rules": [
+    {
+      "rule_id": "LM-PC-001",
+      "rule_number": "Rule 1",
+      "chapter": "CHAPTER I - PRELIMINARY",
+      "field_key": "short_title_commencement",
+      "field_label": "Short Title and Commencement",
+      "requirement": "These rules may be called The Legal Metrology (Packaged Commodities) Rules, 2011. They came into force on the 1st day of April, 2011.",
+      "act_section": "Section 52(1) read with Section 52(2)(j) and 52(2)(q) of Legal Metrology Act, 2009",
+      "penalty_first_offence": "N/A - Preliminary title provision",
+      "penalty_second_offence": "N/A",
+      "penalty_reference": "LM-OFF-012"
+    },
+    {
+      "rule_id": "LM-PC-002",
+      "rule_number": "Rule 2",
+      "chapter": "CHAPTER I - PRELIMINARY",
+      "field_key": "statutory_definitions",
+      "field_label": "Statutory Definitions",
+      "requirement": "Defines Dealer (b), Industrial Consumer (bb), Institutional Consumer (bc), E-commerce (bd), E-commerce entity (be), Marketplace based model (bf), Lot (c), Manufacturer (d), Maximum permissible error (e), Net quantity (f), Packer (g), Principal display panel (h), Quantity (i), Retail dealer (j), Retail package (k), Retail sale (l), Retail sale price (m), Standard package (p), Wholesale dealer (q), Wholesale package (r).",
+      "act_section": "Section 2 & Section 52 of Legal Metrology Act, 2009",
+      "penalty_first_offence": "N/A - Statutory definitions",
+      "penalty_second_offence": "N/A",
+      "penalty_reference": "LM-OFF-012"
+    },
+    {
+      "rule_id": "LM-PC-003",
+      "rule_number": "Rule 3",
+      "chapter": "CHAPTER II - PROVISIONS APPLICABLE TO PACKAGES INTENDED FOR RETAIL SALE",
+      "field_key": "chapter_applicability",
+      "field_label": "Application of Chapter II",
+      "requirement": "The provisions of this chapter shall not apply to: (a) packages of commodities containing quantity of more than 25 kilogram or 25 litre; (b) cement, fertilizer and agricultural farm produce sold in bags above 50 kilogram; and (c) packaged commodities meant for industrial consumers or institutional consumers (substituted vide GSR 629(E) w.e.f. 1.1.2018).",
+      "act_section": "Section 18 of Legal Metrology Act, 2009",
+      "penalty_first_offence": "Fine up to ₹25,000 under Section 36(1) for misapplying retail exemptions",
+      "penalty_second_offence": "Fine up to ₹50,000 under Section 36(1)",
+      "penalty_reference": "LM-OFF-012"
+    },
+    {
+      "rule_id": "LM-PC-004",
+      "rule_number": "Rule 4",
+      "chapter": "CHAPTER II - PROVISIONS APPLICABLE TO PACKAGES INTENDED FOR RETAIL SALE",
+      "field_key": "pre_packing_regulation",
+      "field_label": "Regulation for Pre-packing and Sale",
+      "requirement": "No person shall pre-pack or cause or permit to be pre-packed any commodity for sale, distribution or delivery unless the package bears thereon or on a label securely affixed thereto, such declarations as are required under these rules. Grouped promotional packages must each comply with Rule 6.",
+      "act_section": "Section 18(1) read with Section 36(1) of Legal Metrology Act, 2009",
+      "penalty_first_offence": "Fine up to ₹25,000 under Section 36(1) (Compounding: ₹5,000 retailers / ₹25,000 manufacturers); or fine up to ₹5,000 under Rule 32",
+      "penalty_second_offence": "Fine up to ₹50,000 under Section 36(1) (for subsequent offence: fine up to ₹1,00,000 or imprisonment up to 1 year or both); or fine up to ₹5,000 under Rule 32",
+      "penalty_reference": "LM-OFF-012"
+    },
+    {
+      "rule_id": "LM-PC-005",
+      "rule_number": "Rule 5",
+      "chapter": "CHAPTER II - PROVISIONS APPLICABLE TO PACKAGES INTENDED FOR RETAIL SALE",
+      "field_key": "standard_pack_sizes",
+      "field_label": "Standard Pack Sizes (Historical / Omitted)",
+      "requirement": "Specific commodities to be packed and sold in recommended standard packages as specified in Second Schedule. (Rule 5 omitted vide GSR 779(E) dated 02.11.2021 w.e.f. 01.10.2022 vide GSR 226(E) dated 28.03.2022).",
+      "act_section": "Section 18 of Legal Metrology Act, 2009",
+      "penalty_first_offence": "Historical violation only - Omitted w.e.f. 01.10.2022",
+      "penalty_second_offence": "N/A",
+      "penalty_reference": "LM-OFF-012"
+    },
+    {
+      "rule_id": "LM-PC-006",
+      "rule_number": "Rule 6(1)(a) & Rule 10",
+      "chapter": "CHAPTER II - PROVISIONS APPLICABLE TO PACKAGES INTENDED FOR RETAIL SALE",
+      "field_key": "manufacturer_packer_importer_details",
+      "field_label": "Name and Address of Manufacturer, Packer or Importer",
+      "requirement": "Name and complete address of the manufacturer, or where the manufacturer is not the packer, name and address of manufacturer and packer, and for imported packages name and address of importer. Complete address includes postal address of factory or registered firm/company, street name, premises number, city, State, and PIN code (Rule 10 Explanation 1).",
+      "act_section": "Section 18(1) read with Section 36(1) of Legal Metrology Act, 2009",
+      "penalty_first_offence": "Fine up to ₹25,000 under Section 36(1) (Compounding: ₹5,000 retailers / ₹25,000 manufacturers); or fine up to ₹5,000 under Rule 32",
+      "penalty_second_offence": "Fine up to ₹50,000 under Section 36(1) (Subsequent: fine up to ₹1,00,000 or imprisonment up to 1 year or both); or fine up to ₹5,000 under Rule 32",
+      "penalty_reference": "LM-OFF-012"
+    },
+    {
+      "rule_id": "LM-PC-007",
+      "rule_number": "Rule 6(1)(aa)",
+      "chapter": "CHAPTER II - PROVISIONS APPLICABLE TO PACKAGES INTENDED FOR RETAIL SALE",
+      "field_key": "country_of_origin",
+      "field_label": "Country of Origin (for Imported Products)",
+      "requirement": "The name of the country of origin or manufacture or assembly in case of imported products shall be mentioned on the package.",
+      "act_section": "Section 18(1) read with Section 36(1) of Legal Metrology Act, 2009",
+      "penalty_first_offence": "Fine up to ₹25,000 under Section 36(1) (Compounding: ₹5,000 retailers / ₹25,000 manufacturers); or fine up to ₹5,000 under Rule 32",
+      "penalty_second_offence": "Fine up to ₹50,000 under Section 36(1) (Subsequent: fine up to ₹1,00,000 or imprisonment up to 1 year or both); or fine up to ₹5,000 under Rule 32",
+      "penalty_reference": "LM-OFF-012"
+    },
+    {
+      "rule_id": "LM-PC-008",
+      "rule_number": "Rule 6(1)(b)",
+      "chapter": "CHAPTER II - PROVISIONS APPLICABLE TO PACKAGES INTENDED FOR RETAIL SALE",
+      "field_key": "generic_name",
+      "field_label": "Common or Generic Name of Commodity",
+      "requirement": "The common or generic names of the commodity contained in the package and in case of packages with more than one product, the name and number or quantity of each product shall be mentioned on the package.",
+      "act_section": "Section 18(1) read with Section 36(1) of Legal Metrology Act, 2009",
+      "penalty_first_offence": "Fine up to ₹25,000 under Section 36(1) (Compounding: ₹5,000 retailers / ₹25,000 manufacturers); or fine up to ₹5,000 under Rule 32",
+      "penalty_second_offence": "Fine up to ₹50,000 under Section 36(1) (Subsequent: fine up to ₹1,00,000 or imprisonment up to 1 year or both); or fine up to ₹5,000 under Rule 32",
+      "penalty_reference": "LM-OFF-012"
+    },
+    {
+      "rule_id": "LM-PC-009",
+      "rule_number": "Rule 6(1)(c) & Rules 11-13",
+      "chapter": "CHAPTER II - PROVISIONS APPLICABLE TO PACKAGES INTENDED FOR RETAIL SALE",
+      "field_key": "net_quantity",
+      "field_label": "Net Quantity / Weight",
+      "requirement": "Net quantity in terms of standard unit of weight or measure, or number of commodity contained in the package shall be mentioned. Exclude packaging wrappers. Standard metric SI units only (g, kg, ml, L, cm, m, sq m, cu cm; for number: piece, pair, set, unit). Prohibited words include dozen, gross, approximate, when packed. Deficiency must not exceed MPE in First Schedule.",
+      "act_section": "Section 18(1) read with Section 36(1) of Legal Metrology Act, 2009",
+      "penalty_first_offence": "Fine up to ₹25,000 under Section 36(1) (Compounding: ₹5,000 retailers / ₹25,000 manufacturers); or fine up to ₹5,000 under Rule 32",
+      "penalty_second_offence": "Fine up to ₹50,000 under Section 36(1) (Subsequent: fine up to ₹1,00,000 or imprisonment up to 1 year or both); or fine up to ₹5,000 under Rule 32",
+      "penalty_reference": "LM-OFF-012"
+    },
+    {
+      "rule_id": "LM-PC-010",
+      "rule_number": "Rule 6(1)(d)",
+      "chapter": "CHAPTER II - PROVISIONS APPLICABLE TO PACKAGES INTENDED FOR RETAIL SALE",
+      "field_key": "manufacturing_date",
+      "field_label": "Month and Year of Manufacture",
+      "requirement": "The month and year in which the commodity is manufactured shall be mentioned in the package (the words 'or pre-packed or imported' omitted w.e.f. 01.10.2022). Month and year expressed in words, numerals, or both (Explanation I). Bidi, incense sticks, and PSU LPG cylinders exempt.",
+      "act_section": "Section 18(1) read with Section 36(1) of Legal Metrology Act, 2009",
+      "penalty_first_offence": "Fine up to ₹25,000 under Section 36(1) (Compounding: ₹5,000 retailers / ₹25,000 manufacturers); or fine up to ₹5,000 under Rule 32",
+      "penalty_second_offence": "Fine up to ₹50,000 under Section 36(1) (Subsequent: fine up to ₹1,00,000 or imprisonment up to 1 year or both); or fine up to ₹5,000 under Rule 32",
+      "penalty_reference": "LM-OFF-012"
+    },
+    {
+      "rule_id": "LM-PC-011",
+      "rule_number": "Rule 6(1)(e) & Rule 18(2)",
+      "chapter": "CHAPTER II - PROVISIONS APPLICABLE TO PACKAGES INTENDED FOR RETAIL SALE",
+      "field_key": "mrp",
+      "field_label": "Maximum Retail Price (MRP)",
+      "requirement": "The retail sale price shall clearly indicate that it is the maximum retail price inclusive of all taxes in Indian currency (e.g. MRP Rs. xx.xx or ₹ xx.xx incl. of all taxes). No sale at price exceeding MRP permitted under Rule 18(2). Dual MRP on identical commodity prohibited under Rule 18(2A). Obliterating or altering MRP prohibited under Rule 18(5).",
+      "act_section": "Section 18(1) read with Section 36(1) & Section 36(2) of Legal Metrology Act, 2009",
+      "penalty_first_offence": "Fine up to ₹25,000 under Section 36(1) for missing declaration (Compounding: ₹5,000 retailers / ₹25,000 manufacturers); Fine up to ₹2,000 for sale exceeding MRP under Section 36(2) (Compounding: ₹10,000 retailers / ₹50,000 manufacturers); or fine up to ₹5,000 under Rule 32",
+      "penalty_second_offence": "Fine up to ₹50,000 under Section 36(1) (Subsequent: fine up to ₹1,00,000 or imprisonment up to 1 year or both); Fine up to ₹5,000 under Section 36(2); or fine up to ₹5,000 under Rule 32",
+      "penalty_reference": "LM-OFF-012"
+    },
+    {
+      "rule_id": "LM-PC-012",
+      "rule_number": "Rule 6(2)",
+      "chapter": "CHAPTER II - PROVISIONS APPLICABLE TO PACKAGES INTENDED FOR RETAIL SALE",
+      "field_key": "consumer_care_details",
+      "field_label": "Consumer Care / Grievance Redressal Details",
+      "requirement": "Every package shall bear the name, address, telephone number, and e-mail address of the person who can be or the office which can be contacted, in case of consumer complaints.",
+      "act_section": "Section 18(1) read with Section 36(1) of Legal Metrology Act, 2009",
+      "penalty_first_offence": "Fine up to ₹25,000 under Section 36(1) (Compounding: ₹5,000 retailers / ₹25,000 manufacturers); or fine up to ₹5,000 under Rule 32",
+      "penalty_second_offence": "Fine up to ₹50,000 under Section 36(1) (Subsequent: fine up to ₹1,00,000 or imprisonment up to 1 year or both); or fine up to ₹5,000 under Rule 32",
+      "penalty_reference": "LM-OFF-012"
+    },
+    {
+      "rule_id": "LM-PC-013",
+      "rule_number": "Rule 6(4A)",
+      "chapter": "CHAPTER II - PROVISIONS APPLICABLE TO PACKAGES INTENDED FOR RETAIL SALE",
+      "field_key": "qr_code_gtin_e_code",
+      "field_label": "Voluntary Barcode / QR Code / e-code Declarations",
+      "requirement": "Nothing shall preclude manufacturer or packer or importer to declare barcode, GTIN, QR Code, e-code for net quantity assurance, and logos of Government schemes such as Swachh Bharat Mission (inserted vide GSR 629(E) w.e.f. 1.1.2018).",
+      "act_section": "Section 18 of Legal Metrology Act, 2009",
+      "penalty_first_offence": "N/A - Permissible additional declarations",
+      "penalty_second_offence": "N/A",
+      "penalty_reference": "LM-OFF-012"
+    },
+    {
+      "rule_id": "LM-PC-014",
+      "rule_number": "Rule 6(7) & Rule 6(8)",
+      "chapter": "CHAPTER II - PROVISIONS APPLICABLE TO PACKAGES INTENDED FOR RETAIL SALE",
+      "field_key": "gm_and_veg_nonveg_dots",
+      "field_label": "GM Food & Veg / Non-Veg Origin Symbols",
+      "requirement": "Packages containing GM food must bear 'GM' at top of PDP. Packages containing soaps, shampoos, tooth pastes and cosmetics/toiletries must bear red/brown dot for non-vegetarian origin or green dot for vegetarian origin at top of PDP.",
+      "act_section": "Section 18(1) read with Section 36(1) of Legal Metrology Act, 2009",
+      "penalty_first_offence": "Fine up to ₹25,000 under Section 36(1); or fine up to ₹5,000 under Rule 32",
+      "penalty_second_offence": "Fine up to ₹50,000 under Section 36(1); or fine up to ₹5,000 under Rule 32",
+      "penalty_reference": "LM-OFF-012"
+    },
+    {
+      "rule_id": "LM-PC-015",
+      "rule_number": "Rule 6(10)",
+      "chapter": "CHAPTER II - PROVISIONS APPLICABLE TO PACKAGES INTENDED FOR RETAIL SALE",
+      "field_key": "e_commerce_declarations",
+      "field_label": "Mandatory E-Commerce Network Declarations",
+      "requirement": "An E-Commerce entity shall ensure mandatory declarations specified in sub-rule (1), except month and year of manufacture/packing, are displayed on digital network used for e-commerce transactions.",
+      "act_section": "Section 18(1) read with Section 36(1) of Legal Metrology Act, 2009",
+      "penalty_first_offence": "Fine up to ₹25,000 under Section 36(1); or fine up to ₹5,000 under Rule 32",
+      "penalty_second_offence": "Fine up to ₹50,000 under Section 36(1); or fine up to ₹5,000 under Rule 32",
+      "penalty_reference": "LM-OFF-012"
+    },
+    {
+      "rule_id": "LM-PC-016",
+      "rule_number": "Rule 6(11)",
+      "chapter": "CHAPTER II - PROVISIONS APPLICABLE TO PACKAGES INTENDED FOR RETAIL SALE",
+      "field_key": "unit_sale_price",
+      "field_label": "Unit Sale Price (USP)",
+      "requirement": "Unit sale price in rupees rounded off to nearest two decimal places shall be declared on every pre-packaged commodity as: per g (<1kg) / per kg (>1kg); per cm (<1m) / per m (>1m); per ml (<1L) / per L (>1L); per number/unit. Exempt when retail sale price equals unit sale price (substituted vide GSR 226(E) w.e.f. 01.10.2022).",
+      "act_section": "Section 18(1) read with Section 36(1) of Legal Metrology Act, 2009",
+      "penalty_first_offence": "Fine up to ₹25,000 under Section 36(1) (Compounding: ₹5,000 retailers / ₹25,000 manufacturers); or fine up to ₹5,000 under Rule 32",
+      "penalty_second_offence": "Fine up to ₹50,000 under Section 36(1) (Subsequent: fine up to ₹1,00,000 or imprisonment up to 1 year or both); or fine up to ₹5,000 under Rule 32",
+      "penalty_reference": "LM-OFF-012"
+    },
+    {
+      "rule_id": "LM-PC-017",
+      "rule_number": "Rule 7 & Table-I",
+      "chapter": "CHAPTER II - PROVISIONS APPLICABLE TO PACKAGES INTENDED FOR RETAIL SALE",
+      "field_key": "principal_display_panel_area_font_height",
+      "field_label": "Principal Display Panel and Font Height Requirements",
+      "requirement": "Principal display panel (PDP) area calculation (rectangular = H x W; cylindrical = 40% H x circumference). Minimum height of numerals and letters: Area < 50 sq cm: 1.0mm (2.0mm blown/molded); 50-100 sq cm: 1.5mm (3.0mm); 100-500 sq cm: 2.5mm (4.0mm); 500-2500 sq cm: 4.0mm (6.0mm); > 2500 sq cm: 6.0mm (6.0mm). Width must not be less than 1/3 height (except '1', 'i', 'I', 'l').",
+      "act_section": "Section 18(1) read with Section 36(1) of Legal Metrology Act, 2009",
+      "penalty_first_offence": "Fine up to ₹25,000 under Section 36(1); or fine up to ₹5,000 under Rule 32",
+      "penalty_second_offence": "Fine up to ₹50,000 under Section 36(1); or fine up to ₹5,000 under Rule 32",
+      "penalty_reference": "LM-OFF-012"
+    },
+    {
+      "rule_id": "LM-PC-018",
+      "rule_number": "Rules 8 & 9",
+      "chapter": "CHAPTER II - PROVISIONS APPLICABLE TO PACKAGES INTENDED FOR RETAIL SALE",
+      "field_key": "declaration_placement_and_language",
+      "field_label": "Placement, Contrast and Language of Declarations",
+      "requirement": "Declarations must appear on PDP with surrounding clear space (above/below equal to numeral height; left/right twice numeral height). Numerals of MRP and net quantity must contrast conspicuously with background. Must be in Hindi in Devanagari script or in English (additional languages permitted).",
+      "act_section": "Section 18(1) read with Section 36(1) of Legal Metrology Act, 2009",
+      "penalty_first_offence": "Fine up to ₹25,000 under Section 36(1); or fine up to ₹5,000 under Rule 32",
+      "penalty_second_offence": "Fine up to ₹50,000 under Section 36(1); or fine up to ₹5,000 under Rule 32",
+      "penalty_reference": "LM-OFF-012"
+    },
+    {
+      "rule_id": "LM-PC-019",
+      "rule_number": "Rule 6(1)(da)",
+      "chapter": "CHAPTER II - PROVISIONS APPLICABLE TO PACKAGES INTENDED FOR RETAIL SALE",
+      "field_key": "expiry_date",
+      "field_label": "Expiry Date / Best Before Date",
+      "requirement": "If package contains commodity which may become unfit for human consumption after a period of time, 'best before or use by the date, month and year' shall be mentioned on label.",
+      "act_section": "Section 18(1) read with Section 36(1) of Legal Metrology Act, 2009",
+      "penalty_first_offence": "Fine up to ₹25,000 under Section 36(1) (Compounding: ₹5,000 retailers / ₹25,000 manufacturers); or fine up to ₹5,000 under Rule 32",
+      "penalty_second_offence": "Fine up to ₹50,000 under Section 36(1) (Subsequent: fine up to ₹1,00,000 or imprisonment up to 1 year or both); or fine up to ₹5,000 under Rule 32",
+      "penalty_reference": "LM-OFF-012"
+    },
+    {
+      "rule_id": "LM-PC-023",
+      "rule_number": "Rule 18(1)-(7)",
+      "chapter": "CHAPTER II - PROVISIONS APPLICABLE TO PACKAGES INTENDED FOR RETAIL SALE",
+      "field_key": "mrp_compliance_and_gst_weighing_scale",
+      "field_label": "Retail/Wholesale Price Compliance and GST Weighing Instrument",
+      "requirement": "No wholesale dealer, retail dealer or importer shall sell/display non-compliant package. No sale at price exceeding MRP. No dual MRP. No alteration/smudging of MRP. Retailers under GST dealing in packaged goods by weight/volume must maintain Class III electronic weighing machine with smallest division <= 1g and receipt facility for free consumer verification.",
+      "act_section": "Section 18 & Section 36(2) of Legal Metrology Act, 2009",
+      "penalty_first_offence": "Fine up to ₹2,000 under Section 36(2) (Compounding: ₹10,000 retailers / ₹50,000 manufacturers); or fine up to ₹5,000 under Rule 32",
+      "penalty_second_offence": "Fine up to ₹5,000 under Section 36(2); or fine up to ₹5,000 under Rule 32",
+      "penalty_reference": "LM-OFF-013"
+    },
+    {
+      "rule_id": "LM-PC-028",
+      "rule_number": "Rule 26(a)-(e)",
+      "chapter": "CHAPTER V - EXEMPTIONS",
+      "field_key": "statutory_exemptions",
+      "field_label": "Exemptions in Respect of Certain Packages",
+      "requirement": "Nothing in PCR 2011 applies to: (a) Net weight/measure <= 10g or 10ml (not applicable to tobacco); (b) Fast food items packed by hotel/restaurant; (c) Formulations covered under DPCO 2013 (medical devices declared as drugs not exempt); (e) Thread sold in coil to handloom weavers.",
+      "act_section": "Section 18 & Section 52 of Legal Metrology Act, 2009",
+      "penalty_first_offence": "N/A - Exemption provision",
+      "penalty_second_offence": "N/A",
+      "penalty_reference": "LM-OFF-012"
+    },
+    {
+      "rule_id": "LM-PC-029",
+      "rule_number": "Rules 27-30",
+      "chapter": "CHAPTER VI - REGISTRATION OF MANUFACTURERS, PACKERS AND IMPORTERS",
+      "field_key": "mandatory_registration",
+      "field_label": "Mandatory Registration of Manufacturers, Packers and Importers",
+      "requirement": "Every manufacturer, packer, or importer must apply for registration within 90 days of commencement or beginning pre-packing with fee of ₹500 (Rule 27). Shorter address permissible upon approval (Rule 28). Register maintained by Director/Controller open to public without fee (Rule 29).",
+      "act_section": "Section 37 of Legal Metrology Act, 2009 read with Rule 27 of PCR 2011",
+      "penalty_first_offence": "Fine up to ₹4,000 under Rule 32(1) for contravention of rules 27 and 28; or penalty under Section 37 of Act (fine up to ₹25,000)",
+      "penalty_second_offence": "Fine up to ₹50,000 under Section 37 of Act; or fine up to ₹5,000 under Rule 32",
+      "penalty_reference": "LM-OFF-014"
+    },
+    {
+      "rule_id": "LM-PC-031",
+      "rule_number": "Rules 31-34 & Schedules I to VII",
+      "chapter": "CHAPTER VII - GENERAL & SCHEDULES",
+      "field_key": "general_fine_and_schedules",
+      "field_label": "General Penalty, Compounding Sums, and Schedules",
+      "requirement": "Rule 31: Advertisement mentioning MRP must mention net quantity/number in same font size. Rule 32: Fine up to ₹5,000 for contravention of rules where no punishment is provided. Rule 32A: Table of compounding sums (Section 29: ₹2,000/₹10,000; Section 36(1): ₹5,000/₹25,000; Section 36(2): ₹10,000/₹50,000). First Schedule: MPE; Third Schedule: 'when packed' commodities; Fourth Schedule: exceptions to Rule 12(2); Fifth Schedule: sampling; Sixth Schedule: testing procedures; Seventh Schedule: Forms A & B.",
+      "act_section": "Section 18, 29, 36, 48, 52 of Legal Metrology Act, 2009",
+      "penalty_first_offence": "Fine up to ₹5,000 under Rule 32",
+      "penalty_second_offence": "Fine up to ₹5,000 under Rule 32",
+      "penalty_reference": "LM-OFF-032"
+    }
+  ],
+  "offences": [
+    {
+      "offence_id": "LM-OFF-001",
+      "act_section": "Section 24",
+      "description": "Penalty for use of unverified weight or measure in transaction, deal or contract",
+      "legal_reference": {
+        "act": "Legal Metrology Act, 2009 (Act No. 1 of 2010)",
+        "section": "Section 24",
+        "rule": "Maharashtra Legal Metrology (Enforcement) Rules, 2011 Rule 14",
+        "jurisdiction": "Maharashtra / Central"
+      },
+      "first_offence": {
+        "fine_type": "STATUTORY_RANGE",
+        "fine_min": 2000.0,
+        "fine_max": 10000.0,
+        "imprisonment": null,
+        "description": "Fine which shall not be less than Rs. 2,000, but which may extend to Rs. 10,000"
+      },
+      "second_or_subsequent_offence": {
+        "fine_type": "COURT_DISCRETION",
+        "imprisonment": "Up to 1 year",
+        "description": "Imprisonment for a term which may extend to 1 year and with fine"
+      }
+    },
+    {
+      "offence_id": "LM-OFF-002",
+      "act_section": "Section 25",
+      "description": "Penalty for use of non-standard weight or measure",
+      "legal_reference": {
+        "act": "Legal Metrology Act, 2009",
+        "section": "Section 25",
+        "rule": "LM (General) Rules, 2011",
+        "jurisdiction": "Central"
+      },
+      "first_offence": {
+        "fine_type": "STATUTORY_MAX",
+        "fine_min": 0.0,
+        "fine_max": 25000.0,
+        "imprisonment": null,
+        "description": "Fine which may extend to Rs. 25,000"
+      },
+      "second_or_subsequent_offence": {
+        "fine_type": "COURT_DISCRETION",
+        "imprisonment": "Up to 6 months",
+        "description": "Imprisonment for a term which may extend to 6 months and with fine"
+      }
+    },
+    {
+      "offence_id": "LM-OFF-012",
+      "act_section": "Section 36(1)",
+      "description": "Penalty for manufacturing, packing, importing, distributing or selling non-standard pre-packaged commodities or commodities lacking mandatory declarations",
+      "legal_reference": {
+        "act": "Legal Metrology Act, 2009",
+        "section": "Section 36(1)",
+        "rule": "Legal Metrology (Packaged Commodities) Rules, 2011 Rule 6",
+        "jurisdiction": "Central / Maharashtra"
+      },
+      "first_offence": {
+        "fine_type": "STATUTORY_MAX",
+        "fine_min": 0.0,
+        "fine_max": 25000.0,
+        "imprisonment": null,
+        "description": "Fine which may extend to Rs. 25,000 (Compounding under Rule 32A Table: Rs. 5,000 for retailers/wholesalers, Rs. 25,000 for manufacturers/importers)"
+      },
+      "second_or_subsequent_offence": {
+        "fine_type": "STATUTORY_RANGE_AND_IMPRISONMENT",
+        "fine_min": 50000.0,
+        "fine_max": 100000.0,
+        "imprisonment": "Up to 1 year for 3rd/subsequent offence",
+        "description": "Second offence: Fine up to Rs. 50,000; Subsequent: Fine Rs. 50,000 to Rs. 1,00,000 or imprisonment up to 1 year or both"
+      }
+    },
+    {
+      "offence_id": "LM-OFF-013",
+      "act_section": "Section 36(2)",
+      "description": "Penalty for manufacture, packing, import or sale of pre-packaged commodity at price exceeding Maximum Retail Price (MRP)",
+      "legal_reference": {
+        "act": "Legal Metrology Act, 2009",
+        "section": "Section 36(2)",
+        "rule": "Legal Metrology (Packaged Commodities) Rules, 2011 Rule 18(2)",
+        "jurisdiction": "Central / Maharashtra"
+      },
+      "first_offence": {
+        "fine_type": "STATUTORY_MAX",
+        "fine_min": 0.0,
+        "fine_max": 2000.0,
+        "imprisonment": null,
+        "description": "Fine which may extend to Rs. 2,000 (Compounding under Rule 32A Table: Rs. 10,000 for retailers/wholesalers, Rs. 50,000 for manufacturers/importers)"
+      },
+      "second_or_subsequent_offence": {
+        "fine_type": "STATUTORY_MAX",
+        "fine_min": 0.0,
+        "fine_max": 5000.0,
+        "imprisonment": null,
+        "description": "Fine which may extend to Rs. 5,000"
+      }
+    },
+    {
+      "offence_id": "LM-OFF-014",
+      "act_section": "Section 37",
+      "description": "Failure to register as manufacturer, packer, or importer under Rule 27",
+      "legal_reference": {
+        "act": "Legal Metrology Act, 2009",
+        "section": "Section 37",
+        "rule": "Legal Metrology (Packaged Commodities) Rules, 2011 Rule 27 & Rule 32",
+        "jurisdiction": "Central / Maharashtra"
+      },
+      "first_offence": {
+        "fine_type": "STATUTORY_MAX",
+        "fine_min": 0.0,
+        "fine_max": 4000.0,
+        "imprisonment": null,
+        "description": "Fine which may extend to Rs. 4,000 under Rule 32(1) or up to Rs. 25,000 under Section 37 of Act"
+      },
+      "second_or_subsequent_offence": {
+        "fine_type": "STATUTORY_MAX",
+        "fine_min": 0.0,
+        "fine_max": 50000.0,
+        "imprisonment": null,
+        "description": "Fine which may extend to Rs. 50,000 under Section 37 of Act"
+      }
+    },
+    {
+      "offence_id": "LM-OFF-032",
+      "act_section": "Section 52",
+      "description": "Fine for contravention of Packaged Commodities Rules where no specific punishment is provided in the Act",
+      "legal_reference": {
+        "act": "Legal Metrology Act, 2009",
+        "section": "Section 52",
+        "rule": "Legal Metrology (Packaged Commodities) Rules, 2011 Rule 32",
+        "jurisdiction": "Central / Maharashtra"
+      },
+      "first_offence": {
+        "fine_type": "STATUTORY_MAX",
+        "fine_min": 0.0,
+        "fine_max": 5000.0,
+        "imprisonment": null,
+        "description": "Fine which may extend to Rs. 5,000"
+      },
+      "second_or_subsequent_offence": {
+        "fine_type": "STATUTORY_MAX",
+        "fine_min": 0.0,
+        "fine_max": 5000.0,
+        "imprisonment": null,
+        "description": "Fine which may extend to Rs. 5,000"
+      }
+    }
+  ],
+  "penalties": [
+    {
+      "penalty_id": "LM-PEN-001",
+      "offence_id": "LM-OFF-001",
+      "act_section": "Section 24",
+      "first_offence": {
+        "fine_type": "STATUTORY_RANGE",
+        "fine_min": 2000.0,
+        "fine_max": 10000.0,
+        "imprisonment": null,
+        "description": "Fine which shall not be less than Rs. 2,000, but which may extend to Rs. 10,000"
+      },
+      "second_offence": {
+        "fine_type": "COURT_DISCRETION",
+        "fine_min": null,
+        "fine_max": null,
+        "imprisonment": "Up to 1 year",
+        "description": "Imprisonment for a term which may extend to 1 year and with fine"
+      }
+    },
+    {
+      "penalty_id": "LM-PEN-002",
+      "offence_id": "LM-OFF-002",
+      "act_section": "Section 25",
+      "first_offence": {
+        "fine_type": "STATUTORY_MAX",
+        "fine_min": 0.0,
+        "fine_max": 25000.0,
+        "imprisonment": null,
+        "description": "Fine which may extend to Rs. 25,000"
+      },
+      "second_offence": {
+        "fine_type": "COURT_DISCRETION",
+        "fine_min": null,
+        "fine_max": null,
+        "imprisonment": "Up to 6 months",
+        "description": "Imprisonment for a term which may extend to 6 months and with fine"
+      }
+    },
+    {
+      "penalty_id": "LM-PEN-012",
+      "offence_id": "LM-OFF-012",
+      "act_section": "Section 36(1)",
+      "first_offence": {
+        "fine_type": "STATUTORY_MAX",
+        "fine_min": 0.0,
+        "fine_max": 25000.0,
+        "imprisonment": null,
+        "description": "Fine which may extend to Rs. 25,000 (Compounding under Rule 32A Table: Rs. 5,000 for retailers/wholesalers, Rs. 25,000 for manufacturers/importers)"
+      },
+      "second_offence": {
+        "fine_type": "STATUTORY_MAX",
+        "fine_min": 0.0,
+        "fine_max": 50000.0,
+        "imprisonment": null,
+        "description": "Second offence: Fine up to Rs. 50,000; Subsequent offences: Fine Rs. 50,000 to Rs. 1,00,000 or imprisonment up to 1 year or both"
+      }
+    },
+    {
+      "penalty_id": "LM-PEN-013",
+      "offence_id": "LM-OFF-013",
+      "act_section": "Section 36(2)",
+      "first_offence": {
+        "fine_type": "STATUTORY_MAX",
+        "fine_min": 0.0,
+        "fine_max": 2000.0,
+        "imprisonment": null,
+        "description": "Fine which may extend to Rs. 2,000 (Compounding under Rule 32A Table: Rs. 10,000 for retailers/wholesalers, Rs. 50,000 for manufacturers/importers)"
+      },
+      "second_offence": {
+        "fine_type": "STATUTORY_MAX",
+        "fine_min": 0.0,
+        "fine_max": 5000.0,
+        "imprisonment": null,
+        "description": "Fine which may extend to Rs. 5,000"
+      }
+    },
+    {
+      "penalty_id": "LM-PEN-014",
+      "offence_id": "LM-OFF-014",
+      "act_section": "Section 37",
+      "first_offence": {
+        "fine_type": "STATUTORY_MAX",
+        "fine_min": 0.0,
+        "fine_max": 4000.0,
+        "imprisonment": null,
+        "description": "Fine which may extend to Rs. 4,000 under Rule 32(1) or up to Rs. 25,000 under Section 37 of Act"
+      },
+      "second_offence": {
+        "fine_type": "STATUTORY_MAX",
+        "fine_min": 0.0,
+        "fine_max": 50000.0,
+        "imprisonment": null,
+        "description": "Fine which may extend to Rs. 50,000 under Section 37 of Act"
+      }
+    },
+    {
+      "penalty_id": "LM-PEN-032",
+      "offence_id": "LM-OFF-032",
+      "act_section": "Section 52",
+      "first_offence": {
+        "fine_type": "STATUTORY_MAX",
+        "fine_min": 0.0,
+        "fine_max": 5000.0,
+        "imprisonment": null,
+        "description": "Fine which may extend to Rs. 5,000 under Rule 32"
+      },
+      "second_offence": {
+        "fine_type": "STATUTORY_MAX",
+        "fine_min": 0.0,
+        "fine_max": 5000.0,
+        "imprisonment": null,
+        "description": "Fine which may extend to Rs. 5,000 under Rule 32"
+      }
+    }
+  ],
+  "exemptions": [
+    {
+      "exemption_id": "EX-001",
+      "category": "small_package",
+      "description": "Packages where net weight or measure is 10g or 10ml or less (excluding tobacco products)",
+      "rule_reference": "Rule 26(a)",
+      "act_section": "Section 18"
+    },
+    {
+      "exemption_id": "EX-002",
+      "category": "fast_food",
+      "description": "Fast food items packed by restaurant or hotel and the like",
+      "rule_reference": "Rule 26(b)",
+      "act_section": "Section 18"
+    },
+    {
+      "exemption_id": "EX-003",
+      "category": "drugs_dpco",
+      "description": "Scheduled and non-scheduled formulations covered under Drugs (Price Control) Order, 2013 (Medical devices declared as drugs are not exempt)",
+      "rule_reference": "Rule 26(c)",
+      "act_section": "Section 18"
+    },
+    {
+      "exemption_id": "EX-004",
+      "category": "handloom_thread",
+      "description": "Any thread sold in coil to handloom weavers",
+      "rule_reference": "Rule 26(e)",
+      "act_section": "Section 18"
+    },
+    {
+      "exemption_id": "EX-005",
+      "category": "bulk_package",
+      "description": "Packages containing quantity of more than 25 kg or 25 litre (cement, fertilizer, agricultural produce sold in bags above 50 kg)",
+      "rule_reference": "Rule 3(a)-(b)",
+      "act_section": "Section 18"
+    },
+    {
+      "exemption_id": "EX-006",
+      "category": "institutional_industrial",
+      "description": "Packaged commodities meant for industrial consumers or institutional consumers bearing declaration 'not for retail sale'",
+      "rule_reference": "Rule 3(c)",
+      "act_section": "Section 18"
+    }
+  ]
+}

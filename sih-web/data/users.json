@@ -1,0 +1,39 @@
+{
+  "citizens": [
+    {
+      "id": "usr_cit_01",
+      "name": "Arjun Suresh Sharma",
+      "email": "citizen@gov.in",
+      "mobile": "9845012345",
+      "role": "CITIZEN",
+      "rewardPoints": 2750,
+      "upiVpa": "arjun.sharma@okaxis",
+      "passwordHash": "password123",
+      "createdAt": "2026-09-06T00:00:00.000Z"
+    },
+    {
+      "id": "usr_citizen_1788691841234",
+      "name": "Samrudhi Musale",
+      "email": "abcd@gmail.com",
+      "mobile": "9922566464",
+      "badgeId": null,
+      "role": "CITIZEN",
+      "rewardPoints": 500,
+      "upiVpa": "samrudhi.musale@upi",
+      "passwordHash": "123456789",
+      "createdAt": "2026-09-06T10:50:41.234Z"
+    }
+  ],
+  "controllers": [
+    {
+      "id": "usr_ctrl_01",
+      "name": "Shri R.K. Singh",
+      "email": "controller@gov.in",
+      "badgeId": "MH-LM-412",
+      "role": "CONTROLLER",
+      "rewardPoints": 0,
+      "passwordHash": "password123",
+      "createdAt": "2026-09-06T00:00:00.000Z"
+    }
+  ]
+}

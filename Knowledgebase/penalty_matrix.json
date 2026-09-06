@@ -1,0 +1,226 @@
+[
+  {
+    "offence_id": "LM-OFF-001",
+    "description": "Penalty for use of unverified weight or measure in transaction, deal or contract",
+    "legal_reference": {
+      "act": "Legal Metrology Act, 2009 (Act No. 1 of 2010)",
+      "section": "Section 24",
+      "rule": "Maharashtra Legal Metrology (Enforcement) Rules, 2011 Rule 14",
+      "jurisdiction": "Maharashtra / Central"
+    },
+    "first_offence": {
+      "fine_type": "STATUTORY_RANGE",
+      "fine_min": 2000.0,
+      "fine_max": 10000.0,
+      "imprisonment": null,
+      "description": "Fine which shall not be less than Rs. 2,000, but which may extend to Rs. 10,000"
+    },
+    "second_or_subsequent_offence": {
+      "fine_type": "COURT_DISCRETION",
+      "imprisonment": "Up to 1 year",
+      "description": "Imprisonment for a term which may extend to 1 year and with fine"
+    },
+    "compounding": {
+      "compoundable": true,
+      "authority": "Controller of Legal Metrology Maharashtra / Authorized Legal Metrology Officer",
+      "conditions": [
+        "Applies to first offence only under Section 48(1)"
+      ]
+    },
+    "prosecution": {
+      "mandatory_court_prosecution_on_subsequent": true,
+      "governing_section": "Section 49"
+    },
+    "notes": [
+      "Verified from Section 24 of LM Act 2009"
+    ]
+  },
+  {
+    "offence_id": "LM-OFF-002",
+    "description": "Penalty for use of non-standard weight or measure",
+    "legal_reference": {
+      "act": "Legal Metrology Act, 2009",
+      "section": "Section 25",
+      "rule": "LM (General) Rules, 2011",
+      "jurisdiction": "Central"
+    },
+    "first_offence": {
+      "fine_type": "STATUTORY_MAX",
+      "fine_min": 0.0,
+      "fine_max": 25000.0,
+      "imprisonment": null,
+      "description": "Fine which may extend to Rs. 25,000"
+    },
+    "second_or_subsequent_offence": {
+      "fine_type": "COURT_DISCRETION",
+      "imprisonment": "Up to 6 months",
+      "description": "Imprisonment for a term which may extend to 6 months and with fine"
+    },
+    "compounding": {
+      "compoundable": true,
+      "authority": "Controller of Legal Metrology / Authorized Officer",
+      "conditions": [
+        "First offence compoundable under Section 48(1)"
+      ]
+    },
+    "prosecution": {
+      "mandatory_court_prosecution_on_subsequent": true,
+      "governing_section": "Section 49"
+    },
+    "notes": [
+      "Verified from Section 25 of LM Act 2009"
+    ]
+  },
+  {
+    "offence_id": "LM-OFF-012",
+    "description": "Penalty for manufacturing, packing, importing, distributing or selling non-standard pre-packaged commodities (missing mandatory declarations)",
+    "legal_reference": {
+      "act": "Legal Metrology Act, 2009",
+      "section": "Section 36(1)",
+      "rule": "Legal Metrology (Packaged Commodities) Rules, 2011 Rule 6",
+      "jurisdiction": "Central / Maharashtra"
+    },
+    "first_offence": {
+      "fine_type": "STATUTORY_MAX",
+      "fine_min": 0.0,
+      "fine_max": 25000.0,
+      "imprisonment": null,
+      "description": "Fine which may extend to Rs. 25,000"
+    },
+    "second_or_subsequent_offence": {
+      "fine_type": "STATUTORY_RANGE_AND_IMPRISONMENT",
+      "fine_min": 50000.0,
+      "fine_max": 100000.0,
+      "imprisonment": "Up to 1 year for 3rd/subsequent offence",
+      "description": "Second offence: Fine up to Rs. 50,000; Subsequent: Fine Rs. 50,000 to Rs. 1,00,000 or imprisonment up to 1 year or both"
+    },
+    "compounding": {
+      "compoundable": true,
+      "authority": "Director of Legal Metrology (Central) / Controller of Legal Metrology (Maharashtra)",
+      "conditions": [
+        "First offence compoundable under Section 48(1)"
+      ]
+    },
+    "prosecution": {
+      "mandatory_court_prosecution_on_subsequent": true,
+      "governing_section": "Section 49"
+    },
+    "notes": [
+      "Primary offence for packaged commodity label violations under Rule 6"
+    ]
+  },
+  {
+    "offence_id": "LM-OFF-013",
+    "description": "Penalty for manufacture, packing, import or sale of pre-packaged commodity at price exceeding Maximum Retail Price (MRP)",
+    "legal_reference": {
+      "act": "Legal Metrology Act, 2009",
+      "section": "Section 36(2)",
+      "rule": "Legal Metrology (Packaged Commodities) Rules, 2011 Rule 18",
+      "jurisdiction": "Central / Maharashtra"
+    },
+    "first_offence": {
+      "fine_type": "STATUTORY_MAX",
+      "fine_min": 0.0,
+      "fine_max": 2000.0,
+      "imprisonment": null,
+      "description": "Fine which may extend to Rs. 2,000 for retail dealer"
+    },
+    "second_or_subsequent_offence": {
+      "fine_type": "STATUTORY_MAX",
+      "fine_min": 0.0,
+      "fine_max": 2000.0,
+      "imprisonment": null,
+      "description": "Fine which may extend to Rs. 2,000"
+    },
+    "compounding": {
+      "compoundable": true,
+      "authority": "Controller / Authorized Legal Metrology Officer",
+      "conditions": [
+        "Compoundable under Section 48"
+      ]
+    },
+    "prosecution": {
+      "mandatory_court_prosecution_on_subsequent": false,
+      "governing_section": "Section 48"
+    },
+    "notes": [
+      "Applies to retailers selling above printed MRP"
+    ]
+  },
+  {
+    "offence_id": "LM-OFF-014",
+    "description": "Failure to register as manufacturer, packer, or importer under Rule 27",
+    "legal_reference": {
+      "act": "Legal Metrology Act, 2009",
+      "section": "Section 37",
+      "rule": "Legal Metrology (Packaged Commodities) Rules, 2011 Rule 27",
+      "jurisdiction": "Central / Maharashtra"
+    },
+    "first_offence": {
+      "fine_type": "STATUTORY_MAX",
+      "fine_min": 0.0,
+      "fine_max": 4000.0,
+      "imprisonment": null,
+      "description": "Fine which may extend to Rs. 4,000"
+    },
+    "second_or_subsequent_offence": {
+      "fine_type": "STATUTORY_MAX",
+      "fine_min": 0.0,
+      "fine_max": 10000.0,
+      "imprisonment": null,
+      "description": "Fine which may extend to Rs. 10,000"
+    },
+    "compounding": {
+      "compoundable": true,
+      "authority": "Director of Legal Metrology (Central) / Controller (Maharashtra)",
+      "conditions": [
+        "Compoundable under Section 48"
+      ]
+    },
+    "prosecution": {
+      "mandatory_court_prosecution_on_subsequent": false,
+      "governing_section": "Section 48"
+    },
+    "notes": [
+      "Verified from Section 37 of LM Act 2009 & Rule 32 of PCR 2011"
+    ]
+  },
+  {
+    "offence_id": "LM-OFF-032",
+    "description": "Fine for contravention of Packaged Commodities Rules where no specific punishment is provided in the Act",
+    "legal_reference": {
+      "act": "Legal Metrology Act, 2009",
+      "section": "Section 52",
+      "rule": "Legal Metrology (Packaged Commodities) Rules, 2011 Rule 32",
+      "jurisdiction": "Central / Maharashtra"
+    },
+    "first_offence": {
+      "fine_type": "STATUTORY_MAX",
+      "fine_min": 0.0,
+      "fine_max": 5000.0,
+      "imprisonment": null,
+      "description": "Fine which may extend to Rs. 5,000"
+    },
+    "second_or_subsequent_offence": {
+      "fine_type": "STATUTORY_MAX",
+      "fine_min": 0.0,
+      "fine_max": 5000.0,
+      "imprisonment": null,
+      "description": "Fine which may extend to Rs. 5,000"
+    },
+    "compounding": {
+      "compoundable": true,
+      "authority": "Controller / Legal Metrology Officer",
+      "conditions": [
+        "Compoundable under Rule 32A Table"
+      ]
+    },
+    "prosecution": {
+      "mandatory_court_prosecution_on_subsequent": false,
+      "governing_section": "Section 48"
+    },
+    "notes": [
+      "Rule 32 general PCR penalty clause (as amended vide GSR 385(E) 2015)"
+    ]
+  }
+]

@@ -1,0 +1,51 @@
+[
+  {
+    "offence_id": "LM-OFF-001",
+    "legal_reference": {
+      "act": "Legal Metrology Act, 2009",
+      "section": "Section 48(1)"
+    },
+    "compoundable": true,
+    "amount": "As determined by Controller under Schedule V of Maharashtra Rules",
+    "authority": "Controller / Assistant Controller of Legal Metrology Maharashtra",
+    "conditions": [
+      "First offence only",
+      "Application in Form C within notice window"
+    ],
+    "notes": [
+      "Repeat offence within 3 years is non-compoundable under Section 48(2)"
+    ]
+  },
+  {
+    "offence_id": "LM-OFF-012",
+    "legal_reference": {
+      "act": "Legal Metrology Act, 2009",
+      "section": "Section 48(1)"
+    },
+    "compoundable": true,
+    "amount": "Up to statutory max fine (Rs. 25,000 for 1st offence)",
+    "authority": "Director of Legal Metrology (Central) / Controller of Legal Metrology (Maharashtra)",
+    "conditions": [
+      "First offence only"
+    ],
+    "notes": [
+      "Second and subsequent offences non-compoundable under Section 48(2)"
+    ]
+  },
+  {
+    "offence_id": "LM-OFF-SUBSEQUENT",
+    "legal_reference": {
+      "act": "Legal Metrology Act, 2009",
+      "section": "Section 48(2)"
+    },
+    "compoundable": false,
+    "amount": null,
+    "authority": "N/A - Court Prosecution Mandatory",
+    "conditions": [
+      "Offence repeated within 3 years of first compounding or conviction"
+    ],
+    "notes": [
+      "Mandatory prosecution under Section 49 before Judicial Magistrate First Class"
+    ]
+  }
+]

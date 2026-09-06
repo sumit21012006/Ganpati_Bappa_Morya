@@ -1,0 +1,49 @@
+name: legal_metrology
+description: "Legal Metrology enforcement & compliance companion (SIH) — Inspector + Business apps."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.12.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+
+  # State management
+  flutter_riverpod: ^2.6.1
+
+  # Networking
+  dio: ^5.7.0
+  connectivity_plus: ^6.1.1
+
+  # Navigation
+  go_router: ^14.6.2
+
+  # Storage
+  flutter_secure_storage: ^9.2.2
+
+  # Camera / images
+  camera: ^0.11.0+2
+  image_picker: ^1.1.2
+  permission_handler: ^11.3.1
+
+  # Utilities
+  intl: ^0.20.1
+
+  # NOTE: file_picker (spec-recommended) is intentionally not included yet —
+  # evidence picking uses image_picker. Add file_picker when document
+  # attachments (purchase invoices, dispute evidence) move to the live
+  # backend; the 8.x line pins compileSdk 34 and needs the 10.x/11.x line.
+
+  # Signature capture
+  signature: ^5.5.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true

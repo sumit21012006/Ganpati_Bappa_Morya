@@ -1,0 +1,77 @@
+================================================================================
+SIH PS 34 — LEGAL METROLOGY AUTOMATION & ENFORCEMENT SYSTEM
+MEMBER 4 (WEB FRONTEND) INTEGRATION READINESS & ROADMAP REPORT
+================================================================================
+
+1. INTEGRATION READINESS ASSESSMENT
+--------------------------------------------------------------------------------
+STATUS: 100% READY AND ALIGNED
+
+- Member 1 (NestJS Backend & DB Architect) has built, compiled, and deployed 
+  all required REST API endpoints at http://localhost:3000/api/v1 (Swagger docs 
+  at http://localhost:3000/api/docs).
+- Member 5 (Legal Knowledge Base) rulebook, penalty matrix, and exemptions 
+  are fully seeded into PostgreSQL.
+- Member 3 (Flutter Mobile App) uses the exact same PostgreSQL database 
+  entities and shared ID standards (INSP-2026-XXXXX, LM/2026/XXXX, NOT-XXXXXX).
+- All endpoints, payload keys, and contracts needed by your Next.js Web App 
+  (Member 4) are ready for smooth integration.
+
+--------------------------------------------------------------------------------
+2. ENDPOINT & PAYLOAD KEY MATRIX (NEXT.JS WEB <-> NESTJS BACKEND)
+--------------------------------------------------------------------------------
+1. Authentication:
+   - Endpoint: POST /api/v1/auth/login & POST /api/v1/auth/register
+   - Body: { email, password, role: "CITIZEN" | "CONTROLLER" }
+   - Response: { accessToken, refreshToken, user: { id, email, role } }
+
+2. Citizen Complaint Filing:
+   - Endpoint: POST /api/v1/complaints
+   - Header: Authorization: Bearer <token>
+   - Body: { citizenName, phone, city, address, gstin, productName, 
+             violationType, evidenceUrls: string[], statementOfFact }
+   - Response: { complaintId: "CMP-2026-XXXX", status: "RECEIVED", createdAt }
+
+3. Citizen Complaint Status Tracking:
+   - Endpoint: GET /api/v1/complaints/:id/status
+   - Response: { complaintId, status, inspectorAssigned, history: [...] }
+
+4. Controller Dashboard Regional Analytics:
+   - Endpoint: GET /api/v1/controller/dashboard/stats
+   - Response: { totalInspections, totalViolations, totalRecovery, 
+                 repeatOffenderCount, cityBreakdown: [...] }
+
+5. Controller Compounding Action / Notice Approval:
+   - Endpoint: POST /api/v1/controller/compounding/:id/action
+   - Body: { action: "APPROVE" | "REJECT" | "ESCALATE", comments: string }
+   - Response: { noticeId, newStatus: "COMPOUNDED" | "PROSECUTION", updatedAt }
+
+6. Multi-Tier Supply Chain Traceability (Neo4j Graph):
+   - Endpoint: GET /api/v1/supply-chain/trace/:gstin
+   - Response: { gstin, businessName, nodes: [...], links: [...] }
+
+--------------------------------------------------------------------------------
+3. TEAMMATE INTEGRATION WORKFLOW & DATA PIPELINE
+--------------------------------------------------------------------------------
+A. Integration with Member 1 (NestJS API Gateway):
+   - Add API Base URL in .env.local: NEXT_PUBLIC_API_BASE_URL=http://localhost:3000/api/v1
+   - Attach Authorization Bearer header for authenticated requests.
+
+B. Indirect Shared-State Integration with Member 3 (Flutter Mobile App):
+   - Web App and Mobile App do not connect directly; they sync asynchronously 
+     via Member 1's PostgreSQL backend.
+   - Flow: Citizen files complaint on Web -> Appears on Inspector's Mobile App -> 
+     Inspector conducts inspection & issues notice -> Controller reviews notice 
+     on Web & approves compounding -> Closure reflects across all apps.
+
+C. Legal Knowledge Base (Member 5):
+   - Query GET /api/v1/knowledge-base/rulebook to populate violation categories 
+     and statutory penalty information on Web screens.
+
+--------------------------------------------------------------------------------
+4. KEY PRE-INTEGRATION CHECKLIST
+--------------------------------------------------------------------------------
+1. Ensure CORS is enabled on NestJS (http://localhost:3000) for Next.js origin.
+2. Maintain standard ID formats: INSP-2026-XXXXX, LM/2026/XXXX, NOT-XXXXXX.
+3. Handle multipart image uploads for product evidence before passing URLs.
+================================================================================

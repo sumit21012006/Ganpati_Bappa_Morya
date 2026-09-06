@@ -1,0 +1,95 @@
+[
+  {
+    "test_id": "TC-001",
+    "title": "Compliant Standard Retail Package",
+    "input": {
+      "product_category": "general_packaged_commodity",
+      "package_weight_g_ml": 500.0,
+      "ocr_extracted_fields": {
+        "mrp": "Rs. 100.00",
+        "net_quantity": "500 g",
+        "manufacturer_name_address": "ABC Foods Pvt Ltd, Mumbai",
+        "generic_name": "Atta",
+        "month_year_packing": "08/2026",
+        "consumer_care": "1800-111-222"
+      }
+    },
+    "expected_output": {
+      "status": "COMPLIANT",
+      "is_exempt": false,
+      "violation_count": 0
+    }
+  },
+  {
+    "test_id": "TC-002",
+    "title": "Small Package Exemption (<= 10g)",
+    "input": {
+      "product_category": "general_packaged_commodity",
+      "package_weight_g_ml": 5.0,
+      "ocr_extracted_fields": {
+        "net_quantity": "5 g"
+      }
+    },
+    "expected_output": {
+      "status": "COMPLIANT_EXEMPT",
+      "is_exempt": true,
+      "exemption_id": "LM-EX-001"
+    }
+  },
+  {
+    "test_id": "TC-003",
+    "title": "Missing Mandatory MRP Declaration",
+    "input": {
+      "product_category": "general_packaged_commodity",
+      "package_weight_g_ml": 250.0,
+      "ocr_extracted_fields": {
+        "net_quantity": "250 g",
+        "manufacturer_name_address": "ABC Foods Pvt Ltd"
+      }
+    },
+    "expected_output": {
+      "status": "POTENTIAL_VIOLATION",
+      "is_exempt": false,
+      "violation_rule_id": "LM-PC-011",
+      "penalty_reference": "LM-OFF-012"
+    }
+  },
+  {
+    "test_id": "TC-004",
+    "title": "Missing Mandatory Unit Sale Price (USP)",
+    "input": {
+      "product_category": "general_packaged_commodity",
+      "package_weight_g_ml": 250.0,
+      "ocr_extracted_fields": {
+        "mrp": "Rs. 150.00",
+        "net_quantity": "250 g",
+        "manufacturer_name_address": "Golden Harvest Mills, Pune",
+        "generic_name": "Almonds",
+        "month_year_packing": "09/2026",
+        "consumer_care": "care@goldenharvest.com"
+      }
+    },
+    "expected_output": {
+      "status": "POTENTIAL_VIOLATION",
+      "is_exempt": false,
+      "violation_rule_id": "LM-PC-016",
+      "penalty_reference": "LM-OFF-012"
+    }
+  },
+  {
+    "test_id": "TC-005",
+    "title": "Bulk Package Exemption (> 25 kg)",
+    "input": {
+      "product_category": "industrial_or_bulk",
+      "package_weight_g_ml": 30000.0,
+      "ocr_extracted_fields": {
+        "net_quantity": "30 kg"
+      }
+    },
+    "expected_output": {
+      "status": "COMPLIANT_EXEMPT",
+      "is_exempt": true,
+      "exemption_id": "LM-PC-003"
+    }
+  }
+]

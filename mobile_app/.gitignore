@@ -1,0 +1,26 @@
+# Flutter/Dart build artifacts (must never be committed to the team repo)
+.dart_tool/
+build/
+*.iml
+.idea/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+
+# IDE
+.vscode/
+
+# Android
+android/.gradle/
+android/local.properties
+android/key.properties
+**/android/build/
+
+# iOS (future)
+ios/Pods/
+ios/.symlinks/
+
+# Logs
+*.log
