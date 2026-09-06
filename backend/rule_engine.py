@@ -106,8 +106,10 @@ class LegalComplianceEngine:
             })
 
         # 3. Check Net Quantity (LM-PC-009)
-        if not net_qty_applicable or is_loose_apparel:
+        if is_loose_apparel:
             exemptions_detected.append("Rule 6 Amendment: Net Quantity is EXEMPT for loose/open apparel articles")
+        elif not net_qty_applicable:
+            exemptions_detected.append("Rule 6 Amendment: Net Quantity declaration not applicable for this item")
         else:
             if not net_qty or not re.search(r"\d+\s*(g|kg|ml|l|n|piece|pair|set)", net_qty.lower()):
                 violations.append({
@@ -130,8 +132,10 @@ class LegalComplianceEngine:
                 })
 
         # 5. Check Mfg Date (LM-PC-010)
-        if not mfg_date_applicable or is_loose_apparel:
+        if is_loose_apparel:
             exemptions_detected.append("Rule 6(1)(d) Amendment: Month & Year of manufacture is EXEMPT for loose/open apparel")
+        elif not mfg_date_applicable:
+            exemptions_detected.append("Rule 6(1)(d) Amendment: Month & Year of manufacture not applicable")
         else:
             has_valid_mfg = bool(re.search(r"\d{1,2}[/-]\d{2,4}", mfg_date) or re.search(r"(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s*\d{2,4}", mfg_date, re.IGNORECASE))
             if not mfg_date or not has_valid_mfg:
@@ -208,8 +212,10 @@ class LegalComplianceEngine:
             })
 
         # 10. Check Unit Sale Price (LM-PC-016)
-        if not usp_applicable or is_loose_apparel:
+        if is_loose_apparel:
             exemptions_detected.append("Rule 6(11) Amendment: Unit Sale Price is EXEMPT for loose/open apparel")
+        elif not usp_applicable:
+            exemptions_detected.append("Rule 6(11) Amendment: Unit Sale Price not applicable for this commodity packaging")
         elif not usp and ("kg" in net_qty.lower() or "l" in net_qty.lower() or "g" in net_qty.lower() or is_footwear or is_prepackaged_apparel):
             violations.append({
                 "rule_id": "LM-PC-016",
@@ -220,8 +226,10 @@ class LegalComplianceEngine:
             })
 
         # 11. Check Generic Name (LM-PC-008)
-        if not generic_name_applicable or is_loose_apparel:
+        if is_loose_apparel:
             exemptions_detected.append("Rule 6 Amendment: Common / Generic Name is EXEMPT for loose/open apparel")
+        elif not generic_name_applicable:
+            exemptions_detected.append("Rule 6 Amendment: Common / Generic Name not applicable")
         elif not generic_name:
             violations.append({
                 "rule_id": "LM-PC-008",
