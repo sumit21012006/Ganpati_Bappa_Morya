@@ -46,42 +46,53 @@ class MultiAngleOcrExtractor:
         system_prompt = f"""You are the Statutory Metrology Intelligence Kernel, an expert auditor for India's Legal Metrology (Packaged Commodities) Rules, 2011 and Legal Metrology Act, 2009.
 Today's Date: {today_str}
 
-Your task: Given raw, noisy OCR text extracted from product packaging, extract the statutory declarations and verify legal metrology compliance.
+Your task: Given raw, noisy OCR text extracted from product packaging, extract the statutory declarations and verify legal metrology compliance according to specific commodity checklists.
 
-Statutory Principles:
-1. Commodity Categorization & Statutory Applicability:
-   - Categorize product: 'FOOD_BEVERAGE', 'COSMETIC_PERSONAL_CARE', 'DURABLE_HARDWARE_GLASSWARE', 'ELECTRONICS', 'TEXTILE_APPAREL', or 'GENERAL'.
-   - Perishables (food, edible items, medicines) REQUIRE both manufacturing date and an expiry / 'Best Before' date under Rule 6(1)(d).
-   - Apparel / Garments / Fashion Tops / Footwear / Hosiery ('TEXTILE_APPAREL'):
-     * BOTH Expiry Date and Manufacturing Date (Month & Year) are EXEMPT under 2022 Legal Metrology Rule 6(1)(d) amendments. Set 'expiry_applicable': false and 'mfg_date_applicable': false.
-   - Non-perishable durables (glassware, utensils, electronics, tools):
-     * EXEMPT from Expiry date under Rule 6(1)(d). Set 'expiry_applicable': false, 'mfg_date_applicable': true.
-2. Strict Expiry Date Extraction:
-   - DO NOT hallucinate, guess, or invent an expiry date.
-   - Only populate 'expiry_date' if an EXPLICIT, LEGIBLE calendar date (e.g., '14/10/2025', 'Oct 2025', '07/02/27') or clear 'Best before X months' clause is visibly present in the text.
-   - If the packaging has NO legible expiry date or if the text is garbled/unreadable, return 'expiry_date': null.
-3. Expired Goods Check:
-   - Only if a valid, legible expiry date is found, compare it with today's date ({today_str}).
-   - If the package is past its expiry date, set 'is_expired': true; otherwise 'is_expired': false. If expiry_date is null, 'is_expired': false.
-4. Unit Sale Price (Rule 6(11)):
-   - Look for USP (e.g., '₹ 0.17 / g', '₹ 15 / 100g', '₹ 45 / piece'). If not present on pack, return null.
-5. Manufacturer Details (Rule 6(1)(a)):
-   - Reconstruct complete name, premises, and postal PIN code from multi-line text.
-6. Country of Origin (Rule 6(1)(aa)):
-   - Identify country ('India', 'China', etc.). Default to 'India' if domestic manufacturing is indicated.
+Statutory Principles & Category Checklists:
+1. FOOTWEAR ('FOOTWEAR'):
+   - Sold in a box/package.
+   - Required: Manufacturer/Packer/Importer, Address, Country of origin (if imported), Generic name (e.g., 'Men's Sports Shoes'), Net quantity ('1 Pair'/'Number'), MRP (incl. of all taxes), Unit Sale Price (USP), Consumer-care details, and SIZE (e.g. UK/IND 8, 42).
+   - Month & year of manufacture: Required/Check provision.
+   - Expiry date: EXEMPT (Set 'expiry_applicable': false).
+   - Set 'size_applicable': true.
+
+2. PRE-PACKAGED APPAREL / FANCY TOP ('APPAREL_PRE_PACKAGED'):
+   - Pre-packaged apparel sold in a sealed box/bag.
+   - Required: Manufacturer/Marketer/Brand Owner, Address, Country of origin, Common/generic name, Net quantity, Unit Sale Price (USP), Month & year of manufacture, MRP, SIZE (with internationally recognizable size indicator like S, M, L, XL or chest cm), Consumer-care email, phone, and name/address.
+   - Expiry date: EXEMPT (Set 'expiry_applicable': false).
+   - Set 'mfg_date_applicable': true, 'size_applicable': true.
+
+3. LOOSE / OPEN APPAREL / FANCY TOP ('APPAREL_LOOSE_OPEN'):
+   - Apparel sold loose/open on hangers with a retail tag/label.
+   - Required: Manufacturer/Marketer/Brand, Address, Country of origin (if applicable), MRP, SIZE (with size indicator S, M, L, XL), Consumer-care email, and Consumer-care phone.
+   - EXEMPT FROM: Common/generic name (EXEMPT), Net quantity (EXEMPT), Unit Sale Price (EXEMPT), Month & year of manufacture (EXEMPT), Consumer-care name & address (EXEMPT, only email/phone required), and Expiry date (EXEMPT).
+   - Set 'mfg_date_applicable': false, 'expiry_applicable': false, 'generic_name_applicable': false, 'net_qty_applicable': false, 'usp_applicable': false, 'size_applicable': true.
+
+4. FOOD & PERISHABLES ('FOOD_BEVERAGE'):
+   - Required: All 9 statutory fields including Manufacturing Date AND Expiry Date / Best Before.
+   - Strict Expiry Rule: Do NOT invent or guess an expiry date. If no explicit calendar expiry date is printed, return 'expiry_date': null.
+   - Compare explicit expiry date against {today_str}. If lapsed, set 'is_expired': true.
+
+5. DURABLES / GLASSWARE / ELECTRONICS ('DURABLE_HARDWARE_GLASSWARE' / 'ELECTRONICS'):
+   - Expiry date is EXEMPT (Set 'expiry_applicable': false).
 
 Return ONLY a valid JSON object with this exact structure:
 {{
   "commodity_name": string or null,
-  "category": "FOOD_BEVERAGE" | "COSMETIC_PERSONAL_CARE" | "DURABLE_HARDWARE_GLASSWARE" | "ELECTRONICS" | "TEXTILE_APPAREL" | "GENERAL",
+  "category": "FOOD_BEVERAGE" | "FOOTWEAR" | "APPAREL_PRE_PACKAGED" | "APPAREL_LOOSE_OPEN" | "DURABLE_HARDWARE_GLASSWARE" | "ELECTRONICS" | "COSMETIC_PERSONAL_CARE" | "GENERAL",
   "mfg_date_applicable": boolean,
   "expiry_applicable": boolean,
+  "size_applicable": boolean,
+  "generic_name_applicable": boolean,
+  "net_qty_applicable": boolean,
+  "usp_applicable": boolean,
   "is_expired": boolean,
   "fields": {{
     "mrp": "₹ XX.XX (incl. of all taxes)" or null,
-    "net_quantity": "XX g/kg/ml/l/N" or null,
+    "net_quantity": "XX g/kg/ml/l/N/Pair" or null,
     "manufacturing_date": "MM/YYYY" or string or null,
     "expiry_date": "MM/YYYY" or string or null,
+    "size": "S / M / L / XL / UK 8 / 38cm" or null,
     "manufacturer_name_address": string or null,
     "consumer_care": string or null,
     "country_of_origin": string or "India",
@@ -147,6 +158,10 @@ Return ONLY a valid JSON object with this exact structure:
                 fields["category"] = neural_result.get("category", "GENERAL")
                 fields["mfg_date_applicable"] = neural_result.get("mfg_date_applicable", True)
                 fields["expiry_applicable"] = neural_result.get("expiry_applicable", True)
+                fields["size_applicable"] = neural_result.get("size_applicable", False)
+                fields["generic_name_applicable"] = neural_result.get("generic_name_applicable", True)
+                fields["net_qty_applicable"] = neural_result.get("net_qty_applicable", True)
+                fields["usp_applicable"] = neural_result.get("usp_applicable", True)
                 fields["is_expired"] = neural_result.get("is_expired", False)
                 fields["legal_notes"] = neural_result.get("legal_notes", [])
                 fields["parser_engine"] = "Neural Statutory Parser (SMIK-Groq)"

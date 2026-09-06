@@ -78,7 +78,24 @@ class LegalComplianceEngine:
 
         violations = []
 
-        # 2. Check MRP (LM-PC-011)
+        # 1. Commodity Context & Checklists
+        category = extracted_fields.get("category", "GENERAL")
+        is_loose_apparel = category == "APPAREL_LOOSE_OPEN"
+        is_footwear = category == "FOOTWEAR"
+        is_prepackaged_apparel = category in ["APPAREL_PRE_PACKAGED", "TEXTILE_APPAREL"]
+        
+        size = str(extracted_fields.get("size") or "")
+        size_applicable = extracted_fields.get("size_applicable", False) or is_footwear or is_loose_apparel or is_prepackaged_apparel
+        mfg_date_applicable = extracted_fields.get("mfg_date_applicable", not is_loose_apparel)
+        expiry_applicable = extracted_fields.get("expiry_applicable", not (is_footwear or is_loose_apparel or is_prepackaged_apparel or category in ["DURABLE_HARDWARE_GLASSWARE", "ELECTRONICS"]))
+        generic_name_applicable = extracted_fields.get("generic_name_applicable", not is_loose_apparel)
+        net_qty_applicable = extracted_fields.get("net_qty_applicable", not is_loose_apparel)
+        usp_applicable = extracted_fields.get("usp_applicable", not is_loose_apparel)
+        is_expired = extracted_fields.get("is_expired", False)
+
+        exemptions_detected = []
+
+        # 2. Check MRP (LM-PC-011) - Required for all
         if not mrp or not any(k in mrp.lower() for k in ["rs", "₹", "mrp"]):
             violations.append({
                 "rule_id": "LM-PC-011",
@@ -89,22 +106,32 @@ class LegalComplianceEngine:
             })
 
         # 3. Check Net Quantity (LM-PC-009)
-        if not net_qty or not re.search(r"\d+\s*(g|kg|ml|l|n|piece|pair|set)", net_qty.lower()):
-            violations.append({
-                "rule_id": "LM-PC-009",
-                "title": "Missing or Non-standard Net Quantity",
-                "description": "Statutory Net Quantity declaration in metric SI units missing under Rule 6(1)(c) & Rules 11-13.",
-                "section": "Section 36(1) read with Rule 6(1)(c)",
-                "severity": "high"
-            })
+        if not net_qty_applicable or is_loose_apparel:
+            exemptions_detected.append("Rule 6 Amendment: Net Quantity is EXEMPT for loose/open apparel articles")
+        else:
+            if not net_qty or not re.search(r"\d+\s*(g|kg|ml|l|n|piece|pair|set)", net_qty.lower()):
+                violations.append({
+                    "rule_id": "LM-PC-009",
+                    "title": "Missing or Non-standard Net Quantity",
+                    "description": "Statutory Net Quantity declaration missing or non-compliant under Rule 6(1)(c). For footwear, declare number of pairs.",
+                    "section": "Section 36(1) read with Rule 6(1)(c)",
+                    "severity": "high"
+                })
 
-        # 4. Check Mfg Date (LM-PC-010) - Rule 6(1)(d)
-        mfg_date_applicable = extracted_fields.get("mfg_date_applicable", True)
-        category = extracted_fields.get("category", "GENERAL")
-        exemptions_detected = []
+        # 4. Check Size Declaration (LM-PC-SIZE)
+        if size_applicable:
+            if not size or len(size.strip()) == 0:
+                violations.append({
+                    "rule_id": "LM-PC-SIZE",
+                    "title": "Missing Size Declaration",
+                    "description": "Mandatory size declaration missing. Footwear requires shoe size (e.g. UK/IND 8); Apparel requires internationally recognizable size (S/M/L/XL or cm).",
+                    "section": "Section 36(1) read with Rule 6 & Footwear/Apparel Checklist",
+                    "severity": "high"
+                })
 
-        if not mfg_date_applicable or category == "TEXTILE_APPAREL":
-            exemptions_detected.append(f"Rule 6(1)(d) Amendment: Month & Year of manufacture exempted for category '{category}' (Garments/Apparel/Hosiery)")
+        # 5. Check Mfg Date (LM-PC-010)
+        if not mfg_date_applicable or is_loose_apparel:
+            exemptions_detected.append("Rule 6(1)(d) Amendment: Month & Year of manufacture is EXEMPT for loose/open apparel")
         else:
             has_valid_mfg = bool(re.search(r"\d{1,2}[/-]\d{2,4}", mfg_date) or re.search(r"(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s*\d{2,4}", mfg_date, re.IGNORECASE))
             if not mfg_date or not has_valid_mfg:
@@ -116,10 +143,7 @@ class LegalComplianceEngine:
                     "severity": "medium"
                 })
 
-        # 5. Check Expiry Date & Expired Goods (Rule 6(1)(d) & Consumer Protection)
-        expiry_applicable = extracted_fields.get("expiry_applicable", True)
-        is_expired = extracted_fields.get("is_expired", False)
-
+        # 6. Check Expiry Date & Expired Goods (Rule 6(1)(d))
         if is_expired:
             violations.append({
                 "rule_id": "LM-PC-EXP",
@@ -128,8 +152,8 @@ class LegalComplianceEngine:
                 "section": "Section 36(1) read with Rule 6(1)(d)",
                 "severity": "critical"
             })
-        elif not expiry_applicable or category in ["DURABLE_HARDWARE_GLASSWARE", "ELECTRONICS", "TEXTILE"]:
-            exemptions_detected.append(f"Rule 6(1)(d): Expiry date exempted for non-perishable category '{category}' (Glassware/Hardware/Electronics)")
+        elif not expiry_applicable or is_footwear or is_loose_apparel or is_prepackaged_apparel or category in ["DURABLE_HARDWARE_GLASSWARE", "ELECTRONICS"]:
+            exemptions_detected.append(f"Rule 6(1)(d): Expiry / Best before date is EXEMPT for {category} (Footwear/Apparel/Durables)")
         else:
             # Perishable goods require expiry or best before
             has_valid_exp = bool(exp_date and len(exp_date.strip()) > 3)
@@ -142,7 +166,7 @@ class LegalComplianceEngine:
                     "severity": "high"
                 })
 
-        # 6. Check Manufacturer details & PIN code (LM-PC-006)
+        # 7. Check Manufacturer details & PIN code (LM-PC-006)
         if not mfg_addr or len(mfg_addr.strip()) < 10:
             violations.append({
                 "rule_id": "LM-PC-006",
@@ -152,17 +176,28 @@ class LegalComplianceEngine:
                 "severity": "high"
             })
 
-        # 7. Check Consumer Care Details (LM-PC-012)
-        if not consumer_care or not any(c in consumer_care.lower() for c in ["@", "1800", "tel", "phone", "email", "care"]):
-            violations.append({
-                "rule_id": "LM-PC-012",
-                "title": "Missing Consumer Care Redressal Details",
-                "description": "Statutory grievance redressal officer contact (telephone/email) missing under Rule 6(2).",
-                "section": "Section 36(1) read with Rule 6(2)",
-                "severity": "medium"
-            })
+        # 8. Check Consumer Care Details (LM-PC-012)
+        if is_loose_apparel:
+            # Loose apparel only requires phone or email (physical name/address is exempt)
+            if not consumer_care or not any(c in consumer_care.lower() for c in ["@", "1800", "tel", "phone", "email"]):
+                violations.append({
+                    "rule_id": "LM-PC-012",
+                    "title": "Missing Consumer Care Contact (Phone / Email)",
+                    "description": "Statutory consumer care telephone number or email missing on loose apparel tag.",
+                    "section": "Section 36(1) read with Rule 6(2)",
+                    "severity": "medium"
+                })
+        else:
+            if not consumer_care or not any(c in consumer_care.lower() for c in ["@", "1800", "tel", "phone", "email", "care"]):
+                violations.append({
+                    "rule_id": "LM-PC-012",
+                    "title": "Missing Consumer Care Redressal Details",
+                    "description": "Statutory grievance redressal officer contact (telephone/email/address) missing under Rule 6(2).",
+                    "section": "Section 36(1) read with Rule 6(2)",
+                    "severity": "medium"
+                })
 
-        # 8. Check Country of Origin (LM-PC-007)
+        # 9. Check Country of Origin (LM-PC-007)
         if not origin:
             violations.append({
                 "rule_id": "LM-PC-007",
@@ -172,22 +207,26 @@ class LegalComplianceEngine:
                 "severity": "medium"
             })
 
-        # 9. Check Unit Sale Price (LM-PC-016)
-        if not usp and ("kg" in net_qty.lower() or "l" in net_qty.lower() or "g" in net_qty.lower()):
+        # 10. Check Unit Sale Price (LM-PC-016)
+        if not usp_applicable or is_loose_apparel:
+            exemptions_detected.append("Rule 6(11) Amendment: Unit Sale Price is EXEMPT for loose/open apparel")
+        elif not usp and ("kg" in net_qty.lower() or "l" in net_qty.lower() or "g" in net_qty.lower() or is_footwear or is_prepackaged_apparel):
             violations.append({
                 "rule_id": "LM-PC-016",
                 "title": "Missing Unit Sale Price (USP)",
-                "description": "Mandatory unit sale price (₹ per g/kg or ₹ per ml/L) missing under Rule 6(11) amendment.",
+                "description": "Mandatory unit sale price (₹ per unit/piece/g/kg) missing under Rule 6(11) amendment.",
                 "section": "Section 36(1) read with Rule 6(11)",
                 "severity": "high"
             })
 
-        # 10. Check Generic Name (LM-PC-008)
-        if not generic_name:
+        # 11. Check Generic Name (LM-PC-008)
+        if not generic_name_applicable or is_loose_apparel:
+            exemptions_detected.append("Rule 6 Amendment: Common / Generic Name is EXEMPT for loose/open apparel")
+        elif not generic_name:
             violations.append({
                 "rule_id": "LM-PC-008",
                 "title": "Missing Generic / Common Name",
-                "description": "Common or generic name of commodity missing under Rule 6(1)(b).",
+                "description": "Common or generic name of commodity missing under Rule 6(1)(b). For footwear, declare common name e.g. Men's Sports Shoes.",
                 "section": "Section 36(1) read with Rule 6(1)(b)",
                 "severity": "medium"
             })
