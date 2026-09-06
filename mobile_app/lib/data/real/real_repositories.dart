@@ -370,7 +370,9 @@ class RealOcrRepository implements OcrRepository {
   }) async {
     try {
       final form = FormData();
+      form.fields.add(MapEntry('inspectionId', ownerId));
       for (final image in images) {
+
         if (kIsWeb) {
           final xfile = XFile(image.filePath);
           final bytes = await xfile.readAsBytes();
