@@ -63,12 +63,19 @@ class ExtractPackagingRequest(BaseModel):
     product_category: str = "general_packaged_commodity"
 
 class CreateInspectionRequest(BaseModel):
-    inspector_id: Optional[str] = "usr-insp-001"
+    inspector_id: Optional[str] = None
+    inspectorId: Optional[str] = None
     business_id: Optional[str] = None
-    business_name: Optional[str] = "Retail Store"
+    businessId: Optional[str] = None
+    business_name: Optional[str] = None
+    businessName: Optional[str] = None
     latitude: Optional[float] = 19.0760
     longitude: Optional[float] = 72.8777
-    inspection_type: Optional[str] = "ROUTINE_RAID"
+    inspection_type: Optional[str] = None
+    type: Optional[str] = None
+    complaintId: Optional[str] = None
+    notes: Optional[str] = None
+
 
 class GenerateNoticeRequest(BaseModel):
     notice_type: str  # "compounding_order" | "improvement_notice" | "panchanama"
@@ -96,7 +103,10 @@ class CreateComplaintRequest(BaseModel):
 # ==============================================================================
 
 @app.get("/")
+@app.get("/health")
+@app.get("/api/v1/health")
 def health_check():
+
     return {
         "status": "ONLINE",
         "service": "Legal Metrology Core Enforcement Engine",
@@ -314,30 +324,29 @@ def get_ocr_job_status(job_id: str):
 @app.post("/api/v1/inspections")
 def create_inspection(req: CreateInspectionRequest, db: Session = Depends(get_db)):
     """Create a new on-ground inspection record."""
-    business_name = req.business_name
-    if req.business_id:
-        biz = db.query(BusinessModel).filter(BusinessModel.id == req.business_id).first()
-        if biz:
-            business_name = biz.trade_name
+    biz_id = req.businessId or req.business_id
+    inspector_id = req.inspectorId or req.inspector_id or "officer-001"
+    insp_type = req.type or req.inspection_type or "Routine"
+
+    biz = None
+    if biz_id:
+        biz = db.query(BusinessModel).filter(BusinessModel.id == biz_id).first()
+    business_name = (biz.trade_name if biz else None) or req.businessName or req.business_name or "Retail Store"
 
     inspection = InspectionModel(
-        inspector_id=req.inspector_id or "usr-insp-001",
-        business_id=req.business_id,
+        inspector_id=inspector_id,
+        business_id=biz_id,
         business_name=business_name,
         latitude=req.latitude,
         longitude=req.longitude,
-        inspection_type=req.inspection_type or "ROUTINE_RAID",
-        status="IN_PROGRESS"
+        inspection_type=insp_type,
+        status="assigned"
     )
     db.add(inspection)
     db.commit()
     db.refresh(inspection)
-    return {
-        "id": inspection.id,
-        "business_name": inspection.business_name,
-        "status": inspection.status,
-        "created_at": inspection.created_at.isoformat()
-    }
+    return format_inspection_json(inspection, db)
+
 
 def format_inspection_json(insp: InspectionModel, db: Session) -> Dict[str, Any]:
     b = db.query(BusinessModel).filter(BusinessModel.id == insp.business_id).first() if insp.business_id else None
