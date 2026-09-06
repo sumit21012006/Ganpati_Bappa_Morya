@@ -124,9 +124,15 @@ def run_test():
     extracted_data = extractor.extract_from_text(raw_text)
 
     print("\n" + "=" * 70)
-    print("9 MANDATORY STATUTORY ATTRIBUTES EXTRACTED:")
+    print(f"9 MANDATORY STATUTORY ATTRIBUTES EXTRACTED ({extracted_data.get('parser_engine', 'NSP')}):")
     print("=" * 70)
+    print(f"  [METADATA] COMMODITY CATEGORY      : {extracted_data.get('category', 'GENERAL')}")
+    print(f"  [METADATA] EXPIRY APPLICABLE       : {extracted_data.get('expiry_applicable', True)}")
+    print(f"  [METADATA] EXPIRED STATUS          : {extracted_data.get('is_expired', False)}")
+    print("-" * 70)
     for k, v in extracted_data.items():
+        if k in ["category", "expiry_applicable", "is_expired", "legal_notes", "parser_engine"]:
+            continue
         status_icon = "[OK]" if v else "[MISSING]"
         print(f"  {status_icon} {k.upper():<30} : {v}")
 
@@ -143,6 +149,11 @@ def run_test():
     print(f"  Recommended Action  : {compliance['action']}")
     print(f"  Governing Law       : {compliance['governing_section']}")
     print(f"  Fine Assessment     : {compliance['fine_summary']}")
+
+    if compliance.get('exemptions_detected'):
+        print("\n  Statutory Exemptions Detected:")
+        for ex in compliance['exemptions_detected']:
+            print(f"    * {ex}")
 
     if compliance['violations']:
         print("\n  Observed Violations Breakdown:")
