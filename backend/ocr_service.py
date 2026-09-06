@@ -49,24 +49,32 @@ Today's Date: {today_str}
 Your task: Given raw, noisy OCR text extracted from product packaging, extract the statutory declarations and verify legal metrology compliance.
 
 Statutory Principles:
-1. Commodity Categorization:
-   - Identify commodity category: 'FOOD_BEVERAGE', 'COSMETIC_PERSONAL_CARE', 'DURABLE_HARDWARE_GLASSWARE', 'ELECTRONICS', 'TEXTILE', or 'GENERAL'.
-   - Perishables (food, cosmetics, medicines) REQUIRE an expiry or 'Best Before' date under Rule 6(1)(d).
-   - Non-perishable durables (glassware, crockery, tools, electronics, garments) are EXEMPT from expiry date under Rule 6(1)(d). For these, set 'expiry_applicable': false.
-2. Expired Goods Check:
-   - If an expiry date or 'Best Before' is present, compare it with today's date ({today_str}).
-   - If expired, set 'is_expired': true; otherwise 'is_expired': false.
-3. Unit Sale Price (Rule 6(11)):
+1. Commodity Categorization & Statutory Applicability:
+   - Categorize product: 'FOOD_BEVERAGE', 'COSMETIC_PERSONAL_CARE', 'DURABLE_HARDWARE_GLASSWARE', 'ELECTRONICS', 'TEXTILE_APPAREL', or 'GENERAL'.
+   - Perishables (food, edible items, medicines) REQUIRE both manufacturing date and an expiry / 'Best Before' date under Rule 6(1)(d).
+   - Apparel / Garments / Fashion Tops / Footwear / Hosiery ('TEXTILE_APPAREL'):
+     * BOTH Expiry Date and Manufacturing Date (Month & Year) are EXEMPT under 2022 Legal Metrology Rule 6(1)(d) amendments. Set 'expiry_applicable': false and 'mfg_date_applicable': false.
+   - Non-perishable durables (glassware, utensils, electronics, tools):
+     * EXEMPT from Expiry date under Rule 6(1)(d). Set 'expiry_applicable': false, 'mfg_date_applicable': true.
+2. Strict Expiry Date Extraction:
+   - DO NOT hallucinate, guess, or invent an expiry date.
+   - Only populate 'expiry_date' if an EXPLICIT, LEGIBLE calendar date (e.g., '14/10/2025', 'Oct 2025', '07/02/27') or clear 'Best before X months' clause is visibly present in the text.
+   - If the packaging has NO legible expiry date or if the text is garbled/unreadable, return 'expiry_date': null.
+3. Expired Goods Check:
+   - Only if a valid, legible expiry date is found, compare it with today's date ({today_str}).
+   - If the package is past its expiry date, set 'is_expired': true; otherwise 'is_expired': false. If expiry_date is null, 'is_expired': false.
+4. Unit Sale Price (Rule 6(11)):
    - Look for USP (e.g., '₹ 0.17 / g', '₹ 15 / 100g', '₹ 45 / piece'). If not present on pack, return null.
-4. Manufacturer Details (Rule 6(1)(a)):
+5. Manufacturer Details (Rule 6(1)(a)):
    - Reconstruct complete name, premises, and postal PIN code from multi-line text.
-5. Country of Origin (Rule 6(1)(aa)):
+6. Country of Origin (Rule 6(1)(aa)):
    - Identify country ('India', 'China', etc.). Default to 'India' if domestic manufacturing is indicated.
 
 Return ONLY a valid JSON object with this exact structure:
 {{
   "commodity_name": string or null,
-  "category": "FOOD_BEVERAGE" | "COSMETIC_PERSONAL_CARE" | "DURABLE_HARDWARE_GLASSWARE" | "ELECTRONICS" | "TEXTILE" | "GENERAL",
+  "category": "FOOD_BEVERAGE" | "COSMETIC_PERSONAL_CARE" | "DURABLE_HARDWARE_GLASSWARE" | "ELECTRONICS" | "TEXTILE_APPAREL" | "GENERAL",
+  "mfg_date_applicable": boolean,
   "expiry_applicable": boolean,
   "is_expired": boolean,
   "fields": {{
@@ -137,6 +145,7 @@ Return ONLY a valid JSON object with this exact structure:
             if neural_result and "fields" in neural_result:
                 fields = neural_result["fields"]
                 fields["category"] = neural_result.get("category", "GENERAL")
+                fields["mfg_date_applicable"] = neural_result.get("mfg_date_applicable", True)
                 fields["expiry_applicable"] = neural_result.get("expiry_applicable", True)
                 fields["is_expired"] = neural_result.get("is_expired", False)
                 fields["legal_notes"] = neural_result.get("legal_notes", [])
@@ -156,9 +165,21 @@ Return ONLY a valid JSON object with this exact structure:
 
         # Detect category heuristically
         lower_t = text.lower()
-        is_glass_or_durable = any(k in lower_t for k in ["glass", "tumbler", "crockery", "steel", "tool", "shirt", "pant", "cotton", "socket", "cable"])
-        category = "DURABLE_HARDWARE_GLASSWARE" if is_glass_or_durable else "FOOD_BEVERAGE"
-        expiry_applicable = not is_glass_or_durable
+        is_textile = any(k in lower_t for k in ["shirt", "pant", "top", "dress", "garment", "cotton", "kurti", "tshirt", "jeans"])
+        is_glass_or_durable = any(k in lower_t for k in ["glass", "tumbler", "crockery", "steel", "tool", "socket", "cable"])
+        
+        if is_textile:
+            category = "TEXTILE_APPAREL"
+            mfg_date_applicable = False
+            expiry_applicable = False
+        elif is_glass_or_durable:
+            category = "DURABLE_HARDWARE_GLASSWARE"
+            mfg_date_applicable = True
+            expiry_applicable = False
+        else:
+            category = "FOOD_BEVERAGE"
+            mfg_date_applicable = True
+            expiry_applicable = True
 
         fields: Dict[str, Any] = {
             "mrp": None,
@@ -171,6 +192,7 @@ Return ONLY a valid JSON object with this exact structure:
             "unit_sale_price": None,
             "generic_name": None,
             "category": category,
+            "mfg_date_applicable": mfg_date_applicable,
             "expiry_applicable": expiry_applicable,
             "is_expired": False,
             "parser_engine": "Deterministic Statutory Parser (Regex Heuristics)"

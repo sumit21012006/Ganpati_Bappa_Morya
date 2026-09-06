@@ -98,22 +98,27 @@ class LegalComplianceEngine:
                 "severity": "high"
             })
 
-        # 4. Check Mfg Date (LM-PC-010) - Rule 6(1)(d) Explanation I allows words or numerals
-        has_valid_mfg = bool(re.search(r"\d{1,2}[/-]\d{2,4}", mfg_date) or re.search(r"(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s*\d{2,4}", mfg_date, re.IGNORECASE))
-        if not mfg_date or not has_valid_mfg:
-            violations.append({
-                "rule_id": "LM-PC-010",
-                "title": "Missing Month & Year of Manufacture",
-                "description": "Month and Year of manufacture missing under Rule 6(1)(d).",
-                "section": "Section 36(1) read with Rule 6(1)(d)",
-                "severity": "medium"
-            })
+        # 4. Check Mfg Date (LM-PC-010) - Rule 6(1)(d)
+        mfg_date_applicable = extracted_fields.get("mfg_date_applicable", True)
+        category = extracted_fields.get("category", "GENERAL")
+        exemptions_detected = []
+
+        if not mfg_date_applicable or category == "TEXTILE_APPAREL":
+            exemptions_detected.append(f"Rule 6(1)(d) Amendment: Month & Year of manufacture exempted for category '{category}' (Garments/Apparel/Hosiery)")
+        else:
+            has_valid_mfg = bool(re.search(r"\d{1,2}[/-]\d{2,4}", mfg_date) or re.search(r"(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s*\d{2,4}", mfg_date, re.IGNORECASE))
+            if not mfg_date or not has_valid_mfg:
+                violations.append({
+                    "rule_id": "LM-PC-010",
+                    "title": "Missing Month & Year of Manufacture",
+                    "description": "Month and Year of manufacture missing under Rule 6(1)(d).",
+                    "section": "Section 36(1) read with Rule 6(1)(d)",
+                    "severity": "medium"
+                })
 
         # 5. Check Expiry Date & Expired Goods (Rule 6(1)(d) & Consumer Protection)
         expiry_applicable = extracted_fields.get("expiry_applicable", True)
         is_expired = extracted_fields.get("is_expired", False)
-        category = extracted_fields.get("category", "GENERAL")
-        exemptions_detected = []
 
         if is_expired:
             violations.append({
