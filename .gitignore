@@ -34,6 +34,8 @@ Notices_Template/generated/
 
 # Logs & Environment
 *.log
+*.db
+TEST_UPLOADS/
 .env
 .env.local
 .env.development.local
