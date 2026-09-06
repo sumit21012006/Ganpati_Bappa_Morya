@@ -387,13 +387,51 @@ def get_inspection_details(inspection_id: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Inspection not found")
     return format_inspection_json(insp, db)
 
+@app.post("/api/v1/inspections/{inspection_id}/start")
+def start_inspection(inspection_id: str, db: Session = Depends(get_db)):
+    insp = db.query(InspectionModel).filter(InspectionModel.id == inspection_id).first()
+    if insp:
+        insp.status = "in_progress"
+        db.commit()
+    return format_inspection_json(insp, db) if insp else {"status": "in_progress"}
+
+@app.post("/api/v1/inspections/{inspection_id}/complete")
+def complete_inspection(inspection_id: str, db: Session = Depends(get_db)):
+    insp = db.query(InspectionModel).filter(InspectionModel.id == inspection_id).first()
+    if insp:
+        insp.status = "completed"
+        db.commit()
+    return format_inspection_json(insp, db) if insp else {"status": "completed"}
+
+@app.get("/api/v1/inspections/{inspection_id}/violations")
+def get_inspection_violations(inspection_id: str, db: Session = Depends(get_db)):
+    insp = db.query(InspectionModel).filter(InspectionModel.id == inspection_id).first()
+    if not insp:
+        return []
+    output = []
+    for p in insp.products:
+        for v in p.violations:
+            output.append({
+                "id": v.id,
+                "inspectionId": inspection_id,
+                "type": v.rule_id,
+                "description": v.description or v.title,
+                "ruleSection": v.legal_section,
+                "severity": v.severity or "medium",
+                "status": "confirmed",
+                "detectedAt": v.created_at.isoformat() if v.created_at else datetime.utcnow().isoformat()
+            })
+    return output
+
 @app.get("/api/v1/cases")
 def list_legal_cases(active: Optional[str] = None, db: Session = Depends(get_db)):
+
     """Returns cases for Inspector dashboard."""
     return []
 
+@app.get("/api/v1/inspector/notices")
 @app.get("/api/v1/inspectors/{inspector_id}/notices")
-def list_inspector_notices(inspector_id: str, db: Session = Depends(get_db)):
+def list_inspector_notices(inspector_id: str = "current", db: Session = Depends(get_db)):
     """Returns notices issued or drafted by inspector."""
     notices = db.query(NoticeModel).order_by(NoticeModel.issued_at.desc()).limit(20).all()
     return [
