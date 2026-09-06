@@ -31,6 +31,7 @@ dependencies:
 
   # Utilities
   intl: ^0.20.1
+  url_launcher: ^6.3.1
 
   # NOTE: file_picker (spec-recommended) is intentionally not included yet —
   # evidence picking uses image_picker. Add file_picker when document

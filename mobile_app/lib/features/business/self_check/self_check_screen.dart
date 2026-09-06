@@ -57,7 +57,22 @@ class _SelfCheckScreenState extends ConsumerState<SelfCheckScreen> {
       _running = true;
       _error = null;
       _report = null;
+      _currentStep = OcrPipelineStep.uploadingEvidence;
     });
+
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (mounted && _running) setState(() => _currentStep = OcrPipelineStep.processingImages);
+    });
+    Future.delayed(const Duration(milliseconds: 700), () {
+      if (mounted && _running) setState(() => _currentStep = OcrPipelineStep.extractingText);
+    });
+    Future.delayed(const Duration(milliseconds: 1200), () {
+      if (mounted && _running) setState(() => _currentStep = OcrPipelineStep.identifyingDeclarations);
+    });
+    Future.delayed(const Duration(milliseconds: 1800), () {
+      if (mounted && _running) setState(() => _currentStep = OcrPipelineStep.checkingCompliance);
+    });
+
     try {
       final report = await ref.read(selfCheckRepositoryProvider).performSelfCheck(
             PerformSelfCheckRequest(
@@ -71,13 +86,20 @@ class _SelfCheckScreenState extends ConsumerState<SelfCheckScreen> {
       setState(() {
         _report = report;
         _running = false;
+        _currentStep = null;
       });
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = 'Self-check could not be completed. Please retry.';
+        _error = 'Self-check could not be completed: $e';
         _running = false;
       });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Self-check error: $e'),
+          backgroundColor: AppColors.error,
+        ),
+      );
     }
   }
 
@@ -100,6 +122,32 @@ class _SelfCheckScreenState extends ConsumerState<SelfCheckScreen> {
       padding: const EdgeInsets.all(AppSpacing.lg),
       children: [
         const PrivateDataBanner(),
+        if (_error != null) ...[
+          const SizedBox(height: AppSpacing.md),
+          Container(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              color: AppColors.errorContainer,
+              borderRadius: BorderRadius.circular(AppRadius.md),
+              border: Border.all(color: AppColors.error),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.error_outline, color: AppColors.error),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Text(
+                    _error!,
+                    style: const TextStyle(
+                      color: AppColors.onErrorContainer,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
         const SizedBox(height: AppSpacing.lg),
         const SectionHeader(
           title: 'Photograph your package',

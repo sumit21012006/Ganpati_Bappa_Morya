@@ -15,7 +15,6 @@ import '../repositories/offence_repository.dart';
 import '../repositories/ocr_repository.dart';
 import '../repositories/seizure_repository.dart';
 import '../repositories/violation_repository.dart';
-import '../models/user.dart' show UserRole;
 import '../services/signature_service.dart';
 
 /// ============================================================================
@@ -37,7 +36,7 @@ const bool useMockData = bool.fromEnvironment('USE_MOCK_DATA', defaultValue: fal
 
 /// Per-repository overrides during incremental backend integration.
 /// Defaults to true so live FastAPI OCR, PostgreSQL business search & inspections are active.
-const bool useRealAuth = bool.fromEnvironment('REAL_AUTH', defaultValue: false);
+const bool useRealAuth = bool.fromEnvironment('REAL_AUTH', defaultValue: true);
 const bool useRealOcr = bool.fromEnvironment('REAL_OCR', defaultValue: true);
 const bool useRealBusiness = bool.fromEnvironment('REAL_BUSINESS', defaultValue: true);
 const bool useRealInspection = bool.fromEnvironment('REAL_INSPECTION', defaultValue: true);
@@ -135,6 +134,7 @@ final supplyChainRepositoryProvider = Provider<SupplyChainRepository>((ref) {
 // Services
 // ---------------------------------------------------------------------------
 
-final signatureServiceProvider = Provider<SignatureService>(
-  (ref) => MockSignatureService(),
-);
+final signatureServiceProvider = Provider<SignatureService>((ref) {
+  if (useMockData) return MockSignatureService();
+  return RealSignatureService(ref.watch(apiClientProvider));
+});

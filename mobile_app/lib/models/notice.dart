@@ -89,6 +89,8 @@ class Notice {
     this.penaltyAmount,
     this.bodyText,
     this.inspectorRemark,
+    this.pdfUrl,
+    this.docxUrl,
   });
 
   final String id;
@@ -114,6 +116,8 @@ class Notice {
   /// NLP-generated body text; editable by the inspector.
   final String? bodyText;
   final String? inspectorRemark;
+  final String? pdfUrl;
+  final String? docxUrl;
 
   bool get requiresAction =>
       status == NoticeStatus.issued || status == NoticeStatus.delivered;
@@ -135,6 +139,8 @@ class Notice {
     double? penaltyAmount,
     String? bodyText,
     String? inspectorRemark,
+    String? pdfUrl,
+    String? docxUrl,
   }) {
     return Notice(
       id: id ?? this.id,
@@ -153,22 +159,25 @@ class Notice {
       penaltyAmount: penaltyAmount ?? this.penaltyAmount,
       bodyText: bodyText ?? this.bodyText,
       inspectorRemark: inspectorRemark ?? this.inspectorRemark,
+      pdfUrl: pdfUrl ?? this.pdfUrl,
+      docxUrl: docxUrl ?? this.docxUrl,
     );
   }
 }
 
-/// Request body for notice generation through NestJS (which delegates to
-/// Member 4's NLP service). Flutter does not compose legal text itself.
+/// Request body for notice generation through backend.
 class GenerateNoticeRequest {
   const GenerateNoticeRequest({
     required this.inspectionId,
     required this.noticeType,
+    this.noticeTypes,
     required this.confirmedViolations,
     this.remarks,
   });
 
   final String inspectionId;
   final NoticeType noticeType;
+  final List<NoticeType>? noticeTypes;
   final List<Violation> confirmedViolations;
   final String? remarks;
 }

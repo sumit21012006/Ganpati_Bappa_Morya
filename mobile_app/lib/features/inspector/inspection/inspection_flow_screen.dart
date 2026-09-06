@@ -221,7 +221,7 @@ class _InspectionFlowScreenState extends ConsumerState<InspectionFlowScreen> {
                     },
                     onBack: _back,
                   ),
-                  FlowCompleteScreen(),
+                  FlowCompleteScreen(issuedNotice: _issuedNotice),
                 ],
               ),
             ),

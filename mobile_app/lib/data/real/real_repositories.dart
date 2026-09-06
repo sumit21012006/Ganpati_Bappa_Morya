@@ -587,9 +587,13 @@ class RealNoticeRepository implements NoticeRepository {
   @override
   Future<Notice> generateNotice(GenerateNoticeRequest request) async {
     try {
+      final types = request.noticeTypes != null && request.noticeTypes!.isNotEmpty
+          ? request.noticeTypes!.map((t) => t.name).toList()
+          : [request.noticeType.name];
       final res = await _client.dio.post('/notices/generate', data: {
         'inspectionId': request.inspectionId,
         'type': request.noticeType.name,
+        'types': types,
         'violations': request.confirmedViolations.map((v) => v.id).toList(),
         if (request.remarks != null) 'remarks': request.remarks,
       });
@@ -714,6 +718,8 @@ class RealNoticeRepository implements NoticeRepository {
         penaltyAmount: (json['penaltyAmount'] as num?)?.toDouble(),
         bodyText: json['bodyText'] as String?,
         inspectorRemark: json['inspectorRemark'] as String?,
+        pdfUrl: json['pdfUrl'] as String? ?? json['download_url'] as String?,
+        docxUrl: json['docxUrl'] as String? ?? json['docx_download_url'] as String?,
       );
 }
 
