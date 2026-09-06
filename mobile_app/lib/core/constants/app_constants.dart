@@ -8,19 +8,17 @@
 class AppConstants {
   AppConstants._();
 
-  /// NestJS backend base URL (Member 1).
+  /// Unified Legal Metrology Backend API base URL (FastAPI core on port 8000).
   ///
   /// Override per-environment with:
-  ///   flutter run --dart-define=API_BASE_URL=https://api.example.com
+  ///   flutter run --dart-define=API_BASE_URL=http://localhost:8000/api/v1
   static const String apiBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://10.0.2.2:3000/api/v1',
+    defaultValue: 'http://10.0.2.2:8000/api/v1',
   );
 
-  /// FastAPI AI service (Member 4) is reached THROUGH NestJS, never directly.
-  /// This constant exists only for documentation purposes.
-  static const String aiServiceNote =
-      'OCR/AI is consumed exclusively via NestJS passthrough endpoints.';
+  /// Local development / Windows Desktop base URL
+  static const String localDesktopBaseUrl = 'http://localhost:8000/api/v1';
 
   /// Request timeouts.
   static const Duration connectTimeout = Duration(seconds: 15);
