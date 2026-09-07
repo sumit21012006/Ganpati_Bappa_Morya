@@ -931,20 +931,21 @@ class AIConfidenceIndicator extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: AppColors.aiContainer,
+        color: _color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(AppRadius.sm),
+        border: Border.all(color: _color.withValues(alpha: 0.4)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.auto_awesome, size: 13, color: AppColors.aiAccent),
+          Icon(Icons.auto_awesome, size: 13, color: _color),
           const SizedBox(width: 4),
           Text(
             'AI ${(confidence * 100).round()}%',
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 11.5,
               fontWeight: FontWeight.w700,
-              color: AppColors.aiAccent,
+              color: _color,
             ),
           ),
         ],
