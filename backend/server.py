@@ -231,6 +231,11 @@ def auth_login(data: Dict[str, Any], db: Session = Depends(get_db)):
         )
     ).first()
 
+    pwd_input = data.get("password") or ""
+    if db_user and db_user.password_hash and pwd_input:
+        if hashlib.sha256(pwd_input.encode("utf-8")).hexdigest() != db_user.password_hash:
+            raise HTTPException(status_code=401, detail="Invalid credentials")
+
     db_biz = None
     if db_user and db_user.role == "BUSINESS":
         db_biz = db.query(BusinessModel).filter(
@@ -276,8 +281,8 @@ def auth_login(data: Dict[str, Any], db: Session = Depends(get_db)):
                 "email": db_user.email or f"{clean_u}@mahalm.gov.in",
                 "phone": db_user.phone or "+91 98200 11223",
                 "designation": "Legal Metrology Inspector",
-                "badgeId": "MH-LM-401",
-                "jurisdiction": db_user.district or "Mumbai Suburban, Maharashtra",
+                "badgeId": f"MH-LM-{db_user.id[-4:].upper()}",
+                "jurisdiction": db_user.jurisdiction or db_user.district or "Mumbai Suburban, Maharashtra",
                 "businessId": None
             }
         elif resolved_role == "CONTROLLER":
@@ -308,6 +313,10 @@ def auth_login(data: Dict[str, Any], db: Session = Depends(get_db)):
         user_data["expires_at"] = (datetime.now() + timedelta(days=1)).timestamp()
         token = f"jwt_{uuid.uuid4().hex}"
         refresh = f"ref_{uuid.uuid4().hex}"
+        ACTIVE_SESSIONS[token] = {
+            "user": user_data,
+            "expires_at": user_data["expires_at"]
+        }
         return {
             "user": user_data,
             "tokens": {"accessToken": token, "refreshToken": refresh, "expiresIn": 86400},
@@ -1045,9 +1054,16 @@ def format_inspection_json(insp: InspectionModel, db: Session) -> Dict[str, Any]
     }
 
 @app.get("/api/v1/inspections")
-def list_inspections(status: Optional[str] = None, db: Session = Depends(get_db)):
-    """Lists all inspections for the Inspector and Controller dashboards."""
+def list_inspections(request: Request, status: Optional[str] = None, db: Session = Depends(get_db)):
+    """Lists inspections, strictly scoped to the authenticated inspector when viewed by inspector."""
+    current_user = get_current_user_from_request(request, db)
     query = db.query(InspectionModel)
+    if current_user and current_user.get("role") == "INSPECTOR":
+        query = query.filter(InspectionModel.inspector_id == current_user["id"])
+    elif current_user and current_user.get("role") == "BUSINESS":
+        target_biz = current_user.get("businessId")
+        if target_biz:
+            query = query.filter(InspectionModel.business_id == target_biz)
     if status:
         query = query.filter(InspectionModel.status == status)
     inspections = query.order_by(InspectionModel.created_at.desc()).limit(50).all()
@@ -1254,14 +1270,99 @@ def get_inspection_seizures(inspection_id: str):
     }
 
 @app.post("/api/v1/inspections/{inspection_id}/supply-chain")
-def record_supply_chain_declaration(inspection_id: str, data: Dict[str, Any]):
+def record_supply_chain_declaration(inspection_id: str, data: Dict[str, Any], db: Session = Depends(get_db)):
+    """
+    Records upstream supplier declaration in PostgreSQL SupplyChainLinkModel.
+    Step 1 & Step 2:
+    - Creates a real SupplyChainLinkModel row immediately queryable.
+    - If declared supplier matches an existing business in businesses table:
+        Auto-creates a new case/inspection record against that business, pending assignment.
+    - If named supplier does not match an existing business:
+        Saves link as an unresolved lead without auto-creating a business.
+    """
+    current_insp = db.query(InspectionModel).filter(InspectionModel.id == inspection_id).first()
+    source_biz_id = current_insp.business_id if current_insp else None
+    source_biz = current_insp.business if current_insp else None
+
+    supplier_name = (data.get("supplierName") or "").strip()
+    supplier_type = (data.get("supplierType") or "Wholesaler").strip()
+    supplier_gstin = (data.get("supplierGstin") or "").strip() or None
+    supplier_address = (data.get("supplierAddress") or "").strip() or None
+    remarks = (data.get("remarks") or "").strip()
+
+    # Determine contraband parameter
+    contraband = remarks
+    if not contraband and current_insp and current_insp.products:
+        first_p = current_insp.products[0]
+        viols = [v.description or v.title for v in first_p.violations] if first_p.violations else []
+        if viols:
+            contraband = f"{first_p.commodity_name or 'Commodity'}: {viols[0]}"
+        else:
+            contraband = f"{first_p.commodity_name or 'Packaged Goods'} declared shortfall / non-compliance"
+    if not contraband:
+        contraband = f"{supplier_type} Upstream Supply Traceback (Deficit / Shortfall)"
+
+    # Match against existing businesses
+    matched_biz = None
+    if supplier_gstin:
+        matched_biz = db.query(BusinessModel).filter(func.lower(BusinessModel.gstin) == supplier_gstin.lower()).first()
+    if not matched_biz and supplier_name:
+        matched_biz = db.query(BusinessModel).filter(func.lower(BusinessModel.trade_name) == supplier_name.lower()).first()
+    if not matched_biz and supplier_name:
+        matched_biz = db.query(BusinessModel).filter(BusinessModel.trade_name.ilike(f"%{supplier_name}%")).first()
+
+    target_insp_id = None
+    auto_case_created = False
+
+    # Auto-create inspection link/case if supplier is known
+    if matched_biz:
+        target_insp_id = f"insp-sc-{uuid.uuid4().hex[:8]}"
+        new_insp = InspectionModel(
+            id=target_insp_id,
+            inspector_id=None,
+            business_id=matched_biz.id,
+            business_name=matched_biz.trade_name,
+            inspection_type="supplyChainLinked",
+            status="assigned",
+            created_at=datetime.utcnow()
+        )
+        db.add(new_insp)
+        db.flush()
+        auto_case_created = True
+
+    link_id = f"link-{uuid.uuid4().hex[:8]}"
+    link = SupplyChainLinkModel(
+        id=link_id,
+        inspection_id=inspection_id,
+        target_inspection_id=target_insp_id,
+        source_business_id=source_biz_id,
+        named_upstream_business_name=matched_biz.trade_name if matched_biz else supplier_name,
+        named_upstream_address=supplier_address or (matched_biz.address if matched_biz else None),
+        contraband_parameter=contraband,
+        status="PENDING_ASSIGNMENT",
+        assigned_inspector_id=None,
+        assigned_inspector_name=None,
+        jurisdiction=(matched_biz.district if matched_biz else (source_biz.district if source_biz else "Maharashtra")),
+        created_at=datetime.utcnow()
+    )
+    db.add(link)
+    db.commit()
+    db.refresh(link)
+
     SUPPLY_CHAIN_STORE[inspection_id] = data
+
     return {
         "success": True,
+        "id": link.id,
+        "linkId": link.id,
         "inspectionId": inspection_id,
-        "supplierName": data.get("supplierName"),
-        "supplierType": data.get("supplierType"),
-        "supplierGstin": data.get("supplierGstin")
+        "targetInspectionId": target_insp_id,
+        "autoCaseCreated": auto_case_created,
+        "matchedBusinessId": matched_biz.id if matched_biz else None,
+        "supplierName": link.named_upstream_business_name,
+        "supplierType": supplier_type,
+        "supplierGstin": supplier_gstin,
+        "status": link.status
     }
 
 @app.post("/api/v1/inspections/{inspection_id}/supply-chain/evidence")
@@ -1447,21 +1548,35 @@ def format_case_json(insp: InspectionModel, viewer_role: str = "INSPECTOR") -> D
 
 
 @app.get("/api/v1/cases")
-def list_legal_cases(active: Optional[str] = None, db: Session = Depends(get_db)):
-    """Returns cases for Inspector dashboard."""
-    insps = db.query(InspectionModel).filter(
+def list_legal_cases(request: Request, active: Optional[str] = None, db: Session = Depends(get_db)):
+    """Returns cases for Inspector dashboard, strictly scoped to authenticated inspector."""
+    current_user = get_current_user_from_request(request, db)
+    query = db.query(InspectionModel).filter(
         or_(
             InspectionModel.status.in_(["NOTICE_ISSUED", "COMPOUNDED", "VIOLATION_FOUND", "IN_PROGRESS", "in_progress", "completed", "COMPLETED", "assigned", "ASSIGNED"]),
             InspectionModel.notices.any()
         )
-    ).order_by(InspectionModel.created_at.desc()).limit(25).all()
+    )
+    if current_user and current_user.get("role") == "INSPECTOR":
+        query = query.filter(InspectionModel.inspector_id == current_user["id"])
+    elif current_user and current_user.get("role") == "BUSINESS":
+        target_biz = current_user.get("businessId")
+        if target_biz:
+            query = query.filter(InspectionModel.business_id == target_biz)
+    insps = query.order_by(InspectionModel.created_at.desc()).limit(25).all()
     return [format_case_json(i, viewer_role="INSPECTOR") for i in insps]
 
 @app.get("/api/v1/inspector/notices")
 @app.get("/api/v1/inspectors/{inspector_id}/notices")
-def list_inspector_notices(inspector_id: str = "current", db: Session = Depends(get_db)):
-    """Returns notices issued or drafted by inspector."""
-    notices = db.query(NoticeModel).order_by(NoticeModel.issued_at.desc()).limit(25).all()
+def list_inspector_notices(request: Request, inspector_id: str = "current", db: Session = Depends(get_db)):
+    """Returns notices issued or drafted by inspector, strictly scoped to inspector."""
+    current_user = get_current_user_from_request(request, db)
+    query = db.query(NoticeModel).join(InspectionModel, NoticeModel.inspection_id == InspectionModel.id)
+    if current_user and current_user.get("role") == "INSPECTOR":
+        query = query.filter(InspectionModel.inspector_id == current_user["id"])
+    elif inspector_id != "current":
+        query = query.filter(InspectionModel.inspector_id == inspector_id)
+    notices = query.order_by(NoticeModel.issued_at.desc()).limit(25).all()
     return [format_notice_for_client(n) for n in notices]
 
 
@@ -3011,6 +3126,22 @@ def list_supply_chain_links(db: Session = Depends(get_db)):
         for l in links
     ]
 
+@app.get("/api/v1/controller/inspectors")
+def list_controller_inspectors(db: Session = Depends(get_db)):
+    """Returns list of active enforcement inspectors with jurisdiction details for Controller raid dispatch."""
+    inspectors = db.query(UserModel).filter(UserModel.role.ilike("%INSPECTOR%")).all()
+    return [
+        {
+            "id": u.id,
+            "name": u.name,
+            "email": u.email,
+            "phone": u.phone,
+            "district": u.district or "Maharashtra",
+            "jurisdiction": u.jurisdiction or u.district or "Maharashtra"
+        }
+        for u in inspectors
+    ]
+
 @app.patch("/api/v1/controller/supply-chain-links/{link_id}/assign")
 def assign_supply_chain_link(link_id: str, data: Dict[str, Any], db: Session = Depends(get_db)):
     """Assigns field inspector to execute upstream raid on manufacturer/importer."""
@@ -3027,6 +3158,32 @@ def assign_supply_chain_link(link_id: str, data: Dict[str, Any], db: Session = D
     link.assigned_inspector_id = inspector_id
     link.assigned_inspector_name = insp_name
     link.status = "RAID_SCHEDULED"
+
+    # Synchronize target inspection case
+    if link.target_inspection_id:
+        target_insp = db.query(InspectionModel).filter(InspectionModel.id == link.target_inspection_id).first()
+        if target_insp:
+            target_insp.inspector_id = inspector_id
+            target_insp.status = "assigned"
+    else:
+        # Check if an existing business matches the named upstream business
+        matched_biz = db.query(BusinessModel).filter(func.lower(BusinessModel.trade_name) == link.named_upstream_business_name.lower()).first()
+        if not matched_biz:
+            matched_biz = db.query(BusinessModel).filter(BusinessModel.trade_name.ilike(f"%{link.named_upstream_business_name}%")).first()
+        if matched_biz:
+            new_target_insp = InspectionModel(
+                id=f"insp-sc-{uuid.uuid4().hex[:8]}",
+                inspector_id=inspector_id,
+                business_id=matched_biz.id,
+                business_name=matched_biz.trade_name,
+                inspection_type="supplyChainLinked",
+                status="assigned",
+                created_at=datetime.utcnow()
+            )
+            db.add(new_target_insp)
+            db.flush()
+            link.target_inspection_id = new_target_insp.id
+
     db.commit()
 
     # Record Audit Log

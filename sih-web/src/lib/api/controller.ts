@@ -159,3 +159,24 @@ export async function fetchSupplyChainLinks(): Promise<import('@/types').SupplyC
   return Array.isArray(items) ? items : [];
 }
 
+
+export interface InspectorOption {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  district: string;
+  jurisdiction: string;
+}
+
+/**
+ * Controller: Fetch active field inspectors with jurisdictions for raid assignment.
+ */
+export async function fetchInspectors(): Promise<InspectorOption[]> {
+  try {
+    const items = await apiGet<InspectorOption[]>('/api/v1/controller/inspectors');
+    return Array.isArray(items) ? items : [];
+  } catch {
+    return [];
+  }
+}

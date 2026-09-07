@@ -409,6 +409,97 @@ class _BusinessNoticeDetailScreenState
                           ),
                       ],
                     ),
+                    if (notice.digitalSignatureHash != null && notice.digitalSignatureHash!.isNotEmpty) ...[
+                      const SizedBox(height: AppSpacing.md),
+                      Container(
+                        padding: const EdgeInsets.all(AppSpacing.md),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              const Color(0xFF0F766E).withValues(alpha: 0.1),
+                              const Color(0xFF0D9488).withValues(alpha: 0.04),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(AppRadius.lg),
+                          border: Border.all(color: const Color(0xFF0D9488), width: 1.3),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(6),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF0D9488),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: const Icon(Icons.verified_user, color: Colors.white, size: 18),
+                                ),
+                                const SizedBox(width: AppSpacing.sm),
+                                const Expanded(
+                                  child: Text(
+                                    'DocuSign / eMudhra Digital Signature Certificate',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 12.5,
+                                      color: Color(0xFF0F766E),
+                                    ),
+                                  ),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFDCFCE7),
+                                    borderRadius: BorderRadius.circular(4),
+                                    border: Border.all(color: const Color(0xFF86EFAC)),
+                                  ),
+                                  child: const Text(
+                                    'AUTHENTIC',
+                                    style: TextStyle(
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w800,
+                                      color: Color(0xFF15803D),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: AppSpacing.sm),
+                            const Text(
+                              'SHA-256 Checksum (Tamper-Evident Hash):',
+                              style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: AppColors.textSecondary),
+                            ),
+                            const SizedBox(height: 3),
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF0F172A),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: SelectableText(
+                                notice.digitalSignatureHash!,
+                                style: const TextStyle(
+                                  fontFamily: 'monospace',
+                                  fontSize: 10.5,
+                                  color: Color(0xFF34D399),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            const Text(
+                              'Statutory legal validity under Section 3 of Information Technology Act, 2000.',
+                              style: TextStyle(fontSize: 10, color: AppColors.textSecondary),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+
                     if (notice.pdfPath != null && notice.pdfPath!.isNotEmpty) ...[
                       const SizedBox(height: AppSpacing.md),
                       Container(

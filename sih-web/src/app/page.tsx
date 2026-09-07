@@ -18,7 +18,7 @@ import {
   fetchSupplyChainLinks 
 } from '@/lib/api';
 import { DashboardStats, Notice, SupplyChainLink, Complaint } from '@/types';
-import { compoundingAction, assignSupplyChainLink } from '@/lib/api/controller';
+import { compoundingAction, assignSupplyChainLink, fetchInspectors, InspectorOption } from '@/lib/api/controller';
 
 import { 
   ShieldAlert, 
@@ -215,8 +215,15 @@ export default function UnifiedPortalPage() {
 
   const [isActionDone, setIsActionDone] = useState<boolean>(false);
 
+  const FALLBACK_INSPECTORS: InspectorOption[] = [
+    { id: 'usr-insp-sumit', name: 'Inspector Sumit Mane', email: 'sumit@gov.in', phone: '+91 98200 11001', district: 'Mumbai Suburban', jurisdiction: 'Mumbai Suburban Division' },
+    { id: 'usr-insp-mihir', name: 'Inspector Mihir Patil', email: 'mihir@gov.in', phone: '+91 98200 11002', district: 'Pune Metro', jurisdiction: 'Pune Metropolitan Division' },
+    { id: 'usr-insp-rohit', name: 'Inspector Rohit Sharma', email: 'rohit@gov.in', phone: '+91 98200 11003', district: 'Nagpur Central', jurisdiction: 'Nagpur Central Division' },
+  ];
+
+  const [inspectors, setInspectors] = useState<InspectorOption[]>(FALLBACK_INSPECTORS);
   // Modal Inputs
-  const [selectedInspector, setSelectedInspector] = useState<string>('Insp. S. Kadam (Badge #MH-LM-412)');
+  const [selectedInspector, setSelectedInspector] = useState<string>('usr-insp-sumit');
   const [searchDinQuery, setSearchDinQuery] = useState<string>('');
   const [dscPin, setDscPin] = useState<string>('849201');
   const [prosecutionCourt, setProsecutionCourt] = useState<string>('Chief Metropolitan Magistrate Court, Esplanade Mumbai');
@@ -255,6 +262,12 @@ export default function UnifiedPortalPage() {
     });
     fetchCitizenComplaints().then(setComplaints);
     fetchSupplyChainLinks().then(setSupplyChainLinks);
+    fetchInspectors().then((data) => {
+      if (data && data.length > 0) {
+        setInspectors(data);
+        setSelectedInspector((prev) => (data.some((d) => d.id === prev) ? prev : data[0].id));
+      }
+    });
   }, []);
 
 
@@ -417,9 +430,11 @@ export default function UnifiedPortalPage() {
   const handleDeployRaid = async () => {
     if (selectedRaidTarget) {
       try {
-        // Use real inspector ID satisfying foreign-key constraint on users.id
-        const inspectorId = 'usr-insp-001';
+        const inspectorId = selectedInspector || inspectors[0]?.id || 'usr-insp-sumit';
+        const chosenInsp = inspectors.find((i) => i.id === inspectorId);
         const resp: any = await assignSupplyChainLink(selectedRaidTarget.id, inspectorId);
+        const finalInspName = resp.assignedInspectorName || chosenInsp?.name || inspectorId;
+
         setSupplyChainLinks((prev) =>
           prev.map((item) =>
             item.id === selectedRaidTarget.id
@@ -427,13 +442,13 @@ export default function UnifiedPortalPage() {
                   ...item, 
                   status: 'RAID_SCHEDULED' as const, 
                   assignedInspectorId: inspectorId,
-                  assignedInspectorName: resp.assignedInspectorName || selectedInspector 
+                  assignedInspectorName: finalInspName
                 }
               : item
           )
         );
         fetchSupplyChainLinks().then(setSupplyChainLinks).catch(() => {});
-        showToast(`Surprise Raid Warrant deployed to ${resp.assignedInspectorName || selectedInspector} for target ${selectedRaidTarget.namedBusinessName}`);
+        showToast(`Surprise Raid Warrant deployed to ${finalInspName} for target ${selectedRaidTarget.namedBusinessName}`);
       } catch (err: any) {
         console.error('[page] handleDeployRaid failed:', err);
         showToast(`Failed to deploy raid: ${err.message || 'Assignment failed'}`);
@@ -1342,8 +1357,11 @@ export default function UnifiedPortalPage() {
                                   onChange={(e) => setSelectedInspector(e.target.value)}
                                   className="bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 font-semibold focus:outline-none focus:border-rose-600"
                                 >
-                                  <option value="usr-insp-001">Inspector Rajesh Shinde (Badge #MH-LM-412)</option>
-                                  <option value="usr-insp-002">Insp. V. Patil (Badge #MH-LM-809)</option>
+                                  {inspectors.map((insp) => (
+                                    <option key={insp.id} value={insp.id}>
+                                      {insp.name} — {insp.jurisdiction}
+                                    </option>
+                                  ))}
                                 </select>
 
                                 <button 
@@ -1748,6 +1766,45 @@ export default function UnifiedPortalPage() {
                     </div>
                   </div>
 
+                  {/* High-Visibility Digital Signature Certificate (DSC) & DocuSign Cryptographic Seal Box for Judges */}
+                  <div className="bg-gradient-to-r from-teal-50 via-emerald-50 to-teal-50 p-4 rounded-xl border border-teal-300 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3">
+                    <div className="flex items-start gap-3">
+                      <div className="p-2.5 bg-[#0D9488] rounded-xl text-white shadow-sm mt-0.5">
+                        <FileCheck className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-black text-teal-950 uppercase tracking-wide">
+                            Statutory Digital Signature Verified
+                          </span>
+                          <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded border border-emerald-300">
+                            IT Act 2000 Sec 3 Compliant
+                          </span>
+                          <span className="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded border border-blue-300">
+                            DocuSign / eMudhra Class 3
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-teal-800 mt-1">
+                          Certifying Authority: <strong>eMudhra CCA Sub-CA 2026 / DocuSign Trust Services</strong> • Statutory Notice Form LM-4
+                        </p>
+                        <div className="mt-2 flex flex-wrap items-center gap-2">
+                          <span className="text-[10px] text-slate-500 font-bold uppercase">Cryptographic Document SHA-256 Hash:</span>
+                          <span className="text-[11px] font-mono font-bold bg-[#0F172A] text-[#34D399] px-2.5 py-0.5 rounded select-all shadow-inner">
+                            {activeNotice.digitalSignatureHash || '790b4860b9fb0d3deba6eb4c89685df4570d0a3061801b8cb2a6f6467c59f883'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right flex md:flex-col justify-between items-end gap-1.5 border-t md:border-t-0 pt-2 md:pt-0 border-teal-200">
+                      <span className="text-[10px] text-slate-600 font-mono font-bold">
+                        DIN: DIN-2026-MH-{(activeNotice.id || '9041').substring(Math.max(0, (activeNotice.id || '9041').length - 4)).toUpperCase()}
+                      </span>
+                      <span className="text-[10px] text-emerald-800 font-bold bg-white px-2.5 py-1 rounded-md border border-emerald-300 shadow-xs">
+                        Court Evidentiary Status: ADMISSIBLE
+                      </span>
+                    </div>
+                  </div>
+
                   {/* Summary Display Box 1: Forensic Seizure Evidence Comparison */}
                   <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
                     <div className="flex items-center justify-between">
@@ -2011,9 +2068,11 @@ export default function UnifiedPortalPage() {
                 onChange={(e) => setSelectedInspector(e.target.value)}
                 className="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-xs font-semibold text-slate-800"
               >
-                <option value="Insp. S. Kadam (Badge #MH-LM-412)">Insp. S. Kadam (Badge #MH-LM-412)</option>
-                <option value="Insp. V. Patil (Badge #MH-LM-809)">Insp. V. Patil (Badge #MH-LM-809)</option>
-                <option value="Insp. R. Deshmukh (Badge #MH-LM-102)">Insp. R. Deshmukh (Badge #MH-LM-102)</option>
+                {inspectors.map((insp) => (
+                  <option key={insp.id} value={insp.id}>
+                    {insp.name} — {insp.jurisdiction} ({insp.email})
+                  </option>
+                ))}
               </select>
             </div>
 

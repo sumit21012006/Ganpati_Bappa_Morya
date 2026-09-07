@@ -19,6 +19,8 @@ class UserModel(Base):
     phone = Column(String(20), unique=True, nullable=False)
     email = Column(String(255), unique=True, nullable=True)
     district = Column(String(100), default="Mumbai")
+    jurisdiction = Column(String(100), nullable=True)
+    password_hash = Column(String(255), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
 
     businesses = relationship("BusinessModel", back_populates="owner")
@@ -50,7 +52,7 @@ class InspectionModel(Base):
     __tablename__ = "inspections"
 
     id = Column(String(36), primary_key=True, default=generate_uuid)
-    inspector_id = Column(String(36), ForeignKey("users.id", ondelete="RESTRICT"), nullable=False, index=True)
+    inspector_id = Column(String(36), ForeignKey("users.id", ondelete="RESTRICT"), nullable=True, index=True)
     business_id = Column(String(36), ForeignKey("businesses.id", ondelete="SET NULL"), nullable=True, index=True)
     business_name = Column(String(255), nullable=True)
     latitude = Column(Float, nullable=True)
@@ -149,6 +151,7 @@ class SupplyChainLinkModel(Base):
 
     id = Column(String(36), primary_key=True, default=generate_uuid)
     inspection_id = Column(String(36), ForeignKey("inspections.id", ondelete="SET NULL"), nullable=True, index=True)
+    target_inspection_id = Column(String(36), ForeignKey("inspections.id", ondelete="SET NULL"), nullable=True, index=True)
     source_business_id = Column(String(36), ForeignKey("businesses.id", ondelete="SET NULL"), nullable=True, index=True)
     named_upstream_business_name = Column(String(255), nullable=False)
     named_upstream_address = Column(Text, nullable=True)
@@ -159,7 +162,8 @@ class SupplyChainLinkModel(Base):
     jurisdiction = Column(String(100), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
 
-    inspection = relationship("InspectionModel", backref="supply_chain_links")
+    inspection = relationship("InspectionModel", foreign_keys=[inspection_id], backref="supply_chain_links")
+    target_inspection = relationship("InspectionModel", foreign_keys=[target_inspection_id])
     source_business = relationship("BusinessModel", backref="upstream_supply_links")
     assigned_inspector = relationship("UserModel", foreign_keys=[assigned_inspector_id])
 
