@@ -660,6 +660,7 @@ class MockBackend {
       amount: amount,
       currency: 'INR',
       checkoutNote: note ?? 'Legal Metrology penalty — Case $caseId',
+      checkoutUrl: 'http://127.0.0.1:8000/api/v1/payments/checkout/order_mock_001',
     );
   }
 

@@ -1,3 +1,4 @@
+import 'package:url_launcher/url_launcher.dart';
 import 'dart:io';
 import 'package:printing/printing.dart';
 import 'package:flutter/material.dart';
@@ -260,15 +261,81 @@ class _BusinessNoticeDetailScreenState
             description: 'Penalty for ${notice.type.label} ${notice.id}',
           );
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Payment order created (${initiation.orderId}). Awaiting '
-            'verification — track status under Payments.',
+
+      final url = initiation.checkoutUrl;
+      if (url != null && url.isNotEmpty) {
+        final uri = Uri.parse(url);
+        bool launched = false;
+        try {
+          // Open as an in-app overlay so Flutter never backgrounds or gets killed by OS
+          launched = await launchUrl(
+            uri,
+            mode: LaunchMode.inAppBrowserView,
+            browserConfiguration: const BrowserConfiguration(showTitle: true),
+          );
+        } catch (_) {}
+        if (!launched) {
+          try {
+            launched = await launchUrl(uri, mode: LaunchMode.platformDefault);
+          } catch (_) {}
+        }
+      }
+
+      if (!mounted) return;
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.white,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        builder: (ctx) => Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.payment, color: AppColors.primary),
+                  const SizedBox(width: AppSpacing.sm),
+                  Text(
+                    'Razorpay Gateway Active',
+                    style: Theme.of(ctx).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Text(
+                'Order ${initiation.orderId} for ₹${amount.toStringAsFixed(0)} is active on Razorpay.',
+                style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              PrimaryButton(
+                label: 'Open Razorpay Payment Page',
+                icon: Icons.open_in_browser,
+                onPressed: () {
+                  if (url != null) {
+                    launchUrl(Uri.parse(url), mode: LaunchMode.inAppBrowserView, browserConfiguration: const BrowserConfiguration(showTitle: true));
+                  }
+                },
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              SecondaryButton(
+                label: 'Check Status / Refresh',
+                icon: Icons.refresh,
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  _load();
+                },
+              ),
+              const SizedBox(height: AppSpacing.md),
+            ],
           ),
         ),
       );
-      await _load();
     } on AppException catch (e) {
       _snack(e.friendlyMessage);
     } finally {
@@ -281,7 +348,7 @@ class _BusinessNoticeDetailScreenState
   @override
   Widget build(BuildContext context) {
     final notice = _notice;
-    final dateFormat = DateFormat('d MMM yyyy');
+    final dateFormat = DateFormat('d MMM yyyy, h:mm a');
     if (notice == null) {
       return AppScaffold(
         title: 'Notice Detail',
@@ -319,10 +386,26 @@ class _BusinessNoticeDetailScreenState
                           ),
                         if (notice.penaltyAmount != null)
                           KeyValueRow(
-                            label: 'Penalty',
+                            label: 'Compounding Fee',
                             value: '₹${notice.penaltyAmount!.toStringAsFixed(0)}',
-                            valueColor: AppColors.error,
+                            valueColor: (notice.paymentStatus?.toUpperCase() == 'PAID' || notice.status == NoticeStatus.closed)
+                                ? AppColors.success
+                                : AppColors.error,
                             isBold: true,
+                          ),
+                        KeyValueRow(
+                          label: 'Payment Status',
+                          value: (notice.paymentStatus ?? ((notice.status == NoticeStatus.closed) ? 'PAID' : 'UNPAID')).toUpperCase(),
+                          valueColor: (notice.paymentStatus?.toUpperCase() == 'PAID' || notice.status == NoticeStatus.closed)
+                              ? AppColors.success
+                              : AppColors.warning,
+                          isBold: true,
+                        ),
+                        if (notice.digitalSignatureHash != null && notice.digitalSignatureHash!.isNotEmpty)
+                          KeyValueRow(
+                            label: 'DSC Signature',
+                            value: 'VERIFIED (${notice.digitalSignatureHash!.substring(0, notice.digitalSignatureHash!.length < 14 ? notice.digitalSignatureHash!.length : 14)}…)',
+                            valueColor: AppColors.success,
                           ),
                       ],
                     ),
@@ -449,12 +532,42 @@ class _BusinessNoticeDetailScreenState
   }
 
   Widget _buildActions(Notice notice) {
-    final canRespond = notice.status.canBusinessRespond;
-    final canPay = notice.penaltyAmount != null &&
-        (notice.status == NoticeStatus.consentGiven ||
-            notice.status == NoticeStatus.complianceSubmitted);
-    final canConsent = notice.penaltyAmount != null &&
+    final isPaid = (notice.paymentStatus?.toUpperCase() == 'PAID') || notice.status == NoticeStatus.closed;
+    final hasUnpaidPenalty = notice.penaltyAmount != null && notice.penaltyAmount! > 0 && !isPaid;
+
+    final canRespond = !isPaid && notice.status.canBusinessRespond;
+    final canPay = hasUnpaidPenalty &&
+        (notice.type == NoticeType.compounding ||
+            notice.status == NoticeStatus.consentGiven ||
+            notice.status == NoticeStatus.complianceSubmitted ||
+            notice.status == NoticeStatus.issued);
+    final canConsent = !isPaid &&
+        notice.penaltyAmount != null &&
+        notice.type != NoticeType.compounding &&
         notice.status == NoticeStatus.issued;
+
+    if (isPaid) {
+      return Container(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: BoxDecoration(
+          color: AppColors.successContainer.withValues(alpha: 0.4),
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          border: Border.all(color: AppColors.success.withValues(alpha: 0.5)),
+        ),
+        child: const Row(
+          children: [
+            Icon(Icons.check_circle, color: AppColors.success, size: 24),
+            SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Text(
+                'Compounding fee has been paid and verified. This case is legally settled.',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
 
     if (!canRespond && !canPay && !canConsent) {
       return InfoCard(
@@ -472,6 +585,15 @@ class _BusinessNoticeDetailScreenState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        if (canPay) ...[
+          PrimaryButton(
+            label: 'Pay Fees',
+            icon: Icons.payment_outlined,
+            isLoading: _busy,
+            onPressed: () => _payPenalty(notice),
+          ),
+          const SizedBox(height: AppSpacing.md),
+        ],
         if (canRespond) ...[
           PrimaryButton(
             label: 'Submit Correction',
@@ -485,6 +607,7 @@ class _BusinessNoticeDetailScreenState
             icon: Icons.gavel_outlined,
             onPressed: _busy ? null : () => _raiseDispute(notice),
           ),
+          const SizedBox(height: AppSpacing.md),
         ],
         if (canConsent) ...[
           PrimaryButton(
@@ -492,15 +615,6 @@ class _BusinessNoticeDetailScreenState
             icon: Icons.handshake_outlined,
             isLoading: _busy,
             onPressed: () => _giveConsent(notice),
-          ),
-          const SizedBox(height: AppSpacing.md),
-        ],
-        if (canPay) ...[
-          PrimaryButton(
-            label: 'Pay Penalty Now',
-            icon: Icons.payment_outlined,
-            isLoading: _busy,
-            onPressed: () => _payPenalty(notice),
           ),
         ],
       ],

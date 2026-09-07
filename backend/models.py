@@ -36,6 +36,11 @@ class BusinessModel(Base):
     district = Column(String(100), default="Mumbai", index=True)
     turnover_category = Column(String(50), default="MICRO")  # MICRO, SMALL, MEDIUM, LARGE
     owner_user_id = Column(String(36), ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+    source = Column(String(30), default="SELF_REGISTERED", index=True)  # SELF_REGISTERED, INSPECTOR_ADDED
+    contact_phone = Column(String(20), nullable=True)
+    business_type = Column(String(50), default="Retailer")
+    latitude = Column(Float, nullable=True)
+    longitude = Column(Float, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
 
     owner = relationship("UserModel", back_populates="businesses")

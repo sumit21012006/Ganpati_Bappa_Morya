@@ -1,3 +1,4 @@
+import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -173,15 +174,30 @@ class _PaymentCard extends StatelessWidget {
                 KeyValueRow(
                     label: 'Completed',
                     value: dateFormat.format(record.completedAt!)),
-              if (record.isPending && onCheckStatus != null) ...[
+              if (record.isPending) ...[
                 const SizedBox(height: AppSpacing.md),
-                SizedBox(
-                  width: 200,
-                  child: SmallActionButton(
-                    label: isPolling ? 'Checking…' : 'Check Status',
-                    icon: Icons.refresh,
-                    onPressed: isPolling ? null : onCheckStatus,
-                  ),
+                Wrap(
+                  spacing: AppSpacing.sm,
+                  runSpacing: AppSpacing.sm,
+                  children: [
+                    if (record.receiptUrl != null && record.receiptUrl!.isNotEmpty)
+                      SmallActionButton(
+                        label: 'Open Razorpay',
+                        icon: Icons.open_in_browser,
+                        onPressed: () async {
+                          final uri = Uri.parse(record.receiptUrl!);
+                          if (await canLaunchUrl(uri)) {
+                            await launchUrl(uri, mode: LaunchMode.inAppBrowserView, browserConfiguration: const BrowserConfiguration(showTitle: true));
+                          }
+                        },
+                      ),
+                    if (onCheckStatus != null)
+                      SmallActionButton(
+                        label: isPolling ? 'Checking…' : 'Check Status',
+                        icon: Icons.refresh,
+                        onPressed: isPolling ? null : onCheckStatus,
+                      ),
+                  ],
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Text(

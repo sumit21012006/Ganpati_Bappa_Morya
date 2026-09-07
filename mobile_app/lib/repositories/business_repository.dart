@@ -14,4 +14,17 @@ abstract class BusinessRepository {
   Future<Business> registerBusiness(BusinessRegistrationRequest request);
 
   Future<Business> updateBusiness(Business business);
+
+  /// Quick-add an on-the-spot business during a raid by Inspector.
+  Future<Business> quickAddBusiness({
+    required String name,
+    required String address,
+    required BusinessType type,
+    String? gstin,
+    String? contactPhone,
+    double? latitude,
+    double? longitude,
+    String? district,
+    String? pincode,
+  });
 }

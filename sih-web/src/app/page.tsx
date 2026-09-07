@@ -345,10 +345,15 @@ export default function UnifiedPortalPage() {
     try {
       setIsActionDone(true);
       setActionType('APPROVED');
-      await compoundingAction(activeNotice.id, 'APPROVE', remarks, user?.id);
+      const actRes = await compoundingAction(activeNotice.id, 'APPROVE', remarks, user?.id);
       // Optimistically update local notices state
       setNotices((prev) =>
-        prev.map((n) => n.id === activeNotice.id ? { ...n, status: 'APPROVED' as const } : n)
+        prev.map((n) => n.id === activeNotice.id ? {
+          ...n,
+          status: 'APPROVED' as const,
+          paymentStatus: 'UNPAID' as const,
+          digitalSignatureHash: (actRes as any)?.document_hash || 'EMUDHRA-DSC-MH-401'
+        } : n)
       );
       showToast(`Compounding Order #${activeNotice.id} approved and signed via DSC.`);
     } catch (err: any) {
@@ -1652,11 +1657,15 @@ export default function UnifiedPortalPage() {
                             <span className="font-mono text-xs font-black text-amber-800">{n.id}</span>
                             <div className="flex items-center space-x-1">
                               <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
-                                n.status === 'APPROVED' ? 'bg-emerald-100 text-emerald-800' :
+                                (n.paymentStatus === 'PAID' || n.status === 'PAID') ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' :
+                                n.status === 'APPROVED' ? 'bg-teal-100 text-teal-800' :
                                 n.status === 'REJECTED' ? 'bg-rose-100 text-rose-800' :
-                                'bg-blue-100 text-blue-800'
+                                'bg-amber-100 text-amber-800 border border-amber-300'
                               }`}>
-                                {n.status === 'APPROVED' ? 'Compounded' : n.status === 'REJECTED' ? 'Prosecution' : 'Active Review'}
+                                {(n.paymentStatus === 'PAID' || n.status === 'PAID') ? 'PAID / SETTLED' :
+                                 n.status === 'APPROVED' ? 'Compounded' :
+                                 n.status === 'REJECTED' ? 'Prosecution' :
+                                 'UNPAID / Review'}
                               </span>
                               <span className="text-xs font-black text-emerald-700 font-mono">
                                 ₹{(n.penaltyAmount || 25000).toLocaleString('en-IN')}
@@ -1709,8 +1718,21 @@ export default function UnifiedPortalPage() {
                     </div>
 
                     <div className="flex items-center space-x-2">
-                      <span className="bg-amber-100 text-amber-800 border border-amber-300 font-bold text-xs px-3 py-1 rounded">
-                        Section 36 Compounding Desk
+                      <span className={`text-xs font-bold px-3 py-1 rounded border ${
+                        (activeNotice.paymentStatus === 'PAID' || activeNotice.status === 'PAID')
+                          ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                          : 'bg-amber-100 text-amber-800 border-amber-300'
+                      }`}>
+                        {(activeNotice.paymentStatus === 'PAID' || activeNotice.status === 'PAID') ? 'STATUS: PAID' : 'STATUS: UNPAID'}
+                      </span>
+                      <span className={`text-xs font-bold px-3 py-1 rounded border ${
+                        activeNotice.digitalSignatureHash
+                          ? 'bg-teal-100 text-teal-900 border-teal-300'
+                          : 'bg-slate-100 text-slate-700 border-slate-300'
+                      }`}>
+                        {activeNotice.digitalSignatureHash
+                          ? `DSC: ${activeNotice.digitalSignatureHash.substring(0, 12)}…`
+                          : 'DSC: PENDING'}
                       </span>
 
                       {/* View Detailed Dossier (PDF) Button requested by user */}

@@ -59,6 +59,28 @@ class _BusinessSearchScreenState extends ConsumerState<BusinessSearchScreen> {
     }
   }
 
+  
+  void _openAddBusinessSheet() {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => _AddBusinessSheet(
+        onCreated: (newBiz) {
+          setState(() {
+            _results = [newBiz, ...?_results];
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Business "${newBiz.name}" added on the spot! Ready for inspection.'),
+              backgroundColor: AppColors.success,
+            ),
+          );
+          _openStartInspection(newBiz);
+        },
+      ),
+    );
+  }
+
   void _openStartInspection(Business business) {
     showModalBottomSheet<void>(
       context: context,
@@ -73,6 +95,18 @@ class _BusinessSearchScreenState extends ConsumerState<BusinessSearchScreen> {
       title: 'Businesses',
       subtitle: 'Search by name, GSTIN, owner or city',
       showBack: false,
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.add_business_outlined),
+          tooltip: 'Add on Spot',
+          onPressed: _openAddBusinessSheet,
+        ),
+      ],
+      floatingActionButton: FloatingActionButton.extended(
+        icon: const Icon(Icons.add_business),
+        label: const Text('Add on Spot'),
+        onPressed: _openAddBusinessSheet,
+      ),
       body: Column(
         children: [
           Padding(
@@ -102,11 +136,13 @@ class _BusinessSearchScreenState extends ConsumerState<BusinessSearchScreen> {
                 : _error != null
                     ? ErrorView(message: _error!, onRetry: () => _search(_controller.text))
                     : (_results == null || _results!.isEmpty)
-                        ? const EmptyState(
+                        ? EmptyState(
                             title: 'No businesses found',
                             message:
-                                'Try a different name, GSTIN or city. New registrations appear here after verification.',
+                                'Business not registered yet? Add it on the spot to start an immediate raid inspection.',
                             icon: Icons.storefront_outlined,
+                            actionLabel: 'Add Business on Spot',
+                            onAction: _openAddBusinessSheet,
                           )
                         : RefreshIndicator(
                             onRefresh: () => _search(_controller.text),
@@ -328,6 +364,311 @@ class _StartInspectionSheetState extends ConsumerState<_StartInspectionSheet> {
             ),
           ],
         ],
+      ),
+    );
+  }
+}
+
+
+class _AddBusinessSheet extends ConsumerStatefulWidget {
+  const _AddBusinessSheet({required this.onCreated});
+
+  final ValueChanged<Business> onCreated;
+
+  @override
+  ConsumerState<_AddBusinessSheet> createState() => _AddBusinessSheetState();
+}
+
+class _AddBusinessSheetState extends ConsumerState<_AddBusinessSheet> {
+  final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
+  final _addressController = TextEditingController();
+  final _gstinController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _latController = TextEditingController(text: '19.0760');
+  final _lngController = TextEditingController(text: '72.8777');
+  final _districtController = TextEditingController(text: 'Mumbai');
+
+  BusinessType _selectedType = BusinessType.retailer;
+  bool _submitting = false;
+  bool _gpsDetected = true;
+  String? _error;
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _addressController.dispose();
+    _gstinController.dispose();
+    _phoneController.dispose();
+    _latController.dispose();
+    _lngController.dispose();
+    _districtController.dispose();
+    super.dispose();
+  }
+
+  void _detectGps() {
+    setState(() {
+      _latController.text = '18.5204';
+      _lngController.text = '73.8567';
+      _districtController.text = 'Pune';
+      _gpsDetected = true;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Device GPS acquired: 18.5204 N, 73.8567 E (Pune)'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() {
+      _submitting = true;
+      _error = null;
+    });
+
+    try {
+      final lat = double.tryParse(_latController.text.trim());
+      final lng = double.tryParse(_lngController.text.trim());
+
+      final newBiz = await ref.read(businessRepositoryProvider).quickAddBusiness(
+            name: _nameController.text.trim(),
+            address: _addressController.text.trim(),
+            type: _selectedType,
+            gstin: _gstinController.text.trim().isNotEmpty ? _gstinController.text.trim() : null,
+            contactPhone: _phoneController.text.trim().isNotEmpty ? _phoneController.text.trim() : null,
+            latitude: lat,
+            longitude: lng,
+            district: _districtController.text.trim().isNotEmpty ? _districtController.text.trim() : 'Mumbai',
+          );
+
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      widget.onCreated(newBiz);
+    } on AppException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = e.friendlyMessage;
+        _submitting = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = 'Failed to add business: $e';
+        _submitting = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(
+        left: AppSpacing.xl,
+        right: AppSpacing.xl,
+        top: AppSpacing.lg,
+        bottom: MediaQuery.of(context).viewInsets.bottom + AppSpacing.xl,
+      ),
+      child: SingleChildScrollView(
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: AppColors.primaryContainer,
+                            borderRadius: BorderRadius.circular(AppRadius.md),
+                          ),
+                          child: const Icon(Icons.add_business, color: AppColors.primary, size: 22),
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        const Expanded(
+                          child: Text(
+                            'Add Business on Spot',
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              const Text(
+                'Raid mode: quickly record an unverified/unregistered vendor to start inspection immediately.',
+                style: TextStyle(fontSize: 12.5, color: AppColors.textSecondary),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+
+              TextFormField(
+                controller: _nameController,
+                decoration: const InputDecoration(
+                  labelText: 'Business / Trade Name *',
+                  hintText: 'e.g. Ramesh Kirana Stores',
+                  prefixIcon: Icon(Icons.storefront),
+                ),
+                validator: (v) => (v == null || v.trim().isEmpty) ? 'Please enter business name' : null,
+              ),
+              const SizedBox(height: AppSpacing.md),
+
+              DropdownButtonFormField<BusinessType>(
+                value: _selectedType,
+                decoration: const InputDecoration(
+                  labelText: 'Business Type *',
+                  prefixIcon: Icon(Icons.category_outlined),
+                ),
+                items: BusinessType.values
+                    .map((t) => DropdownMenuItem(value: t, child: Text(t.label)))
+                    .toList(),
+                onChanged: (v) {
+                  if (v != null) setState(() => _selectedType = v);
+                },
+              ),
+              const SizedBox(height: AppSpacing.md),
+
+              TextFormField(
+                controller: _addressController,
+                maxLines: 2,
+                decoration: const InputDecoration(
+                  labelText: 'Premises Address *',
+                  hintText: 'Shop No, Street, Landmark, Market Area',
+                  prefixIcon: Icon(Icons.location_on_outlined),
+                ),
+                validator: (v) => (v == null || v.trim().isEmpty) ? 'Please enter full premises address' : null,
+              ),
+              const SizedBox(height: AppSpacing.md),
+
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceVariant.withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                  border: Border.all(color: AppColors.outline.withOpacity(0.2)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Row(
+                            children: [
+                              Icon(
+                                _gpsDetected ? Icons.my_location : Icons.location_searching,
+                                color: _gpsDetected ? AppColors.success : AppColors.textHint,
+                                size: 18,
+                              ),
+                              const SizedBox(width: 6),
+                              const Flexible(
+                                child: Text(
+                                  'GPS Coordinates',
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        TextButton.icon(
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          icon: const Icon(Icons.gps_fixed, size: 15),
+                          label: const Text('Capture', style: TextStyle(fontSize: 12)),
+                          onPressed: _detectGps,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextFormField(
+                            controller: _latController,
+                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            decoration: const InputDecoration(
+                              labelText: 'Latitude',
+                              isDense: true,
+                              contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        Expanded(
+                          child: TextFormField(
+                            controller: _lngController,
+                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            decoration: const InputDecoration(
+                              labelText: 'Longitude',
+                              isDense: true,
+                              contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+
+              TextFormField(
+                controller: _gstinController,
+                textCapitalization: TextCapitalization.characters,
+                decoration: const InputDecoration(
+                  labelText: 'GSTIN (Optional)',
+                  hintText: 'Leave empty if vendor is unregistered',
+                  prefixIcon: Icon(Icons.badge_outlined),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+
+              TextFormField(
+                controller: _phoneController,
+                keyboardType: TextInputType.phone,
+                decoration: const InputDecoration(
+                  labelText: 'Contact Phone (Optional)',
+                  hintText: 'Vendor / Representative phone number',
+                  prefixIcon: Icon(Icons.phone_outlined),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xl),
+
+              PrimaryButton(
+                label: 'Save & Start Inspection',
+                icon: Icons.check_circle_outline,
+                isLoading: _submitting,
+                onPressed: _submit,
+              ),
+
+              if (_error != null) ...[
+                const SizedBox(height: AppSpacing.md),
+                Text(
+                  _error!,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: AppColors.error, fontSize: 13),
+                ),
+              ],
+            ],
+          ),
+        ),
       ),
     );
   }

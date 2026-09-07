@@ -128,6 +128,38 @@ class MockBusinessRepository implements BusinessRepository {
   }
 
   @override
+  Future<Business> quickAddBusiness({
+    required String name,
+    required String address,
+    required BusinessType type,
+    String? gstin,
+    String? contactPhone,
+    double? latitude,
+    double? longitude,
+    String? district,
+    String? pincode,
+  }) async {
+    await Future.delayed(const Duration(milliseconds: 300));
+    final biz = Business(
+      id: 'biz-raid-${DateTime.now().millisecondsSinceEpoch}',
+      name: name,
+      type: type,
+      status: BusinessStatus.active,
+      location: BusinessLocation(
+        addressLine: address,
+        city: district ?? 'Mumbai',
+        state: 'Maharashtra',
+        pincode: pincode ?? '400001',
+        latitude: latitude ?? 19.0760,
+        longitude: longitude ?? 72.8777,
+      ),
+      gstin: gstin,
+      contactPhone: contactPhone,
+    );
+    return biz;
+  }
+
+  @override
   Future<Business> updateBusiness(Business business) async {
     await _backend.delay();
     return _backend.updateBusiness(business);

@@ -126,7 +126,7 @@ export async function fetchComplaintsFromBackend(): Promise<Complaint[]> {
       updatedAt: item.createdAt || now,
       estimatedRewardPoints: 2500,
       rewardPointsStatus:
-        item.incentiveStatus === 'CREDITED'
+        (item.incentiveStatus === 'CREDITED' || (item as any).rewardPointsStatus === 'CREDITED' || item.status === 'COMPOUNDED')
           ? 'CREDITED'
           : 'PENDING_COMPOUNDING',
     };

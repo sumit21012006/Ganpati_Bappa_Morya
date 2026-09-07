@@ -1,6 +1,8 @@
 import os
 import re
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
+
+IST = timezone(timedelta(hours=5, minutes=30), name="IST")
 from typing import Dict, Any, List, Optional
 import docx
 from reportlab.lib.pagesizes import A4
@@ -102,7 +104,7 @@ class NoticeGenerator:
         canv.setFont("Helvetica-Bold", 6.5)
         canv.drawString(x + 36, y + 22, f"Digitally signed by {signer_name.upper()}")
         canv.setFont("Helvetica", 6.0)
-        date_str = sign_date or datetime.now().strftime("%Y.%m.%d %H:%M:%S +05:30")
+        date_str = sign_date or datetime.now(IST).strftime("%Y.%m.%d %H:%M:%S +05:30")
         canv.drawString(x + 36, y + 12, f"Date: {date_str}")
         canv.drawString(x + 36, y + 4, "Verified by Legal Metrology Organisation")
 
@@ -116,7 +118,10 @@ class NoticeGenerator:
         """
         case_id = data.get("case_id", "9041")
         order_no = data.get("compounding_order_no", f"JCLM/Nagpur/{case_id}/M1/54902/2026-27")
-        date_str = data.get("date", datetime.now().strftime("%d/%m/%Y"))
+        now_local = datetime.now(IST)
+        date_str = data.get("date", now_local.strftime("%d/%m/%Y"))
+        time_str = data.get("time", now_local.strftime("%I:%M %p"))
+        stamp_str = data.get("timestamp", now_local.strftime("%Y.%m.%d %H:%M:%S +05:30"))
         firm_name = data.get("firm_name", "M/s. Gupta Retail LLP")
         firm_address = data.get("firm_address", "Plot 18, Sector 19, Vashi, Navi Mumbai")
         person_name = data.get("person_name", "Shri R. K. Gupta")
@@ -290,7 +295,7 @@ class NoticeGenerator:
         story.append(Paragraph("<b>Signature of the LMO</b><br/>Legal Metrology Officer", ParagraphStyle('LMO', fontName='Helvetica-Bold', fontSize=9, alignment=2)))
 
         def page_decorator(canv, doc):
-            self._draw_official_frame(canv, doc, total_pages=2, is_signed=is_signed, signer_name=officer_name, sign_date=date_str, signature_img=signature_img)
+            self._draw_official_frame(canv, doc, total_pages=2, is_signed=is_signed, signer_name=officer_name, sign_date=stamp_str, signature_img=signature_img)
 
         doc_pdf.build(story, onFirstPage=page_decorator, onLaterPages=page_decorator)
 
@@ -311,7 +316,10 @@ class NoticeGenerator:
         """
         notice_id = data.get("notice_id", data.get("case_id", "2026-0812"))
         notice_no = f"NOT-IN-{notice_id}"
-        date_str = data.get("date", datetime.now().strftime("%d/%m/%Y"))
+        now_local = datetime.now(IST)
+        date_str = data.get("date", now_local.strftime("%d/%m/%Y"))
+        time_str = data.get("time", now_local.strftime("%I:%M %p"))
+        stamp_str = data.get("timestamp", now_local.strftime("%Y.%m.%d %H:%M:%S +05:30"))
         firm_name = data.get("firm_name", "M/s Retail Enterprise")
         firm_address = data.get("firm_address", "Mumbai, Maharashtra")
         jurisdiction = data.get("jurisdiction", "MUMBAI CIRCLE DIVISION-II")
@@ -434,7 +442,7 @@ class NoticeGenerator:
         story.append(Paragraph(f"<b>{officer_name}</b><br/>Inspector of Legal Metrology<br/>{jurisdiction}", ParagraphStyle('LMO', fontName='Helvetica-Bold', fontSize=9, alignment=2)))
 
         def page_decorator(canv, doc):
-            self._draw_official_frame(canv, doc, total_pages=1, is_signed=is_signed, signer_name=officer_name, sign_date=date_str, signature_img=signature_img)
+            self._draw_official_frame(canv, doc, total_pages=1, is_signed=is_signed, signer_name=officer_name, sign_date=stamp_str, signature_img=signature_img)
 
         doc_pdf.build(story, onFirstPage=page_decorator, onLaterPages=page_decorator)
 
@@ -455,7 +463,10 @@ class NoticeGenerator:
         """
         case_id = data.get("case_id", "2026-SZ-01")
         receipt_no = f"SZ-MH-{case_id}"
-        date_str = data.get("date", datetime.now().strftime("%d/%m/%Y"))
+        now_local = datetime.now(IST)
+        date_str = data.get("date", now_local.strftime("%d/%m/%Y"))
+        time_str = data.get("time", now_local.strftime("%I:%M %p"))
+        stamp_str = data.get("timestamp", now_local.strftime("%Y.%m.%d %H:%M:%S +05:30"))
         firm_name = data.get("firm_name", "M/s Gupta Retail LLP")
         firm_address = data.get("firm_address", "APMC Market, Vashi, Navi Mumbai")
         officer_name = signer_name or data.get("ordering_officer_name", "LEGAL METROLOGY OFFICER")
@@ -552,7 +563,7 @@ class NoticeGenerator:
         story.append(Paragraph(f"<b>{officer_name}</b><br/>Inspector of Legal Metrology", ParagraphStyle('LMO', fontName='Helvetica-Bold', fontSize=9, alignment=2)))
 
         def page_decorator(canv, doc):
-            self._draw_official_frame(canv, doc, total_pages=1, is_signed=is_signed, signer_name=officer_name, sign_date=date_str, signature_img=signature_img)
+            self._draw_official_frame(canv, doc, total_pages=1, is_signed=is_signed, signer_name=officer_name, sign_date=stamp_str, signature_img=signature_img)
 
         doc_pdf.build(story, onFirstPage=page_decorator, onLaterPages=page_decorator)
 
@@ -573,7 +584,10 @@ class NoticeGenerator:
         """
         case_id = data.get("case_id", "2026-PAN-01")
         panch_no = f"PAN-MH-{case_id}"
-        date_str = data.get("date", datetime.now().strftime("%d/%m/%Y"))
+        now_local = datetime.now(IST)
+        date_str = data.get("date", now_local.strftime("%d/%m/%Y"))
+        time_str = data.get("time", now_local.strftime("%I:%M %p"))
+        stamp_str = data.get("timestamp", now_local.strftime("%Y.%m.%d %H:%M:%S +05:30"))
         firm_name = data.get("firm_name", "M/s Gupta Retail LLP")
         firm_address = data.get("firm_address", "Pune, Maharashtra")
         officer_name = signer_name or data.get("ordering_officer_name", "LEGAL METROLOGY OFFICER")
@@ -679,7 +693,7 @@ class NoticeGenerator:
         story.append(Paragraph(f"<b>{officer_name}</b><br/>Inspector of Legal Metrology", ParagraphStyle('LMO', fontName='Helvetica-Bold', fontSize=9, alignment=2)))
 
         def page_decorator(canv, doc):
-            self._draw_official_frame(canv, doc, total_pages=1, is_signed=is_signed, signer_name=officer_name, sign_date=date_str, signature_img=signature_img)
+            self._draw_official_frame(canv, doc, total_pages=1, is_signed=is_signed, signer_name=officer_name, sign_date=stamp_str, signature_img=signature_img)
 
         doc_pdf.build(story, onFirstPage=page_decorator, onLaterPages=page_decorator)
 

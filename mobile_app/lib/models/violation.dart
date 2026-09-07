@@ -125,8 +125,15 @@ class Violation {
         sourceImageId: json['sourceImageId'] as String?,
         inspectorRemark: json['inspectorRemark'] as String?,
         isAiGenerated: json['isAiGenerated'] as bool? ?? false,
-        detectedAt:
-            DateTime.tryParse(json['detectedAt'] as String? ?? '') ?? DateTime.now(),
+        detectedAt: () {
+          final val = json['detectedAt'] as String? ?? '';
+          var str = val.trim();
+          if (str.isEmpty) return DateTime.now();
+          if (!str.endsWith('Z') && !RegExp(r'[+-]\d{2}:?\d{2}$').hasMatch(str)) {
+            str = '${str}Z';
+          }
+          return (DateTime.tryParse(str) ?? DateTime.now()).toLocal();
+        }(),
       );
 
   Violation copyWith({

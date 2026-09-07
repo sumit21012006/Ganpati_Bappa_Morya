@@ -62,7 +62,7 @@ class NoticePdfGenerator {
 
     final Map<NoticeType, String> paths = {};
     final dateFormat = DateFormat('dd/MM/yyyy');
-    final todayStr = dateFormat.format(cleanNotice.issuedDate);
+    final todayStr = dateFormat.format(notice.issuedDate);
     final deadlineStr = notice.deadline != null
         ? dateFormat.format(notice.deadline!)
         : dateFormat.format(DateTime.now().add(const Duration(days: 15)));
@@ -131,7 +131,7 @@ class NoticePdfGenerator {
     );
 
     final dateFormat = DateFormat('dd/MM/yyyy');
-    final todayStr = dateFormat.format(cleanNotice.issuedDate);
+    final todayStr = dateFormat.format(notice.issuedDate);
     final deadlineStr = notice.deadline != null
         ? dateFormat.format(notice.deadline!)
         : dateFormat.format(DateTime.now().add(const Duration(days: 15)));
@@ -526,7 +526,7 @@ class NoticePdfGenerator {
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                   children: [
                     pw.Text('Panchanama No:  PAN-MH-${notice.id}', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10)),
-                    pw.Text('Date:  $todayStr  Time: 11:30 AM', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9.5)),
+                    pw.Text('Date:  $todayStr  Time: ${DateFormat("hh:mm a").format(notice.issuedDate)}', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9.5)),
                   ],
                 ),
                 pw.SizedBox(height: 8),
@@ -734,6 +734,7 @@ class NoticePdfGenerator {
             style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9)),
         pw.Text('Legal Metrology Officer (INS-MH-4021)', style: const pw.TextStyle(fontSize: 8)),
         pw.Text('Government of Maharashtra', style: const pw.TextStyle(fontSize: 7.5)),
+        pw.Text('Signed: ${DateFormat("dd/MM/yyyy, hh:mm a").format(signature?.signedAt ?? DateTime.now())} IST', style: const pw.TextStyle(fontSize: 6.5, color: PdfColors.grey700)),
       ],
     );
   }
@@ -778,7 +779,7 @@ class NoticePdfGenerator {
                 style: pw.TextStyle(fontSize: 7.5, fontWeight: pw.FontWeight.bold, color: PdfColors.green900),
               ),
               pw.Text(
-                'DocuSign / eMudhra DSC Verified | $todayStr IST',
+                'DocuSign / eMudhra DSC Verified | ${DateFormat("dd/MM/yyyy, hh:mm:ss a").format(signature?.signedAt ?? DateTime.now())} IST',
                 style: const pw.TextStyle(fontSize: 6.5, color: PdfColors.green800),
               ),
             ],

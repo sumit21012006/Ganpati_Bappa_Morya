@@ -28,6 +28,7 @@ class PaymentInitiation {
     required this.amount,
     required this.currency,
     this.checkoutNote,
+    this.checkoutUrl,
   });
 
   final String paymentId;
@@ -35,6 +36,7 @@ class PaymentInitiation {
   final double amount;
   final String currency;
   final String? checkoutNote;
+  final String? checkoutUrl;
 }
 
 /// Payment record for a compounding order / penalty.

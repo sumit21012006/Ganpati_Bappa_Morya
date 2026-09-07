@@ -246,7 +246,7 @@ class NoticeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dateFormat = DateFormat('d MMM yyyy');
+    final dateFormat = DateFormat('d MMM yyyy, h:mm a');
     return Card(
       child: InkWell(
         onTap: onTap,

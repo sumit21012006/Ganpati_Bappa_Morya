@@ -113,6 +113,8 @@ class Notice {
     this.mrp,
     this.manufacturerName,
     this.businessAddress,
+    this.paymentStatus,
+    this.digitalSignatureHash,
   });
 
   final String id;
@@ -147,6 +149,8 @@ class Notice {
   final String? mrp;
   final String? manufacturerName;
   final String? businessAddress;
+  final String? paymentStatus;
+  final String? digitalSignatureHash;
 
   bool get requiresAction =>
       status == NoticeStatus.issued || status == NoticeStatus.delivered;
@@ -177,6 +181,8 @@ class Notice {
     String? mrp,
     String? manufacturerName,
     String? businessAddress,
+    String? paymentStatus,
+    String? digitalSignatureHash,
   }) {
     return Notice(
       id: id ?? this.id,
@@ -204,6 +210,8 @@ class Notice {
       mrp: mrp ?? this.mrp,
       manufacturerName: manufacturerName ?? this.manufacturerName,
       businessAddress: businessAddress ?? this.businessAddress,
+      paymentStatus: paymentStatus ?? this.paymentStatus,
+      digitalSignatureHash: digitalSignatureHash ?? this.digitalSignatureHash,
     );
   }
 }

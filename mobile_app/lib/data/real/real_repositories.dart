@@ -34,6 +34,30 @@ import '../../models/self_check.dart';
 import '../../models/supply_chain.dart';
 import '../../models/violation.dart';
 
+DateTime _parseDateTime(dynamic val) {
+  if (val == null) return DateTime.now();
+  var str = val.toString().trim();
+  if (str.isEmpty) return DateTime.now();
+  if (!str.endsWith('Z') && !RegExp(r'[+-]\d{2}:?\d{2}$').hasMatch(str)) {
+    str = '${str}Z';
+  }
+  final dt = DateTime.tryParse(str);
+  if (dt == null) return DateTime.now();
+  return dt.toLocal();
+}
+
+DateTime? _tryParseDateTime(dynamic val) {
+  if (val == null) return null;
+  var str = val.toString().trim();
+  if (str.isEmpty) return null;
+  if (!str.endsWith('Z') && !RegExp(r'[+-]\d{2}:?\d{2}$').hasMatch(str)) {
+    str = '${str}Z';
+  }
+  final dt = DateTime.tryParse(str);
+  return dt?.toLocal();
+}
+
+
 Map<String, dynamic> _map(Object? data) =>
     data is Map<String, dynamic> ? data : <String, dynamic>{};
 
@@ -173,6 +197,39 @@ class RealBusinessRepository implements BusinessRepository {
   }
 
   @override
+  
+  @override
+  Future<Business> quickAddBusiness({
+    required String name,
+    required String address,
+    required BusinessType type,
+    String? gstin,
+    String? contactPhone,
+    double? latitude,
+    double? longitude,
+    String? district,
+    String? pincode,
+  }) async {
+    try {
+      final res = await _client.dio.post('/businesses/quick-add', data: {
+        'name': name,
+        'address': address,
+        'type': type.label,
+        if (gstin != null && gstin.trim().isNotEmpty) 'gstin': gstin.trim(),
+        if (contactPhone != null && contactPhone.trim().isNotEmpty)
+          'contactPhone': contactPhone.trim(),
+        if (latitude != null) 'latitude': latitude,
+        if (longitude != null) 'longitude': longitude,
+        if (district != null) 'district': district,
+        if (pincode != null) 'pincode': pincode,
+      });
+      return Business.fromJson(_map(res.data));
+    } catch (e) {
+      throw mapException(e);
+    }
+  }
+
+  @override
   Future<Business> updateBusiness(Business business) async {
     try {
       final res = await _client.dio.patch('/businesses/${business.id}', data: {
@@ -297,13 +354,13 @@ class RealInspectionRepository implements InspectionRepository {
         (s) => s.name.toLowerCase() == (json['status'] as String? ?? '').toLowerCase(),
         orElse: () => InspectionStatus.assigned,
       ),
-      scheduledAt: DateTime.tryParse(json['scheduledAt'] as String? ?? '') ?? DateTime.now(),
-      createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ?? DateTime.now(),
+      scheduledAt: _parseDateTime(json['scheduledAt']),
+      createdAt: _parseDateTime(json['createdAt']),
       inspectorId: json['inspectorId'] as String?,
       inspectorName: json['inspectorName'] as String?,
       complaintId: json['complaintId'] as String?,
       notes: json['notes'] as String?,
-      completedAt: DateTime.tryParse(json['completedAt'] as String? ?? ''),
+      completedAt: _tryParseDateTime(json['completedAt']),
     );
   }
 }
@@ -463,7 +520,7 @@ class RealOcrRepository implements OcrRepository {
         ),
         fields: _list(json['fields']).map(_parseField).toList(),
         analyzedAt:
-            DateTime.tryParse(json['analyzedAt'] as String? ?? '') ?? DateTime.now(),
+            _parseDateTime(json['analyzedAt']),
         currentStep: OcrPipelineStep.values.firstWhere(
           (s) => s.name == (json['progressStep'] as String?),
           orElse: () => OcrPipelineStep.extractingText,
@@ -582,14 +639,14 @@ class RealOffenceRepository implements OffenceRepository {
           (t) => t.name == (data['tier'] as String?),
           orElse: () => OffenceTier.none,
         ),
-        checkedAt: DateTime.tryParse(data['checkedAt'] as String? ?? '') ?? DateTime.now(),
+        checkedAt: _parseDateTime(data['checkedAt']),
         matchConfidence: (data['matchConfidence'] as num?)?.toDouble(),
         records: _list(data['records'])
             .map((r) => OffenceRecord(
                   caseId: r['caseId'] as String,
                   businessName: r['businessName'] as String? ?? '',
                   location: r['location'] as String? ?? '',
-                  date: DateTime.tryParse(r['date'] as String? ?? '') ?? DateTime.now(),
+                  date: _parseDateTime(r['date']),
                   violationSummary: r['violationSummary'] as String? ?? '',
                   caseStatus: r['caseStatus'] as String? ?? '',
                 ))
@@ -740,8 +797,7 @@ class RealNoticeRepository implements NoticeRepository {
           orElse: () => NoticeStatus.draft,
         ),
         productName: json['productName'] as String? ?? '',
-        issuedDate:
-            DateTime.tryParse(json['issuedDate'] as String? ?? '') ?? DateTime.now(),
+        issuedDate: _parseDateTime(json['issuedDate']),
         sections: _list(json['sections'])
             .whereType<Map>()
             .map((s) => NoticeSection.fromJson(Map<String, dynamic>.from(s)))
@@ -754,7 +810,7 @@ class RealNoticeRepository implements NoticeRepository {
         inspectionId: json['inspectionId'] as String? ?? '',
         businessId: json['businessId'] as String? ?? '',
         businessName: json['businessName'] as String? ?? '',
-        deadline: DateTime.tryParse(json['deadline'] as String? ?? ''),
+        deadline: _tryParseDateTime(json['deadline']),
         penaltyAmount: (json['penaltyAmount'] as num?)?.toDouble(),
         bodyText: json['bodyText'] as String?,
         inspectorRemark: json['inspectorRemark'] as String?,
@@ -764,6 +820,8 @@ class RealNoticeRepository implements NoticeRepository {
         mrp: json['mrp'] as String?,
         manufacturerName: json['manufacturerName'] as String?,
         businessAddress: json['businessAddress'] as String?,
+        paymentStatus: (json['payment_status'] as String?) ?? (json['paymentStatus'] as String?),
+        digitalSignatureHash: (json['digital_signature_hash'] as String?) ?? (json['digitalSignatureHash'] as String?),
         relatedNotices: related,
       );
   }
@@ -824,7 +882,7 @@ class RealSeizureRepository implements SeizureRepository {
                 productName: s['productName'] as String? ?? '',
                 quantity: s['quantity'] as String? ?? '',
                 reason: s['reason'] as String? ?? '',
-                capturedAt: DateTime.tryParse(s['capturedAt'] as String? ?? '') ?? DateTime.now(),
+                capturedAt: _parseDateTime(s['capturedAt']),
               ))
           .toList();
     } catch (e) {
@@ -904,7 +962,7 @@ class RealSelfCheckRepository implements SelfCheckRepository {
         id: json['id'] as String,
         productName: json['productName'] as String? ?? '',
         performedAt:
-            DateTime.tryParse(json['performedAt'] as String? ?? '') ?? DateTime.now(),
+            _parseDateTime(json['performedAt']),
         isCompliant: json['isCompliant'] as bool? ?? false,
         issues: _list(json['issues'])
             .map((i) => SelfCheckIssue(
@@ -1023,6 +1081,7 @@ class RealPaymentRepository implements PaymentRepository {
         amount: (data['amount'] as num).toDouble(),
         currency: data['currency'] as String? ?? 'INR',
         checkoutNote: data['note'] as String?,
+        checkoutUrl: (data['receiptUrl'] as String?) ?? (data['checkoutUrl'] as String?),
       );
     } catch (e) {
       throw mapException(e);
@@ -1043,8 +1102,8 @@ class RealPaymentRepository implements PaymentRepository {
           (s) => s.name == (data['status'] as String?),
           orElse: () => PaymentStatus.pendingVerification,
         ),
-        createdAt: DateTime.tryParse(data['createdAt'] as String? ?? '') ?? DateTime.now(),
-        completedAt: DateTime.tryParse(data['completedAt'] as String? ?? ''),
+        createdAt: _parseDateTime(data['createdAt']),
+        completedAt: _tryParseDateTime(data['completedAt']),
         receiptUrl: data['receiptUrl'] as String?,
       );
     } catch (e) {
@@ -1118,7 +1177,7 @@ class RealCaseRepository implements CaseRepository {
           orElse: () => CaseStatus.underReview,
         ),
         openedAt:
-            DateTime.tryParse(json['openedAt'] as String? ?? '') ?? DateTime.now(),
+            _parseDateTime(json['openedAt']),
         timeline: _list(json['timeline'])
             .map((t) => CaseTimelineEntry(
                   title: t['title'] as String,
@@ -1135,7 +1194,7 @@ class RealCaseRepository implements CaseRepository {
         role: UserRole.inspector,
         counterpartyName: json['counterpartyName'] as String? ?? '',
         currentStage: json['currentStage'] as String?,
-        deadline: DateTime.tryParse(json['deadline'] as String? ?? ''),
+        deadline: _tryParseDateTime(json['deadline']),
         requiredAction: json['requiredAction'] as String?,
         noticeType: NoticeType.values.firstWhere(
           (t) => t.name == (json['noticeType'] as String?),

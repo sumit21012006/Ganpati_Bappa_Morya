@@ -26,6 +26,10 @@ interface BackendNotice {
   sections?: Array<{ id?: string; citation?: string; title?: string; description?: string }>;
   isAiDraft?: boolean;
   pdfUrl?: string;
+  payment_status?: string;
+  paymentStatus?: string;
+  digital_signature_hash?: string;
+  digitalSignatureHash?: string;
 }
 
 function mapNoticeType(t: string | undefined): NoticeType {
@@ -40,8 +44,8 @@ function mapNoticeStatus(s: string | undefined): NoticeStatus {
   const upper = (s || 'PENDING').toUpperCase();
   if (upper === 'APPROVED') return 'APPROVED';
   if (upper === 'REJECTED') return 'REJECTED';
-  if (upper === 'DISPUTED') return 'DISPUTED';
-  if (upper === 'PAID') return 'PAID';
+  if (upper === 'DISPUTED' || upper === 'UNDERDISPUTE') return 'DISPUTED';
+  if (upper === 'PAID' || upper === 'CLOSED') return 'PAID';
   return 'PENDING';
 }
 
@@ -56,7 +60,9 @@ function normalizeNotice(b: BackendNotice): Notice {
     gstin: b.gstin || 'N/A',
     violatingProduct: b.productName || 'Packaged Commodity',
     sectionRefs: (b.sections || []).map((s) => s.citation || 'Rule 6').filter(Boolean),
-    status: mapNoticeStatus(b.status),
+    status: (b.payment_status?.toUpperCase() === 'PAID' || b.paymentStatus?.toUpperCase() === 'PAID') ? 'PAID' : mapNoticeStatus(b.status),
+    paymentStatus: (b.payment_status || b.paymentStatus || (b.status?.toLowerCase() === 'paid' ? 'PAID' : 'UNPAID')).toUpperCase() as any,
+    digitalSignatureHash: b.digital_signature_hash || b.digitalSignatureHash,
     issuedDate: b.issuedDate || new Date().toISOString(),
     deadlineDate: b.deadline || new Date(Date.now() + 15 * 86400000).toISOString(),
     penaltyAmount: b.penaltyAmount || 25000,

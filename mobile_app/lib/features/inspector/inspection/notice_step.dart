@@ -523,7 +523,7 @@ class _NoticeStepState extends ConsumerState<NoticeStep> {
             KeyValueRow(label: 'Notice Reference', value: notice.id),
             KeyValueRow(label: 'Case ID', value: notice.caseId),
             KeyValueRow(label: 'Establishment', value: notice.businessName),
-            KeyValueRow(label: 'Issued Date', value: dateFormat.format(notice.issuedDate)),
+            KeyValueRow(label: 'Issued Date & Time', value: DateFormat('d MMM yyyy, h:mm a').format(notice.issuedDate)),
             if (notice.deadline != null)
               KeyValueRow(
                 label: 'Compliance Deadline',

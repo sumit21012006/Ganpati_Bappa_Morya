@@ -117,6 +117,8 @@ export interface Notice {
   deadlineDate: string;
   penaltyAmount: number;
   rewardPointsAllocated: number;
+  paymentStatus?: 'PAID' | 'UNPAID' | 'EXEMPTED' | 'PROSECUTION';
+  digitalSignatureHash?: string;
   pdfUrl?: string;
   signatureUrl?: string;
   offenceTier: 'FIRST_OFFENCE' | 'SECOND_OFFENCE';
