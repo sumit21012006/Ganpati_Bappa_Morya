@@ -3,6 +3,9 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { UserRole, AuthUser } from '@/types';
 import { authDb } from '@/lib/db';
+import { loginToBackend, registerToBackend, getAuthMe } from '@/lib/api/auth';
+import { clearAuthToken } from '@/lib/apiClient';
+
 
 export type CitizenTab = 'FILE_COMPLAINT' | 'MY_COMPLAINTS';
 export type ControllerTab = 'COMMAND_DASHBOARD' | 'COMPOUNDING_QUEUE' | 'SUPPLY_CHAIN' | 'JURISDICTION' | 'PANCHANAMA';
@@ -24,7 +27,7 @@ interface AppContextType {
   setRole: (role: UserRole) => void;
   toggleRole: () => void;
   isLoggedIn: boolean;
-  loginUser: (identifier: string, pass: string, role: UserRole, rememberMe?: boolean) => void;
+  loginUser: (identifier: string, pass: string, role: UserRole, rememberMe?: boolean) => Promise<void>;
   registerUser: (
     data: {
       name: string;
@@ -36,7 +39,7 @@ interface AppContextType {
       upiVpa?: string;
     },
     rememberMe?: boolean
-  ) => void;
+  ) => Promise<void>;
   logout: () => void;
   citizenTab: CitizenTab;
   setCitizenTab: (tab: CitizenTab) => void;
@@ -69,6 +72,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     'Alert: Repeat violation detected for FastFoods Brand in Pune Baramati Sector — Automated Section 36(2)...'
   );
   const [rewardPointsBalance, setRewardPointsBalance] = useState<number>(2750);
+  const [isAuthChecking, setIsAuthChecking] = useState<boolean>(true);
+
 
   const [notifications, setNotifications] = useState<AppNotification[]>([
     {
@@ -113,25 +118,44 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const [notificationCount, setNotificationCount] = useState<number>(3);
 
-  // Restore saved login session on initial mount if "Save Login Information" was selected
+  // Revalidate session with backend GET /api/v1/auth/me on initial app load
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedSession = localStorage.getItem('sih_saved_user_session');
-      if (savedSession) {
-        try {
-          const parsedUser = JSON.parse(savedSession);
-          if (parsedUser && parsedUser.id) {
-            setUser(parsedUser);
-            setRole(parsedUser.role);
-            setIsLoggedIn(true);
-            if (parsedUser.rewardPoints) setRewardPointsBalance(parsedUser.rewardPoints);
-          }
-        } catch (err) {
-          console.error('Error parsing saved login session:', err);
-        }
+    async function revalidateSession() {
+      if (typeof window === 'undefined') {
+        setIsAuthChecking(false);
+        return;
+      }
+
+      const token = localStorage.getItem('sih_auth_token');
+      if (!token) {
+        setIsLoggedIn(false);
+        setUser(null);
+        setIsAuthChecking(false);
+        return;
+      }
+
+      try {
+        // Verify real active session against backend
+        const verifiedUser = await getAuthMe();
+        setUser(verifiedUser);
+        setRole(verifiedUser.role);
+        setIsLoggedIn(true);
+        if (verifiedUser.rewardPoints) setRewardPointsBalance(verifiedUser.rewardPoints);
+        localStorage.setItem('sih_saved_user_session', JSON.stringify(verifiedUser));
+      } catch (err) {
+        console.warn('[auth] Session revalidation failed against /api/v1/auth/me, resetting session:', err);
+        clearAuthToken();
+        localStorage.removeItem('sih_saved_user_session');
+        setUser(null);
+        setIsLoggedIn(false);
+      } finally {
+        setIsAuthChecking(false);
       }
     }
+
+    revalidateSession();
   }, []);
+
 
   useEffect(() => {
     if (user) {
@@ -145,8 +169,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setNotificationCount(unread);
   }, [notifications]);
 
-  const loginUser = (identifier: string, pass: string, targetRole: UserRole, rememberMe: boolean = true) => {
-    const loggedInUser = authDb.login(identifier, pass, targetRole);
+  const loginUser = async (identifier: string, pass: string, targetRole: UserRole, rememberMe: boolean = true): Promise<void> => {
+    let loggedInUser: AuthUser;
+    try {
+      // Try NestJS backend first
+      loggedInUser = await loginToBackend(identifier, pass, targetRole);
+      console.info('[auth] Logged in via NestJS backend');
+    } catch (backendErr) {
+      console.warn('[auth] Backend login failed, falling back to local authDb:', backendErr);
+      // Fall back to local users.json / localStorage
+      loggedInUser = authDb.login(identifier, pass, targetRole);
+    }
     setUser(loggedInUser);
     setRole(loggedInUser.role);
     setIsLoggedIn(true);
@@ -161,7 +194,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const registerUser = (
+  const registerUser = async (
     data: {
       name: string;
       email: string;
@@ -172,8 +205,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
       upiVpa?: string;
     },
     rememberMe: boolean = true
-  ) => {
-    const createdUser = authDb.register(data);
+  ): Promise<void> => {
+    let createdUser: AuthUser;
+    try {
+      // Try NestJS backend first
+      createdUser = await registerToBackend(data);
+      // Also register locally so next local-fallback login works
+      try { authDb.register(data); } catch { /* already exists locally */ }
+      console.info('[auth] Registered via NestJS backend');
+    } catch (backendErr) {
+      console.warn('[auth] Backend register failed, falling back to local authDb:', backendErr);
+      createdUser = authDb.register(data);
+    }
     setUser(createdUser);
     setRole(createdUser.role);
     setIsLoggedIn(true);
@@ -191,6 +234,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     setUser(null);
     setIsLoggedIn(false);
+    clearAuthToken();
     if (typeof window !== 'undefined') {
       localStorage.removeItem('sih_saved_user_session');
     }
@@ -219,6 +263,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
     };
     setNotifications((prev) => [newNotif, ...prev]);
   };
+
+  if (isAuthChecking) {
+    return (
+      <div className="min-h-screen bg-[#EEF2F6] flex flex-col items-center justify-center font-sans">
+        <div className="flex items-center space-x-3 text-slate-800 animate-pulse">
+          <div className="w-8 h-8 rounded-lg bg-amber-500 flex items-center justify-center font-black text-slate-950 text-sm">LM</div>
+          <span className="text-sm font-bold tracking-wide text-slate-700">Validating Sovereign Metrology Session...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <AppContext.Provider

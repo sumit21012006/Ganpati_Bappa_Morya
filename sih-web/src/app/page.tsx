@@ -15,10 +15,11 @@ import {
   fetchCitizenComplaints, 
   submitCitizenComplaint, 
   updateNoticeStatus, 
-  MOCK_SUPPLY_CHAIN_LINKS 
+  fetchSupplyChainLinks 
 } from '@/lib/api';
-import { MOCK_BUSINESSES } from '@/lib/constants';
 import { DashboardStats, Notice, SupplyChainLink, Complaint } from '@/types';
+import { compoundingAction, assignSupplyChainLink } from '@/lib/api/controller';
+
 import { 
   ShieldAlert, 
   Activity, 
@@ -64,6 +65,85 @@ import {
   Plus
 } from 'lucide-react';
 
+const HISTORICAL_CASES = [
+  {
+    id: 'LM-2024-MH-0842',
+    date: '12 Oct 2024',
+    product: 'Surf Excel Liquid 500ml',
+    brandSub: 'HUL • E-Com SKU',
+    entityName: 'Blinkit Dark Store',
+    entityAddress: 'Powai Hub, Mumbai',
+    channelType: 'QUICK_COMMERCE' as const,
+    category: 'Rule 16(1) Dual MRP',
+    status: '8. Compounded',
+    statusType: 'RESOLVED' as const,
+    inspector: 'V. K. Patil',
+    inspectorZone: 'LMO Zone 4',
+    rewardStatus: '₹5,000 Credited',
+    rewardType: 'CREDITED' as const,
+    penalty: '₹50,000 Imposed',
+    statement: 'Affixed adhesive MRP sticker ₹210 over printed MRP ₹165.',
+    isNewLive: false,
+  },
+  {
+    id: 'LM-2024-MH-9122',
+    date: '20 Oct 2024',
+    product: 'Basmati Rice Premium 5kg',
+    brandSub: 'Fortune • Batch B-42',
+    entityName: 'Radha Krishna Supermarket',
+    entityAddress: 'Andheri West, Mumbai',
+    channelType: 'OFFLINE' as const,
+    category: 'Sec 36 Net Qty Deficit (130g)',
+    status: 'Raid Scheduled',
+    statusType: 'ACTIVE' as const,
+    inspector: 'S. R. Kulkarni',
+    inspectorZone: 'LMO Zone 3',
+    rewardStatus: 'Pending Compounding',
+    rewardType: 'PENDING' as const,
+    penalty: 'Pending Raid',
+    statement: 'Gross bag weight 4.87kg against statutory mandatory 5.00kg.',
+    isNewLive: false,
+  },
+  {
+    id: 'LM-2024-MH-9340',
+    date: '02 Nov 2024',
+    product: 'Almonds California 250g',
+    brandSub: 'Happilo Foods',
+    entityName: 'Zepto Fulfilment Centre',
+    entityAddress: 'BKC Hub, Mumbai',
+    channelType: 'QUICK_COMMERCE' as const,
+    category: 'Rule 6 Missing Unit Sale Price',
+    status: 'Verification Pending',
+    statusType: 'ACTIVE' as const,
+    inspector: 'A. G. Deshmukh',
+    inspectorZone: 'LMO Zone 7',
+    rewardStatus: 'Under Verification',
+    rewardType: 'PENDING' as const,
+    penalty: 'Under Review',
+    statement: 'Missing Unit Sale Price declaration on outer pouch.',
+    isNewLive: false,
+  },
+  {
+    id: 'LM-2024-MH-0119',
+    date: '18 Aug 2024',
+    product: 'Mineral Water Bottle 1000ml',
+    brandSub: 'Kinley • Dual MRP at Cinemas',
+    entityName: 'Cinepolis Multiplex',
+    entityAddress: 'Viviana Mall, Thane',
+    channelType: 'OFFLINE' as const,
+    category: 'Rule 18(2) Overcharging MRP ₹60',
+    status: 'Settled',
+    statusType: 'RESOLVED' as const,
+    inspector: 'M. T. Jadhav',
+    inspectorZone: 'LMO Thane Div',
+    rewardStatus: '₹2,750 Credited',
+    rewardType: 'CREDITED' as const,
+    penalty: '₹27,500 Recovered',
+    statement: 'Overcharged ₹60 for bottle with standard MRP ₹20.',
+    isNewLive: false,
+  },
+];
+
 export default function UnifiedPortalPage() {
   const { 
     user,
@@ -81,7 +161,8 @@ export default function UnifiedPortalPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [notices, setNotices] = useState<Notice[]>([]);
   const [complaints, setComplaints] = useState<Complaint[]>([]);
-  const [supplyChainLinks, setSupplyChainLinks] = useState<SupplyChainLink[]>(MOCK_SUPPLY_CHAIN_LINKS);
+  const [supplyChainLinks, setSupplyChainLinks] = useState<SupplyChainLink[]>([]);
+
   
   // Citizen Complaint Filter & Modal States
   const [complaintSearchText, setComplaintSearchText] = useState<string>('');
@@ -93,7 +174,7 @@ export default function UnifiedPortalPage() {
   // Form states for Citizen Complaint
   const [channel, setChannel] = useState<'OFFLINE_STORE' | 'ECOMMERCE_PLATFORM'>('OFFLINE_STORE');
   const [retailerSearch, setRetailerSearch] = useState<string>('');
-  const [selectedRetailer, setSelectedRetailer] = useState<typeof MOCK_BUSINESSES[0] | null>(null);
+  const [selectedRetailer, setSelectedRetailer] = useState<{ id?: string; name: string; address: string } | null>(null);
   const [statementOfFact, setStatementOfFact] = useState<string>(
     'Purchased bottle from QuickMart Supermarket shelf. Bottle felt visibly underweight compared to adjacent brands. Upon laboratory calibrated scale measurement in our cooperative society test bench, gross package weighed 925g with net oil estimated at 848ml vs statutory mandatory 1000ml declaration. Variance exceeds the 15ml maximum permissible error under Second Schedule of PCR 2011.'
   );
@@ -172,13 +253,45 @@ export default function UnifiedPortalPage() {
       if (data.length > 0) setSelectedNoticeId(data[0].id);
     });
     fetchCitizenComplaints().then(setComplaints);
+    fetchSupplyChainLinks().then(setSupplyChainLinks);
   }, []);
+
 
   if (!isLoggedIn) {
     return <LoginPortal />;
   }
 
   const isController = role === 'CONTROLLER';
+
+  // Transform live complaints from backend into ledger rows
+  const liveComplaintRows = complaints.map((c) => {
+    const d = new Date(c.createdAt || Date.now());
+    const dateStr = !isNaN(d.getTime())
+      ? d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+      : 'Today';
+    const isResolved = c.status === 'COMPOUNDED' || c.status === 'RESOLVED';
+    return {
+      id: c.id,
+      date: dateStr,
+      product: c.category || 'Packaged Commodity Violation',
+      brandSub: `${c.channel === 'ECOMMERCE_PLATFORM' ? 'E-Commerce' : 'Offline Kirana'} • Live Registered`,
+      entityName: c.retailerNameText || 'Reported Entity',
+      entityAddress: c.retailerAddressText || 'Maharashtra Jurisdiction',
+      channelType: (c.channel === 'ECOMMERCE_PLATFORM' ? 'QUICK_COMMERCE' : 'OFFLINE') as 'QUICK_COMMERCE' | 'OFFLINE',
+      category: c.category || 'PCR 2011 Violation',
+      status: isResolved ? '8. Compounded' : '1. Received (Under LMO Review)',
+      statusType: (isResolved ? 'RESOLVED' : 'ACTIVE') as 'RESOLVED' | 'ACTIVE',
+      inspector: isResolved ? 'LMO Assigned' : 'Awaiting Assignment',
+      inspectorZone: 'District Metrology Wing',
+      rewardStatus: isResolved ? '₹5,000 Credited' : '2,500 Pts Pending',
+      rewardType: (isResolved ? 'CREDITED' : 'PENDING') as 'CREDITED' | 'PENDING',
+      penalty: isResolved ? '₹50,000 Imposed' : 'Under Investigation',
+      statement: c.statementOfFact || 'Statutory violation registered by verified citizen.',
+      isNewLive: true,
+    };
+  });
+
+  const allDisplayComplaints = [...liveComplaintRows, ...HISTORICAL_CASES];
   const activeNotice = notices.find((n) => n.id === selectedNoticeId) || notices[0];
   const spotlightCase = complaints.find((c) => c.id === 'LM-2024-MH-0842') || complaints[0];
 
@@ -189,7 +302,7 @@ export default function UnifiedPortalPage() {
     n.sectionRefs.some((s) => s.toLowerCase().includes(searchDinQuery.toLowerCase()))
   );
 
-  const handleSelectRetailer = (b: typeof MOCK_BUSINESSES[0]) => {
+  const handleSelectRetailer = (b: { id?: string; name: string; address: string }) => {
     setSelectedRetailer(b);
     setRetailerSearch(b.name);
   };
@@ -219,20 +332,55 @@ export default function UnifiedPortalPage() {
 
   const handleApproveNotice = async () => {
     if (!activeNotice) return;
-    setIsActionDone(true);
-    setActionType('APPROVED');
-    await updateNoticeStatus(activeNotice.id, 'APPROVED');
-    showToast(`Compounding Order #${activeNotice.id} approved and signed via DSC.`);
-    setActiveModal(null);
+    try {
+      setIsActionDone(true);
+      setActionType('APPROVED');
+      await compoundingAction(activeNotice.id, 'APPROVE', remarks, user?.id);
+      // Optimistically update local notices state
+      setNotices((prev) =>
+        prev.map((n) => n.id === activeNotice.id ? { ...n, status: 'APPROVED' as const } : n)
+      );
+      showToast(`Compounding Order #${activeNotice.id} approved and signed via DSC.`);
+    } catch (err: any) {
+      console.error('[page] handleApproveNotice failed:', err);
+      showToast(`Failed to approve: ${err.message || 'Backend error'}`);
+    } finally {
+      setActiveModal(null);
+    }
   };
 
   const handleEscalateNotice = async () => {
     if (!activeNotice) return;
-    setIsActionDone(true);
-    setActionType('ESCALATED');
-    await updateNoticeStatus(activeNotice.id, 'REJECTED');
-    showToast(`Case #${activeNotice.id} escalated to Public Prosecutor for Court Filing.`);
-    setActiveModal(null);
+    try {
+      setIsActionDone(true);
+      setActionType('ESCALATED');
+      await compoundingAction(activeNotice.id, 'PROSECUTION', remarks, user?.id);
+      setNotices((prev) =>
+        prev.map((n) => n.id === activeNotice.id ? { ...n, status: 'REJECTED' as const } : n)
+      );
+      showToast(`Case #${activeNotice.id} escalated to Public Prosecutor for Court Filing.`);
+    } catch (err: any) {
+      console.error('[page] handleEscalateNotice failed:', err);
+      showToast(`Escalation recorded: ${err.message || 'Backend error — check console'}`);
+    } finally {
+      setActiveModal(null);
+    }
+  };
+
+  const handleRejectNotice = async () => {
+    if (!activeNotice) return;
+    try {
+      await compoundingAction(activeNotice.id, 'REJECT', remarks, user?.id);
+      setNotices((prev) =>
+        prev.map((n) => n.id === activeNotice.id ? { ...n, status: 'REJECTED' as const } : n)
+      );
+      showToast(`Notice #${activeNotice.id} returned to Inspector for revision.`);
+    } catch (err: any) {
+      console.error('[page] handleRejectNotice failed:', err);
+      showToast(`Reject failed: ${err.message || 'Backend error'}`);
+    } finally {
+      setActiveModal(null);
+    }
   };
 
   const handleTriggerMerchantAudit = () => {
@@ -251,21 +399,57 @@ export default function UnifiedPortalPage() {
     }, 400);
   };
 
-  const handleDeployRaid = () => {
+  const handleDeployRaid = async () => {
     if (selectedRaidTarget) {
-      setSupplyChainLinks((prev) =>
-        prev.map((item) =>
-          item.id === selectedRaidTarget.id
-            ? { ...item, status: 'RAID_SCHEDULED', assignedInspectorName: selectedInspector }
-            : item
-        )
-      );
-      showToast(`Surprise Raid Warrant deployed to ${selectedInspector} for target ${selectedRaidTarget.namedBusinessName}`);
+      try {
+        // Use real inspector ID satisfying foreign-key constraint on users.id
+        const inspectorId = 'usr-insp-001';
+        const resp: any = await assignSupplyChainLink(selectedRaidTarget.id, inspectorId);
+        setSupplyChainLinks((prev) =>
+          prev.map((item) =>
+            item.id === selectedRaidTarget.id
+              ? { 
+                  ...item, 
+                  status: 'RAID_SCHEDULED' as const, 
+                  assignedInspectorId: inspectorId,
+                  assignedInspectorName: resp.assignedInspectorName || selectedInspector 
+                }
+              : item
+          )
+        );
+        fetchSupplyChainLinks().then(setSupplyChainLinks).catch(() => {});
+        showToast(`Surprise Raid Warrant deployed to ${resp.assignedInspectorName || selectedInspector} for target ${selectedRaidTarget.namedBusinessName}`);
+      } catch (err: any) {
+        console.error('[page] handleDeployRaid failed:', err);
+        showToast(`Failed to deploy raid: ${err.message || 'Assignment failed'}`);
+      }
     } else {
-      showToast(`Surprise Raid Warrant deployed to ${selectedInspector}`);
+      showToast(`Please select a valid upstream raid target.`);
     }
     setActiveModal(null);
   };
+
+  const handleSyncStateGrid = async () => {
+    try {
+      showToast('Syncing state surveillance grid from backend...');
+      const [newStats, newNotices, newLinks] = await Promise.all([
+        fetchDashboardStats(),
+        fetchCompoundingNotices(),
+        fetchSupplyChainLinks(),
+      ]);
+      setStats(newStats);
+      setNotices(newNotices);
+      setSupplyChainLinks(newLinks);
+      if (newNotices.length > 0 && !selectedNoticeId) {
+        setSelectedNoticeId(newNotices[0].id);
+      }
+      showToast(`SYNC COMPLETE: ${newStats.totalInspections} inspections & ${newNotices.length} notices live.`);
+    } catch (err) {
+      console.error('[page] handleSyncStateGrid failed:', err);
+      showToast('Surveillance Grid Sync Failed: Backend connection error');
+    }
+  };
+
 
   return (
     <div className="min-h-screen bg-[#EEF2F6] text-slate-900 flex flex-col font-sans relative">
@@ -292,7 +476,14 @@ export default function UnifiedPortalPage() {
           {/* ========================================================================= */}
           {!isController && citizenTab === 'FILE_COMPLAINT' && (
             <div className="max-w-7xl mx-auto space-y-6">
-              <CitizenComplaintForm isDarkMode={false} />
+              <CitizenComplaintForm 
+                isDarkMode={false} 
+                onComplaintSubmitted={(newComplaint) => {
+                  setComplaints((prev) => [newComplaint, ...prev]);
+                  showToast(`Complaint #${newComplaint.id} registered! Opening ledger...`);
+                  setTimeout(() => setCitizenTab('MY_COMPLAINTS'), 1500);
+                }}
+              />
             </div>
           )}
 
@@ -332,7 +523,7 @@ export default function UnifiedPortalPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="bg-white border border-slate-200/80 rounded-xl p-4 space-y-1 shadow-sm">
                   <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">TOTAL COMPLAINTS FILED</div>
-                  <div className="text-2xl font-black text-slate-900">4 <span className="text-xs text-slate-500 font-normal">Cases</span></div>
+                  <div className="text-2xl font-black text-slate-900">{allDisplayComplaints.length} <span className="text-xs text-slate-500 font-normal">Cases</span></div>
                   <div className="text-[10px] text-emerald-600 flex items-center gap-1 pt-1 border-t border-slate-100 font-semibold">
                     <CheckCircle2 className="w-3 h-3" /> 100% Validated by National Metrology AI
                   </div>
@@ -340,7 +531,7 @@ export default function UnifiedPortalPage() {
 
                 <div className="bg-white border border-slate-200/80 rounded-xl p-4 space-y-1 shadow-sm">
                   <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">UNDER ACTIVE INVESTIGATION</div>
-                  <div className="text-2xl font-black text-amber-600">2 <span className="text-xs text-slate-500 font-normal">Active</span></div>
+                  <div className="text-2xl font-black text-amber-600">{allDisplayComplaints.filter((c) => c.statusType === 'ACTIVE').length} <span className="text-xs text-slate-500 font-normal">Active</span></div>
                   <div className="text-[10px] text-amber-600 flex items-center gap-1 pt-1 border-t border-slate-100 font-semibold">
                     <Clock className="w-3 h-3" /> LMO Field Raids Authorized
                   </div>
@@ -348,7 +539,7 @@ export default function UnifiedPortalPage() {
 
                 <div className="bg-white border border-slate-200/80 rounded-xl p-4 space-y-1 shadow-sm">
                   <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">NOTICES ISSUED & COMPOUNDED</div>
-                  <div className="text-2xl font-black text-emerald-600">1 <span className="text-xs text-slate-500 font-normal">Resolved</span></div>
+                  <div className="text-2xl font-black text-emerald-600">{allDisplayComplaints.filter((c) => c.statusType === 'RESOLVED').length} <span className="text-xs text-slate-500 font-normal">Resolved</span></div>
                   <div className="text-[10px] text-slate-500 pt-1 border-t border-slate-100">
                     Fine Recovered: ₹50,000 Govt Treasury
                   </div>
@@ -615,80 +806,7 @@ export default function UnifiedPortalPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                      {[
-                        {
-                          id: 'LM-2024-MH-0842',
-                          date: '12 Oct 2024',
-                          product: 'Surf Excel Liquid 500ml',
-                          brandSub: 'HUL • E-Com SKU',
-                          entityName: 'Blinkit Dark Store',
-                          entityAddress: 'Powai Hub, Mumbai',
-                          channelType: 'QUICK_COMMERCE',
-                          category: 'Rule 16(1) Dual MRP',
-                          status: '8. Compounded',
-                          statusType: 'RESOLVED',
-                          inspector: 'V. K. Patil',
-                          inspectorZone: 'LMO Zone 4',
-                          rewardStatus: '₹5,000 Credited',
-                          rewardType: 'CREDITED',
-                          penalty: '₹50,000 Imposed',
-                          statement: 'Affixed adhesive MRP sticker ₹210 over printed MRP ₹165.'
-                        },
-                        {
-                          id: 'LM-2024-MH-9122',
-                          date: '20 Oct 2024',
-                          product: 'Basmati Rice Premium 5kg',
-                          brandSub: 'Fortune • Batch B-42',
-                          entityName: 'Radha Krishna Supermarket',
-                          entityAddress: 'Andheri West, Mumbai',
-                          channelType: 'OFFLINE',
-                          category: 'Sec 36 Net Qty Deficit (130g)',
-                          status: 'Raid Scheduled',
-                          statusType: 'ACTIVE',
-                          inspector: 'S. R. Kulkarni',
-                          inspectorZone: 'LMO Zone 3',
-                          rewardStatus: 'Pending Compounding',
-                          rewardType: 'PENDING',
-                          penalty: 'Pending Raid',
-                          statement: 'Gross bag weight 4.87kg against statutory mandatory 5.00kg.'
-                        },
-                        {
-                          id: 'LM-2024-MH-9340',
-                          date: '02 Nov 2024',
-                          product: 'Almonds California 250g',
-                          brandSub: 'Happilo Foods',
-                          entityName: 'Zepto Fulfilment Centre',
-                          entityAddress: 'BKC Hub, Mumbai',
-                          channelType: 'QUICK_COMMERCE',
-                          category: 'Rule 6 Missing Unit Sale Price',
-                          status: 'Verification Pending',
-                          statusType: 'ACTIVE',
-                          inspector: 'A. G. Deshmukh',
-                          inspectorZone: 'LMO Zone 7',
-                          rewardStatus: 'Under Verification',
-                          rewardType: 'PENDING',
-                          penalty: 'Under Review',
-                          statement: 'Missing Unit Sale Price declaration on outer pouch.'
-                        },
-                        {
-                          id: 'LM-2024-MH-0119',
-                          date: '18 Aug 2024',
-                          product: 'Mineral Water Bottle 1000ml',
-                          brandSub: 'Kinley • Dual MRP at Cinemas',
-                          entityName: 'Cinepolis Multiplex',
-                          entityAddress: 'Viviana Mall, Thane',
-                          channelType: 'OFFLINE',
-                          category: 'Rule 18(2) Overcharging MRP ₹60',
-                          status: 'Settled',
-                          statusType: 'RESOLVED',
-                          inspector: 'M. T. Jadhav',
-                          inspectorZone: 'LMO Thane Div',
-                          rewardStatus: '₹2,750 Credited',
-                          rewardType: 'CREDITED',
-                          penalty: '₹27,500 Recovered',
-                          statement: 'Overcharged ₹60 for bottle with standard MRP ₹20.'
-                        }
-                      ].filter((item) => {
+                      {allDisplayComplaints.filter((item) => {
                         const matchesSearch = 
                           complaintSearchText === '' ||
                           item.id.toLowerCase().includes(complaintSearchText.toLowerCase()) ||
@@ -708,7 +826,14 @@ export default function UnifiedPortalPage() {
                       }).map((row) => (
                         <tr key={row.id} className="hover:bg-slate-50 transition-colors">
                           <td className="p-3 font-mono font-bold text-amber-700">
-                            <div>{row.id}</div>
+                            <div className="flex items-center gap-1.5">
+                              <span>{row.id}</span>
+                              {row.isNewLive && (
+                                <span className="bg-emerald-100 text-emerald-800 text-[9px] font-bold px-1.5 py-0.5 rounded border border-emerald-300">
+                                  LIVE
+                                </span>
+                              )}
+                            </div>
                             <div className="text-[10px] text-slate-400 font-normal">{row.date}</div>
                           </td>
                           <td className="p-3 font-semibold text-slate-900">
@@ -833,7 +958,7 @@ export default function UnifiedPortalPage() {
                     </div>
 
                     <button 
-                      onClick={() => showToast('State Grid Synchronized! Live data refreshed from 36 Districts.')}
+                      onClick={handleSyncStateGrid}
                       className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-4 py-2.5 rounded-lg text-xs flex items-center space-x-2 shadow-lg transition-all cursor-pointer"
                     >
                       <RefreshCw className="w-4 h-4" />
@@ -867,9 +992,11 @@ export default function UnifiedPortalPage() {
                   <div>
                     <h3 className="text-xs text-slate-600 font-bold">Total Inspections</h3>
                     <div className="flex items-baseline space-x-2 mt-1">
-                      <span className="text-2xl font-black text-slate-900 tracking-tight">14,892</span>
+                      <span className="text-2xl font-black text-slate-900 tracking-tight">
+                        {stats?.totalInspections?.toLocaleString('en-IN') ?? '0'}
+                      </span>
                       <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
-                        +12.4% MoM
+                        Live Database
                       </span>
                     </div>
                   </div>
@@ -878,13 +1005,13 @@ export default function UnifiedPortalPage() {
                   <div className="pt-2.5 border-t border-slate-200/80 grid grid-cols-2 gap-2 text-xs">
                     <div className="bg-blue-50/70 border border-blue-200 p-2.5 rounded-lg space-y-1">
                       <span className="text-[11px] font-bold text-blue-900 block leading-tight">Surveillance Target</span>
-                      <div className="text-sm font-black text-blue-700">18,000</div>
+                      <div className="text-sm font-black text-blue-700">{stats?.totalInspectionsTarget?.toLocaleString('en-IN') ?? '0'}</div>
                       <span className="text-[10px] font-bold text-blue-800 bg-blue-100/80 px-1.5 py-0.5 rounded inline-block">Annual Goal</span>
                     </div>
                     <div className="bg-emerald-50/70 border border-emerald-200 p-2.5 rounded-lg space-y-1">
-                      <span className="text-[11px] font-bold text-emerald-900 block leading-tight">SLA Target Fulfilled</span>
-                      <div className="text-sm font-black text-emerald-700">82.7%</div>
-                      <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100/80 px-1.5 py-0.5 rounded inline-block">12,315 Completed</span>
+                      <span className="text-[11px] font-bold text-emerald-900 block leading-tight">Active Officers</span>
+                      <div className="text-sm font-black text-emerald-700">{stats?.activeOfficersCount ?? 0} On Duty</div>
+                      <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100/80 px-1.5 py-0.5 rounded inline-block">State Cadre</span>
                     </div>
                   </div>
                 </div>
@@ -900,7 +1027,9 @@ export default function UnifiedPortalPage() {
                   <div>
                     <h3 className="text-xs text-slate-600 font-bold">1st Offences Logged</h3>
                     <div className="flex items-baseline space-x-2 mt-1">
-                      <span className="text-2xl font-black text-slate-900 tracking-tight">2,410</span>
+                      <span className="text-2xl font-black text-slate-900 tracking-tight">
+                        {stats?.firstOffencesLogged?.toLocaleString('en-IN') ?? '0'}
+                      </span>
                       <span className="text-[10px] font-bold text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
                         30-Day Cum Notices
                       </span>
@@ -911,12 +1040,12 @@ export default function UnifiedPortalPage() {
                   <div className="pt-2.5 border-t border-slate-200/80 grid grid-cols-2 gap-2 text-xs">
                     <div className="bg-slate-50 border border-slate-200 p-2.5 rounded-lg space-y-1">
                       <span className="text-[11px] font-bold text-slate-700 block leading-tight">1st Offence cases booked</span>
-                      <div className="text-sm font-black text-slate-900">1,890</div>
+                      <div className="text-sm font-black text-slate-900">{stats?.firstOffencesNoticesServed ?? 0}</div>
                       <span className="text-[10px] font-bold text-slate-500 bg-slate-200/60 px-1.5 py-0.5 rounded inline-block">Notices Served</span>
                     </div>
                     <div className="bg-amber-50/70 border border-amber-200 p-2.5 rounded-lg space-y-1">
                       <span className="text-[11px] font-bold text-amber-900 block leading-tight">1st Offence cases compounded</span>
-                      <div className="text-sm font-black text-amber-700">520</div>
+                      <div className="text-sm font-black text-amber-700">{stats?.firstOffencesUnderVerification ?? 0}</div>
                       <span className="text-[10px] font-bold text-amber-800 bg-amber-100/80 px-1.5 py-0.5 rounded inline-block">Under Verification</span>
                     </div>
                   </div>
@@ -933,7 +1062,9 @@ export default function UnifiedPortalPage() {
                   <div>
                     <h3 className="text-xs text-slate-600 font-bold">2nd / Repeat Offences</h3>
                     <div className="flex items-baseline space-x-2 mt-1">
-                      <span className="text-2xl font-black text-rose-600 tracking-tight">342</span>
+                      <span className="text-2xl font-black text-rose-600 tracking-tight">
+                        {stats?.secondOffencesLogged?.toLocaleString('en-IN') ?? '0'}
+                      </span>
                       <span className="text-[10px] font-bold text-rose-800 bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200">
                         Non-Compounding
                       </span>
@@ -944,13 +1075,13 @@ export default function UnifiedPortalPage() {
                   <div className="pt-2.5 border-t border-slate-200/80 grid grid-cols-2 gap-2 text-xs">
                     <div className="bg-rose-50/70 border border-rose-200 p-2.5 rounded-lg space-y-1">
                       <span className="text-[11px] font-bold text-rose-900 block leading-tight">2nd Offence cases booked</span>
-                      <div className="text-sm font-black text-rose-700">342</div>
+                      <div className="text-sm font-black text-rose-700">{stats?.secondOffencesLogged ?? 0}</div>
                       <span className="text-[10px] font-bold text-rose-800 bg-rose-100/80 px-1.5 py-0.5 rounded inline-block">Non-Compounding</span>
                     </div>
                     <div className="bg-slate-50 border border-slate-200 p-2.5 rounded-lg space-y-1">
-                      <span className="text-[11px] font-bold text-slate-700 block leading-tight">2nd Offence cases court filed</span>
-                      <div className="text-sm font-black text-slate-900">312</div>
-                      <span className="text-[10px] font-bold text-slate-500 bg-slate-200/60 px-1.5 py-0.5 rounded inline-block">312 Lodged (30 Pending)</span>
+                      <span className="text-[11px] font-bold text-slate-700 block leading-tight">2nd Offence court filed</span>
+                      <div className="text-sm font-black text-slate-900">{stats?.secondOffencesChargesheets ?? 0}</div>
+                      <span className="text-[10px] font-bold text-slate-500 bg-slate-200/60 px-1.5 py-0.5 rounded inline-block">Lodged in Court</span>
                     </div>
                   </div>
                 </div>
@@ -966,7 +1097,9 @@ export default function UnifiedPortalPage() {
                   <div>
                     <h3 className="text-xs text-slate-600 font-bold">Penalties Recovered</h3>
                     <div className="flex items-baseline space-x-2 mt-1">
-                      <span className="text-2xl font-black text-emerald-600 tracking-tight">₹8.42 Cr</span>
+                      <span className="text-2xl font-black text-emerald-600 tracking-tight">
+                        {stats?.penaltiesRecoveredRupees ?? '₹0.00 Cr'}
+                      </span>
                       <span className="text-[10px] font-bold text-blue-800 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200">
                         100% Audit Track
                       </span>
@@ -977,13 +1110,13 @@ export default function UnifiedPortalPage() {
                   <div className="pt-2.5 border-t border-slate-200/80 grid grid-cols-2 gap-2 text-xs">
                     <div className="bg-emerald-50/70 border border-emerald-200 p-2.5 rounded-lg space-y-1">
                       <span className="text-[11px] font-bold text-emerald-900 block leading-tight">Citizen Rewards Paid</span>
-                      <div className="text-sm font-black text-emerald-700">1,234</div>
+                      <div className="text-sm font-black text-emerald-700">{(stats?.citizenRewardsPaidPoints ?? 0).toLocaleString('en-IN')} pts</div>
                       <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100/80 px-1.5 py-0.5 rounded inline-block">Direct Credited</span>
                     </div>
                     <div className="bg-amber-50/70 border border-amber-200 p-2.5 rounded-lg space-y-1">
-                      <span className="text-[11px] font-bold text-amber-900 block leading-tight">Whistleblower Disbursement</span>
-                      <div className="text-sm font-black text-amber-700">₹84.2 Lakhs</div>
-                      <span className="text-[10px] font-bold text-amber-800 bg-amber-100/80 px-1.5 py-0.5 rounded inline-block">10% Incentive Share</span>
+                      <span className="text-[11px] font-bold text-amber-900 block leading-tight">Active Officers</span>
+                      <div className="text-sm font-black text-amber-700">{stats?.activeOfficersCount ?? 2} Enforcers</div>
+                      <span className="text-[10px] font-bold text-amber-800 bg-amber-100/80 px-1.5 py-0.5 rounded inline-block">Field Deployment</span>
                     </div>
                   </div>
                 </div>
@@ -1106,7 +1239,7 @@ export default function UnifiedPortalPage() {
                       <span className="text-[11px] text-slate-400">Packaged Commodities Rules (Rule 6)</span>
                     </div>
                     <span className="bg-slate-100 text-slate-700 border border-slate-300 font-bold text-[10px] px-2.5 py-1 rounded-full w-fit">
-                      Auto-Linked: 3 Targets Pending
+                      Auto-Linked: {supplyChainLinks.length} Targets
                     </span>
                   </div>
 
@@ -1122,143 +1255,98 @@ export default function UnifiedPortalPage() {
                     </div>
                   </div>
 
-                  {/* 3 Queue Item Cards (LIGHT THEMED) */}
+                  {/* Dynamic Queue Item Cards (LIGHT THEMED) */}
                   <div className="space-y-3">
-                    
-                    {/* Item 1: Raid Warrant */}
-                    <div className="bg-slate-50 border border-slate-200/90 rounded-lg p-4 space-y-3 hover:bg-slate-100/60 transition-all">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <div className="flex items-center space-x-2">
-                          <span className="w-2 h-2 rounded-full bg-rose-600 animate-ping"></span>
-                          <span className="font-extrabold text-rose-700 text-xs">ACTION MANDATE: RAID WARRANT</span>
-                          <span className="text-slate-400 text-xs font-mono">Ref #TD-THN-0021</span>
+                    {supplyChainLinks.length === 0 ? (
+                      <div className="bg-slate-50 border border-slate-200/90 rounded-lg p-6 text-center text-xs text-slate-500">
+                        No supply chain tracebacks found.
+                      </div>
+                    ) : (
+                      supplyChainLinks.map((link) => (
+                        <div key={link.id} className="bg-slate-50 border border-slate-200/90 rounded-lg p-4 space-y-3 hover:bg-slate-100/60 transition-all">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <div className="flex items-center space-x-2">
+                              {link.status === 'RAID_SCHEDULED' ? (
+                                <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                              ) : (
+                                <span className="w-2 h-2 rounded-full bg-rose-600 animate-ping"></span>
+                              )}
+                              <span className={`font-extrabold text-xs ${
+                                link.status === 'RAID_SCHEDULED' ? 'text-emerald-700' : 'text-rose-700'
+                              }`}>
+                                {link.status === 'RAID_SCHEDULED' ? 'RAID SQUAD DEPLOYED' : 'ACTION MANDATE: RAID WARRANT'}
+                              </span>
+                              <span className="text-slate-400 text-xs font-mono">Ref #{link.id}</span>
+                            </div>
+                            <span className={`font-bold text-[10px] px-2 py-0.5 rounded border ${
+                              link.status === 'RAID_SCHEDULED'
+                                ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                                : link.status === 'ASSIGNED'
+                                ? 'bg-blue-100 text-blue-800 border-blue-300'
+                                : 'bg-amber-100 text-amber-800 border-amber-300'
+                            }`}>
+                              {link.status === 'RAID_SCHEDULED' ? 'Raid Deployed' : link.status === 'ASSIGNED' ? 'Assigned' : 'Pending Control Assignment'}
+                            </span>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs bg-white p-3 rounded-lg border border-slate-200">
+                            <div>
+                              <span className="text-[10px] text-slate-400 font-bold block uppercase">Retailer Caught</span>
+                              <span className="font-bold text-slate-900">{link.sourceBusinessName}</span>
+                              <span className="text-[10px] text-slate-500 block">{link.sourceAddress}</span>
+                            </div>
+                            <div className="border-t sm:border-t-0 sm:border-l border-slate-100 pt-2 sm:pt-0 sm:pl-3">
+                              <span className="text-[10px] text-amber-700 font-bold block uppercase">Identified Upstream Manufacturer</span>
+                              <span className="font-black text-slate-900">{link.namedBusinessName}</span>
+                              <span className="text-[10px] text-slate-500 block">{link.namedBusinessAddress}</span>
+                            </div>
+                          </div>
+
+                          <div className="text-xs text-slate-700">
+                            <strong className="text-rose-700">Contraband Parameter:</strong> {link.contrabandParameter}
+                          </div>
+
+                          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-1">
+                            {link.status === 'RAID_SCHEDULED' ? (
+                              <>
+                                <div className="text-xs text-slate-600 font-semibold">
+                                  Assigned Officer: <strong className="text-slate-900 font-bold">{link.assignedInspectorName || 'Inspector Rajesh Shinde'}</strong>
+                                </div>
+                                <button 
+                                  onClick={() => setActiveModal('PANCHANAMA_STREAM')}
+                                  className="bg-blue-50 hover:bg-blue-100 border border-blue-300 text-blue-900 font-bold text-xs px-3.5 py-1.5 rounded-lg shadow-sm flex items-center space-x-1.5 transition-all cursor-pointer"
+                                >
+                                  <Radio className="w-3.5 h-3.5 text-rose-600 animate-pulse" />
+                                  <span>View Live Field Panchnama Stream</span>
+                                </button>
+                              </>
+                            ) : (
+                              <>
+                                <select 
+                                  value={selectedInspector}
+                                  onChange={(e) => setSelectedInspector(e.target.value)}
+                                  className="bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 font-semibold focus:outline-none focus:border-rose-600"
+                                >
+                                  <option value="usr-insp-001">Inspector Rajesh Shinde (Badge #MH-LM-412)</option>
+                                  <option value="usr-insp-002">Insp. V. Patil (Badge #MH-LM-809)</option>
+                                </select>
+
+                                <button 
+                                  onClick={() => {
+                                    setSelectedRaidTarget(link);
+                                    setActiveModal('RAID_DISPATCH');
+                                  }}
+                                  className="bg-rose-700 hover:bg-rose-800 text-white font-black text-xs px-4 py-2 rounded-lg shadow transition-all flex items-center justify-center space-x-1.5 cursor-pointer"
+                                >
+                                  <Zap className="w-3.5 h-3.5 fill-current" />
+                                  <span>Dispatch Surprise Raid</span>
+                                </button>
+                              </>
+                            )}
+                          </div>
                         </div>
-                        <span className="bg-amber-100 text-amber-800 border border-amber-300 font-bold text-[10px] px-2 py-0.5 rounded">
-                          Pending Control Assignment
-                        </span>
-                      </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs bg-white p-3 rounded-lg border border-slate-200">
-                        <div>
-                          <span className="text-[10px] text-slate-400 font-bold block uppercase">Retailer Caught</span>
-                          <span className="font-bold text-slate-900">Shree Ganesh Kirana</span>
-                          <span className="text-[10px] text-slate-500 block">Naupada, Thane West</span>
-                        </div>
-                        <div className="border-t sm:border-t-0 sm:border-l border-slate-100 pt-2 sm:pt-0 sm:pl-3">
-                          <span className="text-[10px] text-amber-700 font-bold block uppercase">Identified Upstream Manufacturer</span>
-                          <span className="font-black text-slate-900">Bhoomi Agro Packagers & Mills Pvt Ltd</span>
-                          <span className="text-[10px] text-slate-500 block">Plot C-14, MIDC Taloja, Raigad Dist.</span>
-                        </div>
-                      </div>
-
-                      <div className="text-xs text-slate-700">
-                        <strong className="text-rose-700">Contraband Parameter:</strong> Mustard Oil 1L Net Qty Shortfall (12.4% deficit against Rule 24)
-                      </div>
-
-                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-1">
-                        <select 
-                          value={selectedInspector}
-                          onChange={(e) => setSelectedInspector(e.target.value)}
-                          className="bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 font-semibold focus:outline-none focus:border-rose-600"
-                        >
-                          <option>Select Raigad Inspector...</option>
-                          <option value="Insp. S. Kadam (Badge #MH-LM-412)">Insp. S. Kadam (Badge #MH-LM-412)</option>
-                          <option value="Insp. V. Patil (Badge #MH-LM-809)">Insp. V. Patil (Badge #MH-LM-809)</option>
-                          <option value="Insp. R. Deshmukh (Badge #MH-LM-102)">Insp. R. Deshmukh (Badge #MH-LM-102)</option>
-                        </select>
-
-                        <button 
-                          onClick={() => {
-                            setSelectedRaidTarget(supplyChainLinks[0]);
-                            setActiveModal('RAID_DISPATCH');
-                          }}
-                          className="bg-rose-700 hover:bg-rose-800 text-white font-black text-xs px-4 py-2 rounded-lg shadow transition-all flex items-center justify-center space-x-1.5 cursor-pointer"
-                        >
-                          <Zap className="w-3.5 h-3.5 fill-current" />
-                          <span>Dispatch Surprise Raid</span>
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Item 2: Cross Border Jurisdiction */}
-                    <div className="bg-slate-50 border border-slate-200/90 rounded-lg p-4 space-y-3 hover:bg-slate-100/60 transition-all">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <div className="flex items-center space-x-2">
-                          <span className="font-extrabold text-blue-700 text-xs">CROSS-BORDER JURISDICTION</span>
-                          <span className="text-slate-400 text-xs font-mono">Ref #TD-MUM-2740</span>
-                        </div>
-                        <span className="bg-blue-100 text-blue-800 border border-blue-300 font-bold text-[10px] px-2 py-0.5 rounded">
-                          Inter-State Protocol Active
-                        </span>
-                      </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs bg-white p-3 rounded-lg border border-slate-200">
-                        <div>
-                          <span className="text-[10px] text-slate-400 font-bold block uppercase">Retailer Caught</span>
-                          <span className="font-bold text-slate-900">FreshDaily E-Com Hub</span>
-                          <span className="text-[10px] text-slate-500 block">Bandra Kurla Complex, Mumbai</span>
-                        </div>
-                        <div className="border-t sm:border-t-0 sm:border-l border-slate-100 pt-2 sm:pt-0 sm:pl-3">
-                          <span className="text-[10px] text-rose-600 font-bold block uppercase">Import Hub Identified</span>
-                          <span className="font-black text-slate-900">Apex Global Imports Pvt Ltd</span>
-                          <span className="text-[10px] text-slate-500 block">Okhla Industrial Area Phase-III, New Delhi</span>
-                        </div>
-                      </div>
-
-                      <div className="text-xs text-slate-700">
-                        <strong className="text-rose-700">Contraband Parameter:</strong> Missing Country of Origin & Unregistered Importer MRP sticker
-                      </div>
-
-                      <div className="flex justify-end pt-1">
-                        <button 
-                          onClick={() => showToast('Case #TD-MUM-2740 successfully routed to Central Inter-State Registry.')}
-                          className="bg-[#0D1F3C] hover:bg-[#081427] text-white font-black text-xs px-4 py-2 rounded-lg shadow transition-all flex items-center space-x-1.5 cursor-pointer"
-                        >
-                          <Gavel className="w-3.5 h-3.5" />
-                          <span>Route to Central Inter-State Registry</span>
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Item 3: Raid Squad Deployed */}
-                    <div className="bg-slate-50 border border-slate-200/90 rounded-lg p-4 space-y-3 hover:bg-slate-100/60 transition-all">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <div className="flex items-center space-x-2">
-                          <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                          <span className="font-extrabold text-emerald-700 text-xs">RAID SQUAD DEPLOYED</span>
-                          <span className="text-slate-400 text-xs font-mono">Ref #TD-AND-0519</span>
-                        </div>
-                        <span className="bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold text-[10px] px-2 py-0.5 rounded">
-                          Execution: 24 Oct (Today)
-                        </span>
-                      </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs bg-white p-3 rounded-lg border border-slate-200">
-                        <div>
-                          <span className="text-[10px] text-slate-400 font-bold block uppercase">Retailer Caught</span>
-                          <span className="font-bold text-slate-900">Modern Supermarket</span>
-                          <span className="text-[10px] text-slate-500 block">Andheri Lokhandwala, Mumbai</span>
-                        </div>
-                        <div className="border-t sm:border-t-0 sm:border-l border-slate-100 pt-2 sm:pt-0 sm:pl-3">
-                          <span className="text-[10px] text-emerald-700 font-bold block uppercase">Assigned Manufacturer Facility</span>
-                          <span className="font-black text-slate-900">Zenith Health Supplements LLP</span>
-                          <span className="text-[10px] text-slate-500 block">Kalyan Bhiwandi Logistics Park</span>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs">
-                        <div className="text-slate-600 font-semibold">
-                          Assigned Officer: <strong className="text-slate-900 font-bold">Insp. S. Kadam (Badge #MH-LM-412)</strong>
-                        </div>
-                        <button 
-                          onClick={() => setActiveModal('PANCHANAMA_STREAM')}
-                          className="bg-blue-50 hover:bg-blue-100 border border-blue-300 text-blue-900 font-bold text-xs px-3.5 py-1.5 rounded-lg shadow-sm flex items-center space-x-1.5 transition-all cursor-pointer"
-                        >
-                          <Radio className="w-3.5 h-3.5 text-rose-600 animate-pulse" />
-                          <span>View Live Field Panchnama Stream</span>
-                        </button>
-                      </div>
-                    </div>
+                      ))
+                    )}
                   </div>
 
                   {/* Footer link matching Image 1 */}
@@ -1323,121 +1411,75 @@ export default function UnifiedPortalPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                      
-                      {/* Row 1 matching Image 1 */}
-                      <tr className="hover:bg-slate-50/80 transition-all">
-                        <td className="p-3 font-mono">
-                          <div className="font-bold text-slate-900">DIN-2024-MH-9104</div>
-                          <div className="text-[10px] text-slate-400 font-mono">SHA256: 4188fa...02e</div>
-                        </td>
-                        <td className="p-3">
-                          <div className="font-bold text-slate-900">Mahalaxmi Provision Stores</div>
-                          <div className="text-[10px] text-slate-500 font-mono">GSTIN: 27ABCM8921F1Z3</div>
-                        </td>
-                        <td className="p-3">
-                          <div className="font-bold text-rose-600 text-xs">Rule 18(1) MRP Alteration</div>
-                          <div className="text-[10px] text-slate-500">Dual pricing sticker on baby formula</div>
-                        </td>
-                        <td className="p-3">
-                          <div className="font-semibold text-slate-800">Insp. A. Deshmukh</div>
-                          <div className="text-[10px] text-slate-400 font-mono">19.0760° N, 72.8777° E (11:04 AM)</div>
-                        </td>
-                        <td className="p-3 font-mono">
-                          <div className="font-black text-slate-900 text-sm">₹50,000</div>
-                          <div className="text-[10px] text-slate-500">Sec 36 First Offence</div>
-                        </td>
-                        <td className="p-3">
-                          <span className="bg-amber-100 text-amber-800 border border-amber-300 font-bold text-[10px] px-2 py-0.5 rounded">
-                            Notice Issued (11 Days Left)
-                          </span>
-                        </td>
-                        <td className="p-3 text-right">
-                          <button 
-                            onClick={() => {
-                              setSelectedNoticeId('CO-2024-9041');
-                              setActiveModal('DSC_SIGN');
-                            }}
-                            className="bg-[#0D1F3C] hover:bg-[#081427] text-white font-bold text-xs px-3.5 py-1.5 rounded-lg shadow transition-all cursor-pointer"
-                          >
-                            Sign Compounding Order
-                          </button>
-                        </td>
-                      </tr>
-
-                      {/* Row 2 matching Image 1 */}
-                      <tr className="hover:bg-slate-50/80 transition-all">
-                        <td className="p-3 font-mono">
-                          <div className="font-bold text-slate-900">DIN-2024-MH-9105</div>
-                          <div className="text-[10px] text-slate-400 font-mono">SHA256: 9e32fa...cc1</div>
-                        </td>
-                        <td className="p-3">
-                          <div className="font-bold text-slate-900">Kalyan Beverage Bottlers Ltd</div>
-                          <div className="text-[10px] text-slate-500 font-mono">GSTIN: 27ADCK4490Q1Z8</div>
-                        </td>
-                        <td className="p-3">
-                          <div className="font-bold text-rose-600 text-xs">Sec 36(2) Repeat Violation</div>
-                          <div className="text-[10px] text-slate-500">Non-standard net volume (650ml bottles)</div>
-                        </td>
-                        <td className="p-3">
-                          <div className="font-semibold text-slate-800">Insp. V. Patil</div>
-                          <div className="text-[10px] text-slate-400 font-mono">19.2400° N, 73.1300° E (00:42 AM)</div>
-                        </td>
-                        <td className="p-3">
-                          <div className="font-black text-rose-700 text-xs">Prosecution</div>
-                          <div className="text-[10px] text-rose-600 font-semibold">Mandatory Court Filing</div>
-                        </td>
-                        <td className="p-3">
-                          <span className="bg-rose-100 text-rose-800 border border-rose-300 font-bold text-[10px] px-2 py-0.5 rounded">
-                            Apparatus Seized
-                          </span>
-                        </td>
-                        <td className="p-3 text-right">
-                          <button 
-                            onClick={() => setActiveModal('PROSECUTION')}
-                            className="bg-rose-700 hover:bg-rose-800 text-white font-bold text-xs px-3.5 py-1.5 rounded-lg shadow transition-all cursor-pointer"
-                          >
-                            Transmit to Public Prosecutor
-                          </button>
-                        </td>
-                      </tr>
-
-                      {/* Row 3 matching Image 1 */}
-                      <tr className="hover:bg-slate-50/80 transition-all">
-                        <td className="p-3 font-mono">
-                          <div className="font-bold text-slate-900">DIN-2024-MH-9088</div>
-                          <div className="text-[10px] text-slate-400 font-mono">SHA256: b5712...89a</div>
-                        </td>
-                        <td className="p-3">
-                          <div className="font-bold text-slate-900">Ratna Super Bazar</div>
-                          <div className="text-[10px] text-slate-500 font-mono">GSTIN: 27ABCR1209M1ZQ</div>
-                        </td>
-                        <td className="p-3">
-                          <div className="font-bold text-slate-800 text-xs">Rule 6(1)(d) Consumer Care</div>
-                          <div className="text-[10px] text-slate-500">Absence of valid helpline / email</div>
-                        </td>
-                        <td className="p-3">
-                          <div className="font-semibold text-slate-800">Insp. N. Salve</div>
-                          <div className="text-[10px] text-slate-400 font-mono">18.9975° N, 73.0898° E (Yesterday)</div>
-                        </td>
-                        <td className="p-3 font-mono">
-                          <div className="font-black text-slate-900 text-sm">₹25,000</div>
-                          <div className="text-[10px] text-emerald-600 font-semibold">Settled via Bharatkosh</div>
-                        </td>
-                        <td className="p-3">
-                          <span className="bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold text-[10px] px-2 py-0.5 rounded">
-                            Compounded & Closed
-                          </span>
-                        </td>
-                        <td className="p-3 text-right">
-                          <button 
-                            onClick={() => showToast('Downloading Official LM-1 Compounding Order PDF...')}
-                            className="bg-blue-50 hover:bg-blue-100 border border-blue-300 text-blue-900 font-bold text-xs px-3.5 py-1.5 rounded-lg shadow-sm transition-all cursor-pointer"
-                          >
-                            Download LM-1 Order
-                          </button>
-                        </td>
-                      </tr>
-
+                      {notices.length === 0 ? (
+                        <tr>
+                          <td colSpan={7} className="p-6 text-center text-xs text-slate-500">
+                            No evidence or seizure records currently in registry.
+                          </td>
+                        </tr>
+                      ) : (
+                        notices
+                          .filter((n) => !searchDinQuery || n.id.toLowerCase().includes(searchDinQuery.toLowerCase()) || n.businessName.toLowerCase().includes(searchDinQuery.toLowerCase()) || (n.gstin && n.gstin.toLowerCase().includes(searchDinQuery.toLowerCase())))
+                          .map((n) => (
+                            <tr key={n.id} className="hover:bg-slate-50/80 transition-all">
+                              <td className="p-3 font-mono">
+                                <div className="font-bold text-slate-900">{n.dinNumber}</div>
+                                <div className="text-[10px] text-slate-400 font-mono">ID: {n.id}</div>
+                              </td>
+                              <td className="p-3">
+                                <div className="font-bold text-slate-900">{n.businessName}</div>
+                                <div className="text-[10px] text-slate-500 font-mono">GSTIN: {n.gstin}</div>
+                              </td>
+                              <td className="p-3">
+                                <div className="font-bold text-rose-600 text-xs">
+                                  {n.sectionRefs?.[0] || 'Section 36(1)'}
+                                </div>
+                                <div className="text-[10px] text-slate-500">{n.violatingProduct}</div>
+                              </td>
+                              <td className="p-3">
+                                <div className="font-semibold text-slate-800">Inspector Rajesh Shinde</div>
+                                <div className="text-[10px] text-slate-400 font-mono">
+                                  {new Date(n.issuedDate).toLocaleString()}
+                                </div>
+                              </td>
+                              <td className="p-3 font-mono">
+                                <div className="font-black text-slate-900 text-sm">
+                                  ₹{(n.penaltyAmount || 25000).toLocaleString('en-IN')}
+                                </div>
+                                <div className="text-[10px] text-slate-500">{n.offenceTier}</div>
+                              </td>
+                              <td className="p-3">
+                                <span className={`font-bold text-[10px] px-2 py-0.5 rounded border ${
+                                  n.status === 'APPROVED' ? 'bg-emerald-100 text-emerald-800 border-emerald-300' :
+                                  n.status === 'REJECTED' ? 'bg-rose-100 text-rose-800 border-rose-300' :
+                                  'bg-amber-100 text-amber-800 border-amber-300'
+                                }`}>
+                                  {n.status === 'APPROVED' ? 'Compounded' : n.status === 'REJECTED' ? 'Prosecution' : 'Notice Issued'}
+                                </span>
+                              </td>
+                              <td className="p-3 text-right">
+                                {n.status === 'APPROVED' ? (
+                                  <button 
+                                    onClick={() => showToast(`Opening Compounded Order #${n.id}...`)}
+                                    className="bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-900 font-bold text-xs px-3.5 py-1.5 rounded-lg shadow-sm transition-all cursor-pointer"
+                                  >
+                                    View Order
+                                  </button>
+                                ) : (
+                                  <button 
+                                    onClick={() => {
+                                      setSelectedNoticeId(n.id);
+                                      setActiveModal('DSC_SIGN');
+                                    }}
+                                    className="bg-[#0D1F3C] hover:bg-[#081427] text-white font-bold text-xs px-3.5 py-1.5 rounded-lg shadow transition-all cursor-pointer"
+                                  >
+                                    Sign Compounding Order
+                                  </button>
+                                )}
+                              </td>
+                            </tr>
+                          ))
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -1581,110 +1623,51 @@ export default function UnifiedPortalPage() {
 
                   {/* Rich Dossier Cards List (Light Theme as Image 1, Info as Image 2) */}
                   <div className="space-y-2 max-h-[460px] overflow-y-auto pr-1">
-                    {/* Card 1: CO-2024-9041 */}
-                    <div
-                      onClick={() => setSelectedNoticeId('CO-2024-9041')}
-                      className={`p-3 rounded-xl border transition-all cursor-pointer space-y-1.5 ${
-                        selectedNoticeId === 'CO-2024-9041'
-                          ? 'bg-amber-50/80 border-amber-500 shadow-md ring-1 ring-amber-500/40'
-                          : 'bg-slate-50 border-slate-200 hover:bg-slate-100'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="font-mono text-xs font-black text-amber-800">CO-2024-9041</span>
-                        <div className="flex items-center space-x-1">
-                          <span className="bg-blue-100 text-blue-800 text-[9px] font-bold px-1.5 py-0.5 rounded">Active Review</span>
-                          <span className="text-xs font-black text-emerald-700 font-mono">₹50,000</span>
+                    {filteredNotices.length === 0 ? (
+                      <div className="p-6 text-center text-xs text-slate-500">
+                        No statutory notices found matching filter.
+                      </div>
+                    ) : (
+                      filteredNotices.map((n) => (
+                        <div
+                          key={n.id}
+                          onClick={() => setSelectedNoticeId(n.id)}
+                          className={`p-3 rounded-xl border transition-all cursor-pointer space-y-1.5 ${
+                            selectedNoticeId === n.id
+                              ? 'bg-amber-50/80 border-amber-500 shadow-md ring-1 ring-amber-500/40'
+                              : 'bg-slate-50 border-slate-200 hover:bg-slate-100'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="font-mono text-xs font-black text-amber-800">{n.id}</span>
+                            <div className="flex items-center space-x-1">
+                              <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
+                                n.status === 'APPROVED' ? 'bg-emerald-100 text-emerald-800' :
+                                n.status === 'REJECTED' ? 'bg-rose-100 text-rose-800' :
+                                'bg-blue-100 text-blue-800'
+                              }`}>
+                                {n.status === 'APPROVED' ? 'Compounded' : n.status === 'REJECTED' ? 'Prosecution' : 'Active Review'}
+                              </span>
+                              <span className="text-xs font-black text-emerald-700 font-mono">
+                                ₹{(n.penaltyAmount || 25000).toLocaleString('en-IN')}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="text-xs font-bold text-slate-900 leading-tight">{n.violatingProduct}</div>
+                          <div className="text-[10px] text-slate-500">{n.businessName} • GSTIN: {n.gstin}</div>
+                          <div className="flex items-center space-x-1.5 text-[9px] font-bold pt-1">
+                            <span className="bg-rose-100 text-rose-700 px-1.5 py-0.5 rounded border border-rose-200">
+                              {n.sectionRefs?.[0] || 'Rule 6 & Sec 36(1)'}
+                            </span>
+                            <span className="text-amber-800 font-semibold">{n.type}</span>
+                          </div>
+                          <div className="text-[9px] font-mono text-slate-500 pt-0.5 border-t border-slate-200/60 flex items-center justify-between">
+                            <span>Case: {n.caseId}</span>
+                            <span>Due: {new Date(n.deadlineDate).toLocaleDateString()}</span>
+                          </div>
                         </div>
-                      </div>
-                      <div className="text-xs font-bold text-slate-900 leading-tight">Surf Super Wash 2kg Powder</div>
-                      <div className="text-[10px] text-slate-500">Barcode: 89010307 • Apex Retailers & Mart LLP, Kurla, Mumbai</div>
-                      <div className="flex items-center space-x-1.5 text-[9px] font-bold pt-1">
-                        <span className="bg-rose-100 text-rose-700 px-1.5 py-0.5 rounded border border-rose-200">Rule 18(1) & Sec 36(1)</span>
-                        <span className="text-amber-800 font-semibold">Dual MRP Sticker</span>
-                      </div>
-                      <div className="text-[9px] font-mono text-slate-500 pt-0.5 border-t border-slate-200/60 flex items-center justify-between">
-                        <span>Sec 48 First Offence (Eligible)</span>
-                        <span>Hearing Ref: MH-LM-412</span>
-                      </div>
-                    </div>
-
-                    {/* Card 2: CO-2024-8994 */}
-                    <div
-                      onClick={() => setSelectedNoticeId('CO-2024-8994')}
-                      className={`p-3 rounded-xl border transition-all cursor-pointer space-y-1.5 ${
-                        selectedNoticeId === 'CO-2024-8994'
-                          ? 'bg-amber-50/80 border-amber-500 shadow-md ring-1 ring-amber-500/40'
-                          : 'bg-slate-50 border-slate-200 hover:bg-slate-100'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="font-mono text-xs font-black text-amber-800">CO-2024-8994</span>
-                        <div className="flex items-center space-x-1">
-                          <span className="bg-rose-100 text-rose-800 border border-rose-300 text-[9px] font-bold px-1.5 py-0.5 rounded">REPEAT OFFENDER</span>
-                          <span className="text-xs font-black text-rose-700 font-mono">₹1,00,000</span>
-                        </div>
-                      </div>
-                      <div className="text-xs font-bold text-slate-900 leading-tight">Golden Harvest Basmati Rice 5kg</div>
-                      <div className="text-[10px] text-slate-500">Kisan Mega Agro Wholesalers, Hadapsar, Pune</div>
-                      <div className="text-[9px] text-rose-800 bg-rose-50 border border-rose-200 p-1.5 rounded font-medium">
-                        Prior conviction DCO-2023-4123 in Nashik. Section 36(2) Net Weight Deficit of 450g. Prosecution under Sec 49/51 advised.
-                      </div>
-                      <div className="text-[9px] font-mono text-rose-700 font-bold flex items-center justify-between">
-                        <span>CJM Prosecution File Ready</span>
-                        <span>Seized: 180 Sacks</span>
-                      </div>
-                    </div>
-
-                    {/* Card 3: CO-2024-8977 */}
-                    <div
-                      onClick={() => setSelectedNoticeId('CO-2024-8977')}
-                      className={`p-3 rounded-xl border transition-all cursor-pointer space-y-1.5 ${
-                        selectedNoticeId === 'CO-2024-8977'
-                          ? 'bg-amber-50/80 border-amber-500 shadow-md ring-1 ring-amber-500/40'
-                          : 'bg-slate-50 border-slate-200 hover:bg-slate-100'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="font-mono text-xs font-black text-amber-800">CO-2024-8977</span>
-                        <div className="flex items-center space-x-1">
-                          <span className="bg-blue-100 text-blue-800 text-[9px] font-bold px-1.5 py-0.5 rounded">E-Com Notice</span>
-                          <span className="text-xs font-black text-emerald-700 font-mono">₹25,000</span>
-                        </div>
-                      </div>
-                      <div className="text-xs font-bold text-slate-900 leading-tight">California Supreme Almond Butter 350g</div>
-                      <div className="text-[10px] text-slate-500">QuickKart Direct Warehousing Pvt Ltd (Bhivandi)</div>
-                      <div className="text-[9px] text-slate-600">Missing Importer Registration & FSSAI / Stamp Specification</div>
-                      <div className="text-[9px] font-mono text-emerald-700 font-bold flex items-center justify-between">
-                        <span>First Offence • Voluntary Disclosure</span>
-                        <span>Consent Received</span>
-                      </div>
-                    </div>
-
-                    {/* Card 4: CO-2024-8962 */}
-                    <div
-                      onClick={() => setSelectedNoticeId('CO-2024-8962')}
-                      className={`p-3 rounded-xl border transition-all cursor-pointer space-y-1.5 ${
-                        selectedNoticeId === 'CO-2024-8962'
-                          ? 'bg-amber-50/80 border-amber-500 shadow-md ring-1 ring-amber-500/40'
-                          : 'bg-slate-50 border-slate-200 hover:bg-slate-100'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="font-mono text-xs font-black text-amber-800">CO-2024-8962</span>
-                        <div className="flex items-center space-x-1">
-                          <span className="bg-amber-100 text-amber-800 text-[9px] font-bold px-1.5 py-0.5 rounded">Urgent Raid</span>
-                          <span className="text-xs font-black text-amber-800 font-mono">₹75,000</span>
-                        </div>
-                      </div>
-                      <div className="text-xs font-bold text-slate-900 leading-tight">High-Speed Diesel Dispenser E08 • Pulsar Seal Tamper</div>
-                      <div className="text-[10px] text-slate-500">Western Highway Fueling Station, Panvel</div>
-                      <div className="text-[9px] text-rose-700 font-semibold">Sec 30 • Non-Standard Verification Stamp</div>
-                      <div className="text-[9px] font-mono text-slate-500 flex items-center justify-between">
-                        <span>Nozzle Seized On Spot</span>
-                        <span>Awaiting Report</span>
-                      </div>
-                    </div>
+                      ))
+                    )}
                   </div>
                 </div>
 
@@ -1780,7 +1763,7 @@ export default function UnifiedPortalPage() {
                   <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
                       <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">TOTAL COMPOUNDING PAYABLE</div>
-                      <div className="text-2xl font-black text-emerald-600 font-mono">₹50,000.00</div>
+                      <div className="text-2xl font-black text-emerald-600 font-mono">₹{(activeNotice.penaltyAmount || 25000).toLocaleString('en-IN')}.00</div>
                       <div className="text-[10px] text-slate-500">Merchant must deposit via Bharatkosh Challan within 15 days</div>
                     </div>
                     <div className="flex flex-wrap items-center gap-3">
