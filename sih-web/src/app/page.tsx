@@ -154,7 +154,8 @@ export default function UnifiedPortalPage() {
     controllerTab, 
     activeAlert, 
     rewardPointsBalance, 
-    setRewardPointsBalance 
+    setRewardPointsBalance,
+    isAuthChecking
   } = useApp();
 
   // State data
@@ -256,6 +257,15 @@ export default function UnifiedPortalPage() {
     fetchSupplyChainLinks().then(setSupplyChainLinks);
   }, []);
 
+
+  if (isAuthChecking) {
+    return (
+      <div className="min-h-screen bg-[#081427] text-white flex flex-col items-center justify-center space-y-4">
+        <RefreshCw className="w-8 h-8 text-amber-400 animate-spin" />
+        <p className="text-sm font-bold tracking-wider text-slate-300">AUTHENTICATING SECURE SESSION...</p>
+      </div>
+    );
+  }
 
   if (!isLoggedIn) {
     return <LoginPortal />;

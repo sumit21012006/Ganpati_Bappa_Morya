@@ -11,6 +11,7 @@ abstract class OcrRepository {
   Future<String> submitPackageImages({
     required String ownerId,
     required List<EvidenceItem> images,
+    String? rawText,
   });
 
   /// One-shot analysis convenience that submits and waits for completion.
@@ -18,6 +19,7 @@ abstract class OcrRepository {
   Future<OcrResult> analyzePackage({
     required String ownerId,
     required List<EvidenceItem> images,
+    String? rawText,
     void Function(OcrPipelineStep step)? onStep,
   });
 

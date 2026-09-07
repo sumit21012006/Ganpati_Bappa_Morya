@@ -131,8 +131,8 @@ class ComplaintModel(Base):
     product_name = Column(String(255), nullable=False)
     statement_of_fact = Column(Text, nullable=True)
     photo_urls = Column(JSON, default=list)
-    evidence_url = Column(String(500), nullable=True)
-    invoice_url = Column(String(500), nullable=True)
+    evidence_url = Column(Text, nullable=True)
+    invoice_url = Column(Text, nullable=True)
     status = Column(String(50), default="SUBMITTED", index=True)  # SUBMITTED, VERIFIED, RAIDED, COMPOUNDED, REJECTED
     bounty_amount = Column(Float, default=0.0)
     created_at = Column(DateTime, default=datetime.utcnow, index=True)

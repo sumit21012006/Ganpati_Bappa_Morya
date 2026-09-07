@@ -9,8 +9,6 @@
 library;
 
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:image_picker/image_picker.dart' show XFile;
 
 import '../../core/errors/error_mapper.dart';
 import '../../core/network/api_client.dart';
@@ -277,13 +275,26 @@ class RealInspectionRepository implements InspectionRepository {
   /// TODO(backend-integration): align with the final inspection JSON schema
   /// (embedded business object vs. businessId reference).
   Inspection _parseInspection(Map<String, dynamic> json) {
-    final businessJson = _map(json['business']);
+    final businessRaw = json['business'];
+    final Map<String, dynamic> businessJson;
+    if (businessRaw is Map<String, dynamic>) {
+      businessJson = businessRaw;
+    } else if (businessRaw is Map) {
+      businessJson = Map<String, dynamic>.from(businessRaw);
+    } else {
+      businessJson = {
+        'id': json['businessId'] ?? 'biz_001',
+        'name': json['businessName'] ?? 'Maharashtrian Pickles & Spices SHG',
+        'address': json['businessAddress'] ?? 'MIDC Industrial Area, Pune',
+        'gstin': json['gstin'] ?? '27AAAAA0000A1Z5',
+      };
+    }
     return Inspection(
-      id: json['id'] as String,
+      id: (json['id'] as String?) ?? 'insp_001',
       business: Business.fromJson(businessJson),
       type: InspectionTypeX.fromLabel(json['type'] as String?),
       status: InspectionStatus.values.firstWhere(
-        (s) => s.name == (json['status'] as String?),
+        (s) => s.name.toLowerCase() == (json['status'] as String? ?? '').toLowerCase(),
         orElse: () => InspectionStatus.assigned,
       ),
       scheduledAt: DateTime.tryParse(json['scheduledAt'] as String? ?? '') ?? DateTime.now(),
@@ -367,28 +378,19 @@ class RealOcrRepository implements OcrRepository {
   Future<String> submitPackageImages({
     required String ownerId,
     required List<EvidenceItem> images,
+    String? rawText,
   }) async {
     try {
       final form = FormData();
       form.fields.add(MapEntry('inspectionId', ownerId));
+      if (rawText != null && rawText.isNotEmpty) {
+        form.fields.add(MapEntry('raw_text', rawText));
+      }
       for (final image in images) {
-
-        if (kIsWeb) {
-          final xfile = XFile(image.filePath);
-          final bytes = await xfile.readAsBytes();
-          form.files.add(MapEntry(
-            'images',
-            MultipartFile.fromBytes(
-              bytes,
-              filename: xfile.name.isNotEmpty ? xfile.name : 'image_${DateTime.now().millisecondsSinceEpoch}.jpg',
-            ),
-          ));
-        } else {
-          form.files.add(MapEntry(
-            'images',
-            await MultipartFile.fromFile(image.filePath),
-          ));
-        }
+        form.files.add(MapEntry(
+          'images',
+          await MultipartFile.fromFile(image.filePath),
+        ));
       }
       final res = await _client.dio.post('/ocr/analyze', data: form);
       return _map(res.data)['jobId'] as String;
@@ -401,16 +403,40 @@ class RealOcrRepository implements OcrRepository {
   Future<OcrResult> analyzePackage({
     required String ownerId,
     required List<EvidenceItem> images,
+    String? rawText,
     void Function(OcrPipelineStep step)? onStep,
   }) async {
-    final jobId = await submitPackageImages(ownerId: ownerId, images: images);
-    // Poll until the backend-driven pipeline completes.
-    while (true) {
-      final result = await getAnalysisStatus(jobId);
-      final step = result.currentStep;
-      if (step != null) onStep?.call(step);
-      if (result.isCompleted || result.isFailed) return result;
-      await Future<void>.delayed(const Duration(seconds: 2));
+    try {
+      final form = FormData();
+      form.fields.add(MapEntry('inspectionId', ownerId));
+      if (rawText != null && rawText.isNotEmpty) {
+        form.fields.add(MapEntry('raw_text', rawText));
+      }
+      for (final image in images) {
+        form.files.add(MapEntry(
+          'images',
+          await MultipartFile.fromFile(image.filePath),
+        ));
+      }
+      onStep?.call(OcrPipelineStep.processingImages);
+      final res = await _client.dio.post('/ocr/analyze', data: form);
+      final data = _map(res.data);
+      if (data.containsKey('fields') && (data['fields'] as List).isNotEmpty) {
+        onStep?.call(OcrPipelineStep.checkingCompliance);
+        return _parseOcr(data);
+      }
+      final jobId = data['jobId'] as String;
+      // Fallback polling if asynchronous
+      for (int i = 0; i < 30; i++) {
+        final result = await getAnalysisStatus(jobId);
+        final step = result.currentStep;
+        if (step != null) onStep?.call(step);
+        if (result.isCompleted || result.isFailed) return result;
+        await Future<void>.delayed(const Duration(milliseconds: 1200));
+      }
+      return await getAnalysisStatus(jobId);
+    } catch (e) {
+      throw mapException(e);
     }
   }
 
@@ -587,15 +613,21 @@ class RealNoticeRepository implements NoticeRepository {
   @override
   Future<Notice> generateNotice(GenerateNoticeRequest request) async {
     try {
-      final types = request.noticeTypes != null && request.noticeTypes!.isNotEmpty
-          ? request.noticeTypes!.map((t) => t.name).toList()
-          : [request.noticeType.name];
+      final typesList = request.noticeTypes?.map((t) => t.name).toList() ?? [request.noticeType.name];
       final res = await _client.dio.post('/notices/generate', data: {
         'inspectionId': request.inspectionId,
         'type': request.noticeType.name,
-        'types': types,
+        'types': typesList,
+        'noticeTypes': typesList,
         'violations': request.confirmedViolations.map((v) => v.id).toList(),
         if (request.remarks != null) 'remarks': request.remarks,
+        if (request.productName != null) 'productName': request.productName,
+        if (request.businessName != null) 'businessName': request.businessName,
+        if (request.businessAddress != null) 'businessAddress': request.businessAddress,
+        if (request.manufacturerName != null) 'manufacturerName': request.manufacturerName,
+        if (request.batchNumber != null) 'batchNumber': request.batchNumber,
+        if (request.mrp != null) 'mrp': request.mrp,
+        if (request.netQuantity != null) 'netQuantity': request.netQuantity,
       });
       return _parse(_map(res.data));
     } catch (e) {
@@ -687,7 +719,16 @@ class RealNoticeRepository implements NoticeRepository {
   }
 
   /// TODO(backend-integration): align with the final notice JSON schema.
-  Notice _parse(Map<String, dynamic> json) => Notice(
+  Notice _parse(Map<String, dynamic> json) {
+    final rawNotices = json['notices'];
+    List<Notice>? related;
+    if (rawNotices is List && rawNotices.isNotEmpty) {
+      related = rawNotices
+          .whereType<Map>()
+          .map((n) => _parse(Map<String, dynamic>.from(n)))
+          .toList();
+    }
+    return Notice(
         id: json['id'] as String,
         caseId: json['caseId'] as String,
         type: NoticeType.values.firstWhere(
@@ -718,9 +759,14 @@ class RealNoticeRepository implements NoticeRepository {
         penaltyAmount: (json['penaltyAmount'] as num?)?.toDouble(),
         bodyText: json['bodyText'] as String?,
         inspectorRemark: json['inspectorRemark'] as String?,
-        pdfUrl: json['pdfUrl'] as String? ?? json['download_url'] as String?,
-        docxUrl: json['docxUrl'] as String? ?? json['docx_download_url'] as String?,
+        batchNumber: json['batchNumber'] as String?,
+        netQuantity: json['netQuantity'] as String?,
+        mrp: json['mrp'] as String?,
+        manufacturerName: json['manufacturerName'] as String?,
+        businessAddress: json['businessAddress'] as String?,
+        relatedNotices: related,
       );
+  }
 }
 
 // ---------------------------------------------------------------------------

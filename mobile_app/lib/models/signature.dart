@@ -13,6 +13,8 @@ class SignatureResult {
     required this.signedAt,
     required this.signerName,
     required this.isElectronicDrawing,
+    this.docusignEnvelopeId,
+    this.isDocuSign = false,
   });
 
   final String id;
@@ -20,8 +22,14 @@ class SignatureResult {
   final DateTime signedAt;
   final String signerName;
 
-  /// Always true for the prototype; false once eMudhra DSC is integrated.
+  /// True for touch-drawn signatures; false for DocuSign / eMudhra DSC signatures.
   final bool isElectronicDrawing;
+  final String? docusignEnvelopeId;
+  final bool isDocuSign;
+
+  bool get isDrawn => isElectronicDrawing;
+  bool get isDigital => !isElectronicDrawing || isDocuSign;
+  String? get certificateId => docusignEnvelopeId;
 
   File get file => File(imagePath);
 }

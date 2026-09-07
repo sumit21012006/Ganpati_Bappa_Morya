@@ -18,7 +18,7 @@ class OcrReviewStep extends StatefulWidget {
   });
 
   final OcrResult? ocrResult;
-  final VoidCallback onConfirmed;
+  final ValueChanged<OcrResult> onConfirmed;
   final VoidCallback onBack;
 
   @override
@@ -26,6 +26,7 @@ class OcrReviewStep extends StatefulWidget {
 }
 
 class _OcrReviewStepState extends State<OcrReviewStep> {
+  late List<ExtractedField> _workingFields;
   late Map<String, TextEditingController> _controllers;
   late Set<String> _corrected;
   late Set<String> _removed;
@@ -37,10 +38,25 @@ class _OcrReviewStepState extends State<OcrReviewStep> {
     _initControllers();
   }
 
+  @override
+  void didUpdateWidget(covariant OcrReviewStep oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.ocrResult != widget.ocrResult) {
+      _initControllers();
+    }
+  }
+
   void _initControllers() {
     final fields = widget.ocrResult?.fields ?? const <ExtractedField>[];
+    final seenKeys = <String>{};
+    _workingFields = [];
+    for (final f in fields) {
+      if (seenKeys.add(f.key)) {
+        _workingFields.add(f);
+      }
+    }
     _controllers = {
-      for (final f in fields)
+      for (final f in _workingFields)
         f.key: TextEditingController(text: f.isMissing ? '' : f.value),
     };
     _corrected = {};
@@ -62,7 +78,7 @@ class _OcrReviewStepState extends State<OcrReviewStep> {
     if (result == null) {
       return const ErrorView(message: 'No OCR result available. Go back and retry analysis.');
     }
-    final fields = result.fields.where((f) => !_removed.contains(f.key)).toList();
+    final fields = _workingFields.where((f) => !_removed.contains(f.key)).toList();
 
     return Column(
       children: [
@@ -111,10 +127,12 @@ class _OcrReviewStepState extends State<OcrReviewStep> {
                 ),
               const SizedBox(height: AppSpacing.xl),
 
-              // Fields
               ...fields.map((field) => _FieldEditor(
                     field: field,
-                    controller: _controllers[field.key]!,
+                    controller: _controllers.putIfAbsent(
+                      field.key,
+                      () => TextEditingController(text: field.isMissing ? '' : field.value),
+                    ),
                     isCorrected: _corrected.contains(field.key),
                     onCorrected: () =>
                         setState(() => _corrected.add(field.key)),
@@ -126,8 +144,12 @@ class _OcrReviewStepState extends State<OcrReviewStep> {
               const SizedBox(height: AppSpacing.md),
               _AddFieldButton(onAdd: (field) {
                 setState(() {
+                  if (!_workingFields.any((f) => f.key == field.key)) {
+                    _workingFields.add(field);
+                  }
                   _controllers[field.key] =
                       TextEditingController(text: field.value);
+                  _removed.remove(field.key);
                   _corrected.add(field.key);
                 });
               }),
@@ -142,14 +164,34 @@ class _OcrReviewStepState extends State<OcrReviewStep> {
                 label: 'Confirm Information',
                 icon: Icons.verified_outlined,
                 onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        'Extracted information verified by inspector',
+                  final baseResult = widget.ocrResult;
+                  if (baseResult != null) {
+                    final updatedFields = _workingFields
+                        .where((f) => !_removed.contains(f.key))
+                        .map((f) {
+                      final text = _controllers[f.key]?.text.trim() ?? '';
+                      final wasCorrected = _corrected.contains(f.key);
+                      return f.copyWith(
+                        value: text,
+                        isMissing: text.isEmpty,
+                        isCorrected: wasCorrected,
+                        confidence: wasCorrected ? 1.0 : f.confidence,
+                      );
+                    }).toList();
+
+                    final updatedResult = baseResult.copyWith(
+                      fields: updatedFields,
+                    );
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Extracted information verified by inspector',
+                        ),
                       ),
-                    ),
-                  );
-                  widget.onConfirmed();
+                    );
+                    widget.onConfirmed(updatedResult);
+                  }
                 },
               ),
             ),
@@ -252,12 +294,15 @@ class _AddFieldButton extends StatelessWidget {
   final ValueChanged<ExtractedField> onAdd;
 
   static const _knownFields = [
-    ExtractedField(key: OcrFieldKeys.genericName, label: 'Generic Name', value: '', confidence: 0),
+    ExtractedField(key: OcrFieldKeys.genericName, label: 'Generic Name (Rule 6(1)(b))', value: '', confidence: 0),
     ExtractedField(key: OcrFieldKeys.packer, label: 'Packer', value: '', confidence: 0),
     ExtractedField(key: OcrFieldKeys.importer, label: 'Importer', value: '', confidence: 0),
-    ExtractedField(key: OcrFieldKeys.expiryOrUseBy, label: 'Expiry / Use By', value: '', confidence: 0),
-    ExtractedField(key: OcrFieldKeys.countryOfOrigin, label: 'Country of Origin', value: '', confidence: 0),
-    ExtractedField(key: OcrFieldKeys.other, label: 'Other Declaration', value: '', confidence: 0),
+    ExtractedField(key: OcrFieldKeys.fssaiLicense, label: 'FSSAI License No (Food Safety)', value: '', confidence: 0),
+    ExtractedField(key: OcrFieldKeys.unitSalePrice, label: 'Unit Sale Price (Rule 6(11))', value: '', confidence: 0),
+    ExtractedField(key: OcrFieldKeys.batchOrLot, label: 'Batch / Lot Number (Rule 6(1)(d))', value: '', confidence: 0),
+    ExtractedField(key: OcrFieldKeys.expiryOrUseBy, label: 'Expiry / Best Before (Rule 6(1)(da))', value: '', confidence: 0),
+    ExtractedField(key: OcrFieldKeys.countryOfOrigin, label: 'Country of Origin (Rule 6(1)(aa))', value: '', confidence: 0),
+    ExtractedField(key: OcrFieldKeys.other, label: 'Other Statutory Declaration', value: '', confidence: 0),
   ];
 
   @override

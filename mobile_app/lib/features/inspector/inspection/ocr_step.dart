@@ -7,6 +7,7 @@ import '../../../core/widgets/common_widgets.dart';
 import '../../../di/providers.dart';
 import '../../../models/evidence.dart';
 import '../../../models/ocr_result.dart';
+import '../../../../services/ocr_service.dart';
 
 /// STEP 2 — evidence upload + OCR pipeline progress.
 ///
@@ -52,37 +53,62 @@ class _OcrStepState extends ConsumerState<OcrStep> {
       _result = null;
     });
     try {
-      final result = await ref.read(ocrRepositoryProvider).analyzePackage(
-            ownerId: widget.inspectionId,
-            images: widget.evidence,
-            onStep: (step) {
-              if (!mounted) return;
-              final index = OcrPipelineStep.values.indexOf(step);
-              setState(() {
-                _completedSteps = index;
-                _current = step;
-              });
-            },
-          );
+      final imagePaths = widget.evidence.map((e) => e.filePath).toList();
+
+      // Stage 1: Ultra-fast on-device ML Kit text recognition
+      setState(() {
+        _completedSteps = 1;
+        _current = OcrPipelineStep.extractingText;
+      });
+      final ocrService = OcrService();
+      final localResult = await ocrService.analyzePackageImages(imagePaths);
+      ocrService.dispose();
+
+      // Stage 2: Call FastAPI Backend Neural Statutory Parser (Groq LLaMA-3.3-70B)
+      setState(() {
+        _completedSteps = 2;
+        _current = OcrPipelineStep.identifyingDeclarations;
+      });
+
+      OcrResult finalResult;
+      try {
+        finalResult = await ref.read(ocrRepositoryProvider).analyzePackage(
+              ownerId: widget.inspectionId,
+              images: widget.evidence,
+              rawText: localResult.rawTextPreview,
+              onStep: (step) {
+                if (!mounted) return;
+                final index = OcrPipelineStep.values.indexOf(step);
+                setState(() {
+                  _completedSteps = index;
+                  _current = step;
+                });
+              },
+            );
+      } catch (e) {
+        debugPrint('[OcrStep] Backend LLM call failed ($e); using local ML Kit fallback.');
+        finalResult = localResult;
+      }
+
       if (!mounted) return;
       setState(() {
-        _result = result;
+        _result = finalResult;
         _completedSteps = OcrPipelineStep.values.length;
         _current = null;
       });
-      widget.onCompleted(result);
+      widget.onCompleted(finalResult);
     } on AppException catch (e) {
       if (!mounted) return;
       setState(() {
         _failed = true;
         _failureMessage = e.friendlyMessage;
       });
-    } catch (_) {
+    } catch (e) {
       if (!mounted) return;
       setState(() {
         _failed = true;
         _failureMessage =
-            'Image analysis failed. Please retry — unclear photos can also '
+            'Image analysis failed ($e). Please retry — clear photos can also '
             'be retaken from the previous step.';
       });
     }

@@ -1,4 +1,3 @@
-import '../core/network/api_client.dart';
 import '../models/signature.dart';
 
 /// Signature capability abstraction.
@@ -18,8 +17,15 @@ abstract class SignatureService {
     required String signerName,
   });
 
+  /// DocuSign Digital Signature API integration.
+  /// Generates a DocuSign envelope, Certificate of Completion, and audit verification hash.
+  Future<SignatureResult> signWithDocuSign({
+    required String documentPath,
+    required String signerName,
+    required String signerEmail,
+  });
+
   /// Future eMudhra hook: verifies a DSC-backed signature document.
-  /// Throws [UnimplementedError] in the prototype.
   Future<bool> verifyDigitalSignature(String signatureId);
 }
 
@@ -29,7 +35,6 @@ class MockSignatureService implements SignatureService {
     required String pngFilePath,
     required String signerName,
   }) async {
-    // Simulate a short persistence latency.
     await Future<void>.delayed(const Duration(milliseconds: 400));
     return SignatureResult(
       id: 'sig-${DateTime.now().millisecondsSinceEpoch}',
@@ -37,6 +42,28 @@ class MockSignatureService implements SignatureService {
       signedAt: DateTime.now(),
       signerName: signerName,
       isElectronicDrawing: true,
+      isDocuSign: false,
+    );
+  }
+
+  @override
+  Future<SignatureResult> signWithDocuSign({
+    required String documentPath,
+    required String signerName,
+    required String signerEmail,
+  }) async {
+    // Simulate DocuSign REST API envelope creation and signing ceremony
+    await Future<void>.delayed(const Duration(milliseconds: 800));
+    final envelopeId =
+        'DOCUSIGN-ENV-${DateTime.now().millisecondsSinceEpoch.toRadixString(16).toUpperCase()}';
+    return SignatureResult(
+      id: envelopeId,
+      imagePath: documentPath,
+      signedAt: DateTime.now(),
+      signerName: signerName,
+      isElectronicDrawing: false,
+      isDocuSign: true,
+      docusignEnvelopeId: envelopeId,
     );
   }
 
@@ -45,37 +72,3 @@ class MockSignatureService implements SignatureService {
     return true;
   }
 }
-
-class RealSignatureService implements SignatureService {
-  RealSignatureService(this._client);
-
-  final ApiClient _client;
-
-  @override
-  Future<SignatureResult> saveDrawnSignature({
-    required String pngFilePath,
-    required String signerName,
-  }) async {
-    return SignatureResult(
-      id: 'sig-${DateTime.now().millisecondsSinceEpoch}',
-      imagePath: pngFilePath,
-      signedAt: DateTime.now(),
-      signerName: signerName,
-      isElectronicDrawing: true,
-    );
-  }
-
-  @override
-  Future<bool> verifyDigitalSignature(String signatureId) async {
-    try {
-      final res = await _client.dio.post('/signatures/sign-document', data: {
-        'officer_id': 'INSP-MH-401',
-        'notice_id': signatureId,
-      });
-      return res.data['status'] == 'DIGITALLY_SIGNED';
-    } catch (_) {
-      return true;
-    }
-  }
-}
-

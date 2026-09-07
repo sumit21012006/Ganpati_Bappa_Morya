@@ -5,8 +5,12 @@ import '../../../core/widgets/common_widgets.dart';
 import 'supplier_declaration_sheet.dart';
 import 'seizure_step.dart';
 
-/// STEP 6 — Procedural Actions (Supplier Declaration & Seizure Recording).
-/// Text input fields removed as per official workflow requirements.
+/// STEP 6 — Streamlined Observations: Supplier Declaration & Seizure Recording.
+///
+/// Removes redundant manual observation text fields and highlights the two critical
+/// statutory actions required during physical inspection:
+/// 1. Declare Supplier / Upstream Source (multi-tier supply chain traceability)
+/// 2. Record Seizure / Sample Collection (panchanama witnesses and evidence)
 class ObservationsStep extends StatefulWidget {
   const ObservationsStep({
     super.key,
@@ -25,7 +29,7 @@ class ObservationsStep extends StatefulWidget {
 
 class _ObservationsStepState extends State<ObservationsStep> {
   bool _supplierDeclared = false;
-  bool _seizureRecorded = false;
+  bool _sampleSeized = false;
 
   @override
   Widget build(BuildContext context) {
@@ -37,19 +41,19 @@ class _ObservationsStepState extends State<ObservationsStep> {
             children: [
               const SectionHeader(
                 title: 'Inspection Actions & Observations',
-                subtitle: 'Record upstream supply chain declarations and statutory sample seizures',
-              ),
-              const SizedBox(height: AppSpacing.md),
-
-              // Option 1: Declare Supplier / Source Card
-              _ActionCard(
-                icon: Icons.link_outlined,
-                iconColor: AppColors.primary,
-                title: 'DECLARE SUPPLIER / SOURCE',
                 subtitle:
-                    'Link upstream manufacturer, wholesale distributor or packaging source for tracing contraventions under Section 18.',
-                buttonLabel: _supplierDeclared ? 'Edit Supplier Declaration' : 'Declare Supplier / Source',
-                buttonIcon: _supplierDeclared ? Icons.check_circle_outline : Icons.add_circle_outline,
+                    'Record statutory upstream supply chain links and formal seizure/sample documentation',
+              ),
+              const SizedBox(height: AppSpacing.sm),
+
+              // Card 1: Declare Supplier / Source
+              _ActionCard(
+                title: 'Declare Supplier / Source',
+                subtitle:
+                    'Link this retailer to distributor or manufacturer (auto-creates upstream inspection for Controller)',
+                icon: Icons.link_outlined,
+                actionLabel: _supplierDeclared ? 'Update Supplier Link' : 'Declare Supplier / Source',
+                statusLabel: _supplierDeclared ? 'Declared & Linked' : 'Optional / Recommended',
                 isCompleted: _supplierDeclared,
                 onPressed: () async {
                   await SupplierDeclarationSheet.show(context, widget.inspectionId);
@@ -59,44 +63,41 @@ class _ObservationsStepState extends State<ObservationsStep> {
 
               const SizedBox(height: AppSpacing.lg),
 
-              // Option 2: Record Seizure / Sample Card
+              // Card 2: Record Seizure / Sample
               _ActionCard(
-                icon: Icons.inventory_2_outlined,
-                iconColor: AppColors.warning,
-                title: 'RECORD SEIZURE / SAMPLE',
+                title: 'Record Seizure / Sample',
                 subtitle:
-                    'Record seized sample packages, panchanama witnesses, and detention memo under Section 15 of Legal Metrology Act.',
-                buttonLabel: _seizureRecorded ? 'Edit Seizure Records' : 'Record Seizure / Sample',
-                buttonIcon: _seizureRecorded ? Icons.check_circle_outline : Icons.inventory_2,
-                isCompleted: _seizureRecorded,
+                    'Record seized sample units, seizure reason, panchanama witnesses, and official sample ID',
+                icon: Icons.inventory_2_outlined,
+                actionLabel: _sampleSeized ? 'Update Seizure Record' : 'Record Seizure / Sample',
+                statusLabel: _sampleSeized ? 'Samples Recorded' : 'If Samples Seized On-site',
+                isCompleted: _sampleSeized,
                 onPressed: () async {
                   await SeizureSheet.show(context, widget.inspectionId);
-                  setState(() => _seizureRecorded = true);
+                  setState(() => _sampleSeized = true);
                 },
               ),
 
               const SizedBox(height: AppSpacing.xl),
 
-              // Statutory info note
               Container(
                 padding: const EdgeInsets.all(AppSpacing.md),
                 decoration: BoxDecoration(
                   color: AppColors.surfaceVariant,
                   borderRadius: BorderRadius.circular(AppRadius.md),
-                  border: Border.all(color: AppColors.outlineVariant),
+                  border: Border.all(color: AppColors.outline),
                 ),
                 child: const Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.shield_outlined, size: 20, color: AppColors.textSecondary),
+                    Icon(Icons.info_outline, size: 20, color: AppColors.primary),
                     SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: Text(
-                        'Declared suppliers and seizure memos will be linked to the official inspection dossier and automatically cited in the Government Notice generated in the next step.',
+                        'Captured packaging photos, OCR declarations, and verified violations are automatically attached to the statutory notice in the next step.',
                         style: TextStyle(
                           fontSize: 12.5,
                           color: AppColors.textSecondary,
-                          height: 1.45,
+                          height: 1.4,
                         ),
                       ),
                     ),
@@ -110,7 +111,7 @@ class _ObservationsStepState extends State<ObservationsStep> {
           children: [
             Expanded(
               child: PrimaryButton(
-                label: 'Continue to Notice',
+                label: 'Continue to Notice Generation',
                 icon: Icons.arrow_forward,
                 onPressed: widget.onContinue,
               ),
@@ -124,22 +125,20 @@ class _ObservationsStepState extends State<ObservationsStep> {
 
 class _ActionCard extends StatelessWidget {
   const _ActionCard({
-    required this.icon,
-    required this.iconColor,
     required this.title,
     required this.subtitle,
-    required this.buttonLabel,
-    required this.buttonIcon,
+    required this.icon,
+    required this.actionLabel,
+    required this.statusLabel,
     required this.isCompleted,
     required this.onPressed,
   });
 
-  final IconData icon;
-  final Color iconColor;
   final String title;
   final String subtitle;
-  final String buttonLabel;
-  final IconData buttonIcon;
+  final IconData icon;
+  final String actionLabel;
+  final String statusLabel;
   final bool isCompleted;
   final VoidCallback onPressed;
 
@@ -150,14 +149,14 @@ class _ActionCard extends StatelessWidget {
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppRadius.lg),
         border: Border.all(
-          color: isCompleted ? AppColors.success.withValues(alpha: 0.6) : AppColors.outlineVariant,
+          color: isCompleted ? AppColors.success.withValues(alpha: 0.5) : AppColors.outline,
           width: isCompleted ? 1.5 : 1.0,
         ),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: Color(0x08000000),
             blurRadius: 8,
-            offset: const Offset(0, 2),
+            offset: Offset(0, 2),
           ),
         ],
       ),
@@ -170,10 +169,16 @@ class _ActionCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: iconColor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(AppRadius.md),
+                  color: isCompleted
+                      ? AppColors.successContainer
+                      : AppColors.primaryContainer,
+                  shape: BoxShape.circle,
                 ),
-                child: Icon(icon, size: 24, color: iconColor),
+                child: Icon(
+                  icon,
+                  size: 24,
+                  color: isCompleted ? AppColors.success : AppColors.primary,
+                ),
               ),
               const SizedBox(width: AppSpacing.md),
               Expanded(
@@ -183,31 +188,24 @@ class _ActionCard extends StatelessWidget {
                     Text(
                       title,
                       style: const TextStyle(
-                        fontSize: 14.5,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.3,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
-                    if (isCompleted) ...[
-                      const SizedBox(height: 2),
-                      const Row(
-                        children: [
-                          Icon(Icons.check_circle, size: 14, color: AppColors.success),
-                          SizedBox(width: 4),
-                          Text(
-                            'Recorded',
-                            style: TextStyle(
-                              fontSize: 11.5,
-                              color: AppColors.success,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ],
+                    const SizedBox(height: 2),
+                    Text(
+                      statusLabel,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: isCompleted ? AppColors.success : AppColors.textSecondary,
                       ),
-                    ],
+                    ),
                   ],
                 ),
               ),
+              if (isCompleted)
+                const Icon(Icons.check_circle, color: AppColors.success, size: 22),
             ],
           ),
           const SizedBox(height: AppSpacing.md),
@@ -216,7 +214,7 @@ class _ActionCard extends StatelessWidget {
             style: const TextStyle(
               fontSize: 13,
               color: AppColors.textSecondary,
-              height: 1.45,
+              height: 1.4,
             ),
           ),
           const SizedBox(height: AppSpacing.lg),
@@ -224,17 +222,14 @@ class _ActionCard extends StatelessWidget {
             width: double.infinity,
             child: isCompleted
                 ? OutlinedButton.icon(
-                    icon: Icon(buttonIcon, size: 18),
-                    label: Text(buttonLabel),
                     onPressed: onPressed,
+                    icon: const Icon(Icons.edit_outlined, size: 18),
+                    label: Text(actionLabel),
                   )
-                : FilledButton.icon(
-                    icon: Icon(buttonIcon, size: 18),
-                    label: Text(buttonLabel),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: iconColor,
-                    ),
+                : ElevatedButton.icon(
                     onPressed: onPressed,
+                    icon: Icon(icon, size: 18),
+                    label: Text(actionLabel),
                   ),
           ),
         ],

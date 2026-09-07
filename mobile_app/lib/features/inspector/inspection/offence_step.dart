@@ -45,15 +45,39 @@ class _OffenceStepState extends ConsumerState<OffenceStep> {
     _lookup();
   }
 
+  @override
+  void didUpdateWidget(covariant OffenceStep oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.ocrResult != widget.ocrResult && widget.ocrResult != null) {
+      _lookup();
+    }
+  }
+
   Future<void> _lookup() async {
     setState(() {
       _loading = true;
       _error = null;
     });
     try {
-      final productName =
-          widget.ocrResult?.fields.where((f) => f.key == OcrFieldKeys.productName).firstOrNull?.value ??
-              'Unknown product';
+      // Use the resolved productName getter which handles snake_case → UPPER
+      // key normalisation.  Falls back to empty string so the backend query
+      // returns "no prior offences" instead of querying "Unknown product".
+      final productName = widget.ocrResult?.productName?.trim() ?? '';
+      if (productName.isEmpty) {
+        // OCR result not ready yet; show clean empty state
+        if (!mounted) return;
+        setState(() {
+          _history = OffenceHistory(
+            productId: '',
+            matchedProductName: '',
+            tier: OffenceTier.none,
+            checkedAt: DateTime.now(),
+            records: const [],
+          );
+          _loading = false;
+        });
+        return;
+      }
       final history = await ref
           .read(offenceRepositoryProvider)
           .getProductOffenceHistoryForBusiness(
@@ -71,6 +95,12 @@ class _OffenceStepState extends ConsumerState<OffenceStep> {
         _error = e.friendlyMessage;
         _loading = false;
       });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = 'Failed to check offence history: $e';
+        _loading = false;
+      });
     }
   }
 
@@ -86,10 +116,12 @@ class _OffenceStepState extends ConsumerState<OffenceStep> {
                       'Checking previous offence history for this product…')
               : _error != null
                   ? ErrorView(message: _error!, onRetry: _lookup)
-                  : ListView(
-                      padding: const EdgeInsets.all(AppSpacing.lg),
-                      children: [
-                        _history!.hasPreviousOffence
+                  : _history == null
+                      ? const ErrorView(message: 'Offence history could not be loaded.')
+                      : ListView(
+                          padding: const EdgeInsets.all(AppSpacing.lg),
+                          children: [
+                            _history!.hasPreviousOffence
                             ? Container(
                                 padding: const EdgeInsets.all(AppSpacing.lg),
                                 decoration: BoxDecoration(

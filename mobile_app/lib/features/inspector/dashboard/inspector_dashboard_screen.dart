@@ -53,17 +53,19 @@ class _InspectorDashboardScreenState
           .listCases(onlyActive: true);
       if (!mounted) return;
       setState(() {
-        _assigned =
-            inspections.where((i) => i.status.isActive).take(6).toList();
-        _draftNotices =
-            notices.where((n) => n.status.isEditableByInspector).toList();
+        _assigned = inspections.where((i) => i.status.isActive).take(6).toList();
+        if (_assigned.isEmpty && inspections.isNotEmpty) {
+          _assigned = inspections.take(6).toList();
+        }
+        _draftNotices = notices.take(6).toList();
         _activeCases = cases.length;
         _loading = false;
       });
     } catch (e) {
+      debugPrint('[DASH] Load error: $e');
       if (!mounted) return;
       setState(() {
-        _error = 'Could not load your dashboard. Please check your connection and retry.';
+        _error = 'Could not load your dashboard ($e). Please check your connection and retry.';
         _loading = false;
       });
     }
@@ -82,6 +84,24 @@ class _InspectorDashboardScreenState
       title: 'Inspector Dashboard',
       subtitle: user != null ? '${user.name} · ${user.jurisdiction ?? ''}' : null,
       showBack: false,
+      actions: [
+        IconButton(
+          tooltip: 'Sign out',
+          icon: const Icon(Icons.logout),
+          onPressed: () async {
+            final confirmed = await ConfirmationDialog.show(
+              context,
+              title: 'Sign out?',
+              message: 'You will need to sign in again to access your account.',
+              confirmLabel: 'Sign out',
+              danger: true,
+            );
+            if (confirmed && context.mounted) {
+              await ref.read(authControllerProvider.notifier).logout();
+            }
+          },
+        ),
+      ],
       body: _loading
           ? const LoadingView(message: 'Loading your dashboard…')
           : _error != null
@@ -256,7 +276,7 @@ class _QuickActionCard extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(AppRadius.lg),
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: AppSpacing.md, horizontal: 4),
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
           child: Column(
             children: [
               Container(
@@ -271,8 +291,6 @@ class _QuickActionCard extends StatelessWidget {
               Text(
                 label,
                 textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
@@ -302,7 +320,7 @@ class _InspectionTile extends StatelessWidget {
             horizontal: AppSpacing.lg,
             vertical: AppSpacing.sm + 2,
           ),
-          onTap: () => context.go(inspectionDetailPath(inspection.id)),
+          onTap: () => context.push(inspectionDetailPath(inspection.id)),
           leading: Container(
             padding: const EdgeInsets.all(9),
             decoration: BoxDecoration(

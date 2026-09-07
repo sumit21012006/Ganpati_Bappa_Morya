@@ -260,7 +260,7 @@ class _BusinessDashboardScreenState
                     subtitle: 'Private reports — never shared with inspectors',
                     icon: Icons.history,
                     color: AppColors.textSecondary,
-                    onTap: () => context.go(RouteNames.selfCheckHistory),
+                    onTap: () => context.push(RouteNames.selfCheckHistory),
                   ),
                   const SizedBox(height: AppSpacing.xl),
                   const PrivateDataBanner(),

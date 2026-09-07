@@ -50,31 +50,33 @@ class AuthController extends StateNotifier<AuthState> {
       final accessToken = await _tokenStorage
           .readAccessToken()
           .timeout(const Duration(seconds: 2));
-      final userId = await _tokenStorage
-          .readUserId()
-          .timeout(const Duration(seconds: 2));
       User? user;
 
       if (accessToken != null && accessToken.isNotEmpty) {
         user = await _authRepository
             .currentUser()
             .timeout(const Duration(seconds: 3));
-        // Fallback to cached user id when /me is unavailable.
-        user ??= userId == null
-            ? null
-            : User(id: userId, name: 'User', role: UserRole.business);
+        if (user != null) {
+          state = AuthState(
+            status: AuthStatus.authenticated,
+            user: user,
+            isRestoring: false,
+          );
+          return;
+        }
       }
-
-      if (user != null) {
-        state = AuthState(
-            status: AuthStatus.authenticated, user: user, isRestoring: false);
-      } else {
-        state = const AuthState(
-            status: AuthStatus.unauthenticated, isRestoring: false);
-      }
-    } catch (_) {
+      // If /me is null, expired, or invalid: unconditionally clear tokens and land on login
+      await _tokenStorage.clear();
       state = const AuthState(
-          status: AuthStatus.unauthenticated, isRestoring: false);
+        status: AuthStatus.unauthenticated,
+        isRestoring: false,
+      );
+    } catch (_) {
+      await _tokenStorage.clear();
+      state = const AuthState(
+        status: AuthStatus.unauthenticated,
+        isRestoring: false,
+      );
     }
   }
 

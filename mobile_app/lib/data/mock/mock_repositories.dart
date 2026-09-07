@@ -230,6 +230,7 @@ class MockOcrRepository implements OcrRepository {
   Future<String> submitPackageImages({
     required String ownerId,
     required List<EvidenceItem> images,
+    String? rawText,
   }) async {
     await Future<void>.delayed(const Duration(milliseconds: 300));
     return MockIds.selfCheck();
@@ -239,6 +240,7 @@ class MockOcrRepository implements OcrRepository {
   Future<OcrResult> analyzePackage({
     required String ownerId,
     required List<EvidenceItem> images,
+    String? rawText,
     void Function(OcrPipelineStep step)? onStep,
   }) {
     return _backend.runOcrPipeline(

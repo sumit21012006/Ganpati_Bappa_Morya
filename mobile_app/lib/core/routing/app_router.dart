@@ -85,7 +85,9 @@ final routerProvider = Provider<GoRouter>((ref) {
         return status == AuthStatus.authenticated
             ? (authState.isInspector
                 ? RouteNames.inspectorDashboard
-                : RouteNames.businessDashboard)
+                : (authState.isBusiness
+                    ? RouteNames.businessDashboard
+                    : RouteNames.login))
             : RouteNames.login;
       }
 
@@ -98,7 +100,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (isAuthRoute) {
         return authState.isInspector
             ? RouteNames.inspectorDashboard
-            : RouteNames.businessDashboard;
+            : (authState.isBusiness
+                ? RouteNames.businessDashboard
+                : RouteNames.login);
       }
 
       // Role-based route protection.

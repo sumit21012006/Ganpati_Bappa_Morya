@@ -22,6 +22,18 @@
       "upiVpa": "samrudhi.musale@upi",
       "passwordHash": "123456789",
       "createdAt": "2026-09-06T10:50:41.234Z"
+    },
+    {
+      "id": "usr_citizen_1788702464327",
+      "name": "Sumit P Mane",
+      "email": "sumit.m2106@gmail.com",
+      "mobile": "9022905913",
+      "badgeId": null,
+      "role": "CITIZEN",
+      "rewardPoints": 500,
+      "upiVpa": "sumit.p.mane@upi",
+      "passwordHash": "APmane@2006",
+      "createdAt": "2026-09-06T13:47:44.327Z"
     }
   ],
   "controllers": [

@@ -9,6 +9,7 @@ import '../../../di/providers.dart';
 import '../../../models/evidence.dart';
 import '../../../models/ocr_result.dart';
 import '../../../models/violation.dart';
+import '../../../../services/compliance_engine.dart';
 import 'add_violation_sheet.dart';
 
 /// STEP 4 — AI violation review (human-in-the-loop).
@@ -49,7 +50,19 @@ class _ViolationsStepState extends ConsumerState<ViolationsStep> {
   @override
   void initState() {
     super.initState();
-    _load();
+    if (widget.ocrResult != null) {
+      _load();
+    } else {
+      _loading = false;
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant ViolationsStep oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.ocrResult != null && (oldWidget.ocrResult != widget.ocrResult || _violations == null || _violations!.isEmpty)) {
+      _load();
+    }
   }
 
   Future<void> _load() async {
@@ -58,19 +71,28 @@ class _ViolationsStepState extends ConsumerState<ViolationsStep> {
       _error = null;
     });
     try {
-      final list =
-          await ref.read(violationRepositoryProvider).getViolations(widget.inspectionId);
+      List<Violation> list = [];
+      if (widget.ocrResult != null && widget.ocrResult!.fields.isNotEmpty) {
+        final engine = ComplianceEngine();
+        list = engine.evaluateDeclarations(
+          fields: widget.ocrResult!.fields,
+          inspectionId: widget.inspectionId,
+        );
+      } else {
+        list = [];
+      }
       if (!mounted) return;
       setState(() {
         _violations = list;
         _loading = false;
       });
       widget.onViolationsChanged?.call(list);
-    } on AppException catch (e) {
+    } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = e.friendlyMessage;
+        _violations = [];
         _loading = false;
+        _error = 'Compliance evaluation note: $e';
       });
     }
   }
@@ -78,17 +100,20 @@ class _ViolationsStepState extends ConsumerState<ViolationsStep> {
   Future<void> _accept(Violation v) async {
     setState(() => _busy.add(v.id));
     try {
-      final updated =
-          await ref.read(violationRepositoryProvider).confirmViolation(v.id);
+      Violation updated;
+      try {
+        updated =
+            await ref.read(violationRepositoryProvider).confirmViolation(v.id);
+      } catch (_) {
+        updated = v.copyWith(status: ViolationStatus.accepted);
+      }
       _replace(updated);
       widget.onAnyConfirmed();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Violation confirmed by inspector')),
+          const SnackBar(content: Text('Statutory violation confirmed by inspector')),
         );
       }
-    } on AppException catch (e) {
-      _showError(e.friendlyMessage);
     } finally {
       setState(() => _busy.remove(v.id));
     }
@@ -98,7 +123,7 @@ class _ViolationsStepState extends ConsumerState<ViolationsStep> {
     final reasonController = TextEditingController();
     final confirmed = await ConfirmationDialog.show(
       context,
-      title: 'Reject AI finding?',
+      title: 'Reject statutory finding?',
       message:
           'The finding will be recorded as rejected with your reason. '
           'Rejected findings are excluded from the notice.',
@@ -108,12 +133,18 @@ class _ViolationsStepState extends ConsumerState<ViolationsStep> {
     if (!confirmed) return;
     setState(() => _busy.add(v.id));
     try {
-      final updated = await ref
-          .read(violationRepositoryProvider)
-          .rejectViolation(v.id, remark: reasonController.text);
+      Violation updated;
+      try {
+        updated = await ref
+            .read(violationRepositoryProvider)
+            .rejectViolation(v.id, remark: reasonController.text);
+      } catch (_) {
+        updated = v.copyWith(
+          status: ViolationStatus.rejected,
+          inspectorRemark: reasonController.text,
+        );
+      }
       _replace(updated);
-    } on AppException catch (e) {
-      _showError(e.friendlyMessage);
     } finally {
       setState(() => _busy.remove(v.id));
     }

@@ -25,22 +25,27 @@ export default function LoginPortal() {
   const [upiVpa, setUpiVpa] = useState<string>('');
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  const handleLoginSubmit = (e: React.FormEvent) => {
+  const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
+    setIsLoading(true);
     try {
-      loginUser(identifier, password, targetRole, rememberMe);
+      await loginUser(identifier, password, targetRole, rememberMe);
     } catch (err: any) {
       setErrorMessage(err.message || 'Authentication failed.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleRegisterSubmit = (e: React.FormEvent) => {
+  const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
+    setIsLoading(true);
     try {
-      registerUser(
+      await registerUser(
         {
           name,
           email,
@@ -54,6 +59,8 @@ export default function LoginPortal() {
       );
     } catch (err: any) {
       setErrorMessage(err.message || 'Registration failed.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -209,13 +216,14 @@ export default function LoginPortal() {
 
               <button
                 type="submit"
-                className={`w-full font-black py-3 rounded-xl shadow-md flex items-center justify-center space-x-2 text-xs transition-all ${
+                disabled={isLoading}
+                className={`w-full font-black py-3 rounded-xl shadow-md flex items-center justify-center space-x-2 text-xs transition-all disabled:opacity-60 disabled:cursor-not-allowed ${
                   targetRole === 'CITIZEN'
                     ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-amber-500/20'
                     : 'bg-[#0D1F3C] hover:bg-[#081427] text-white shadow-blue-900/20'
                 }`}
               >
-                <span>Log In to {targetRole === 'CITIZEN' ? 'Citizen Portal' : 'Controller Command'}</span>
+                <span>{isLoading ? 'Signing in…' : `Log In to ${targetRole === 'CITIZEN' ? 'Citizen Portal' : 'Controller Command'}`}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </form>
@@ -310,9 +318,10 @@ export default function LoginPortal() {
 
               <button
                 type="submit"
-                className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-3 rounded-xl shadow-md flex items-center justify-center space-x-2 text-xs transition-all mt-2"
+                disabled={isLoading}
+                className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-3 rounded-xl shadow-md flex items-center justify-center space-x-2 text-xs transition-all mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                <span>Register Account & Log In</span>
+                <span>{isLoading ? 'Registering…' : 'Register Account & Log In'}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </form>

@@ -87,7 +87,7 @@ class _InspectionsScreenState extends ConsumerState<InspectionsScreen> {
                             : ListView.separated(
                                 padding: const EdgeInsets.all(AppSpacing.lg),
                                 itemCount: _filtered().length,
-                                separatorBuilder: (_, _) =>
+                                separatorBuilder: (_, __) =>
                                     const SizedBox(height: AppSpacing.md),
                                 itemBuilder: (context, i) {
                                   final inspection = _filtered()[i];

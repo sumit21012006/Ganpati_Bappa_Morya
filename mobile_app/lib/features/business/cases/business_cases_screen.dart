@@ -64,7 +64,7 @@ class _BusinessCasesScreenState extends ConsumerState<BusinessCasesScreen> {
                       : ListView.separated(
                           padding: const EdgeInsets.all(AppSpacing.lg),
                           itemCount: _cases!.length,
-                          separatorBuilder: (_, _) =>
+                          separatorBuilder: (_, __) =>
                               const SizedBox(height: AppSpacing.md),
                           itemBuilder: (context, i) {
                             final c = _cases![i];

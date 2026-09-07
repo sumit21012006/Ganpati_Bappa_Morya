@@ -216,7 +216,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                     const SizedBox(height: AppSpacing.md),
                     TextButton(
-                      onPressed: () => context.go('/register'),
+                      onPressed: () => context.push('/register'),
                       child: const Text(
                         'New business? Register your business account',
                       ),

@@ -115,7 +115,7 @@ class _BusinessSearchScreenState extends ConsumerState<BusinessSearchScreen> {
                                 AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.xl,
                               ),
                               itemCount: _results!.length,
-                              separatorBuilder: (_, _) =>
+                              separatorBuilder: (_, __) =>
                                   const SizedBox(height: AppSpacing.md),
                               itemBuilder: (context, i) =>
                                   _BusinessCard(

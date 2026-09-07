@@ -4,7 +4,7 @@ publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.12.0
+  sdk: '>=3.0.0 <4.0.0'
 
 dependencies:
   flutter:
@@ -31,7 +31,6 @@ dependencies:
 
   # Utilities
   intl: ^0.20.1
-  url_launcher: ^6.3.1
 
   # NOTE: file_picker (spec-recommended) is intentionally not included yet —
   # evidence picking uses image_picker. Add file_picker when document
@@ -40,6 +39,14 @@ dependencies:
 
   # Signature capture
   signature: ^5.5.0
+
+  # On-device Text Recognition (OCR)
+  google_mlkit_text_recognition: ^0.17.1
+
+  # Official PDF Generation & Previewing
+  pdf: ^3.13.0
+  printing: ^5.15.0
+  path_provider: ^2.1.2
 
 dev_dependencies:
   flutter_test:

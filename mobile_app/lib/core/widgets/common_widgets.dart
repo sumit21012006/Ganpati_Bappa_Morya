@@ -1,3 +1,4 @@
+import 'package:go_router/go_router.dart';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -16,6 +17,7 @@ class AppScaffold extends StatelessWidget {
     this.floatingActionButton,
     this.bottomBar,
     this.showBack = true,
+    this.onBack,
   });
 
   final String title;
@@ -25,9 +27,12 @@ class AppScaffold extends StatelessWidget {
   final Widget? floatingActionButton;
   final Widget? bottomBar;
   final bool showBack;
+  final VoidCallback? onBack;
 
   @override
   Widget build(BuildContext context) {
+    final canPop = Navigator.of(context).canPop() || (ModalRoute.of(context)?.canPop ?? false);
+
     return Scaffold(
       appBar: AppBar(
         title: Column(
@@ -41,7 +46,24 @@ class AppScaffold extends StatelessWidget {
               ),
           ],
         ),
-        automaticallyImplyLeading: showBack,
+        automaticallyImplyLeading: false,
+        leading: showBack && (canPop || onBack != null)
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back),
+                tooltip: 'Back',
+                onPressed: () {
+                  if (onBack != null) {
+                    onBack!();
+                  } else if (Navigator.of(context).canPop()) {
+                    Navigator.of(context).pop();
+                  } else {
+                    try {
+                      GoRouter.of(context).pop();
+                    } catch (_) {}
+                  }
+                },
+              )
+            : null,
         actions: actions,
       ),
       body: body,

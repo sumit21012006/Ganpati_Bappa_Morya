@@ -76,9 +76,9 @@ void main() {
       await tester.pumpWidget(
         const ProviderScope(child: LegalMetrologyApp()),
       );
-      await tester.pump(const Duration(milliseconds: 100));
       expect(find.byType(MaterialApp), findsOneWidget);
       expect(find.text('Legal Metrology'), findsWidgets);
+      await tester.pump(const Duration(seconds: 4));
     });
   });
 
@@ -90,6 +90,7 @@ void main() {
       // AuthController is created lazily by reading the provider.
       final state = container.read(authControllerProvider);
       expect(state.isRestoring, isTrue);
+      await tester.pump(const Duration(seconds: 4));
     });
   });
 }

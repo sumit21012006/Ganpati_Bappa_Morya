@@ -286,10 +286,13 @@ Return ONLY a valid JSON object with this exact structure:
         for item in image_paths_or_texts:
             if isinstance(item, str) and os.path.exists(item) and item.lower().endswith(('.jpg', '.jpeg', '.png', '.webp')):
                 if self.rapid_ocr:
-                    result, _ = self.rapid_ocr(item)
-                    if result:
-                        for line in result:
-                            extracted_lines.append(line[1])
+                    try:
+                        result, _ = self.rapid_ocr(item)
+                        if result:
+                            for line in result:
+                                extracted_lines.append(line[1])
+                    except Exception as err:
+                        print(f"RapidOCR warning on {item}: {err}")
                 else:
                     extracted_lines.append(f"Image processed: {os.path.basename(item)}")
             else:
@@ -298,19 +301,9 @@ Return ONLY a valid JSON object with this exact structure:
         combined_text = "\n".join(extracted_lines)
         extracted = self.extract_from_text(combined_text)
 
-        # Fallback intelligent defaults if image is unreadable
-        if not extracted["mrp"] and not extracted["net_quantity"]:
-            extracted = {
-                "mrp": "₹ 150.00 (incl. of all taxes)",
-                "net_quantity": "500 g",
-                "manufacturing_date": "08/2026",
-                "expiry_date": "Best before 12 months from mfg",
-                "manufacturer_name_address": "ABC Agro Processing Pvt Ltd, Plot 14, MIDC, Pune - 411018",
-                "consumer_care": "care@abcagro.com | 1800-222-333",
-                "country_of_origin": "India",
-                "unit_sale_price": "₹ 0.30 / g",
-                "generic_name": "Edible Sunflower Oil",
-            }
+        # Keep real extracted data intact — do not inject fake placeholder data
+        extracted.setdefault("category", "GENERAL")
+        extracted.setdefault("legal_notes", [])
 
         return {
             "fields": extracted,

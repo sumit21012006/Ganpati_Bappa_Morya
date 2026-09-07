@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
@@ -71,9 +72,13 @@ class ApiClient {
   Dio get dio => _dio ??= _build();
 
   Dio _build() {
+    String baseUrl = AppConstants.apiBaseUrl;
+    if (baseUrl.contains('localhost')) {
+      baseUrl = baseUrl.replaceAll('localhost', '127.0.0.1');
+    }
     final dio = Dio(
       BaseOptions(
-        baseUrl: AppConstants.apiBaseUrl,
+        baseUrl: baseUrl,
         connectTimeout: AppConstants.connectTimeout,
         receiveTimeout: AppConstants.receiveTimeout,
         contentType: 'application/json',
@@ -100,6 +105,14 @@ class ApiClient {
         handler.next(error);
       },
     ));
+
+    if (kDebugMode) {
+      dio.interceptors.add(LogInterceptor(
+        requestBody: true,
+        responseBody: true,
+        logPrint: (obj) => debugPrint('[DIO] $obj'),
+      ));
+    }
 
     return dio;
   }

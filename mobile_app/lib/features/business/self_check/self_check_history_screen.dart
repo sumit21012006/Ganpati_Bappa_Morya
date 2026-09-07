@@ -70,7 +70,7 @@ class _SelfCheckHistoryScreenState extends ConsumerState<SelfCheckHistoryScreen>
                           : ListView.separated(
                               padding: const EdgeInsets.all(AppSpacing.lg),
                               itemCount: _reports!.length,
-                              separatorBuilder: (_, _) =>
+                              separatorBuilder: (_, __) =>
                                   const SizedBox(height: AppSpacing.md),
                               itemBuilder: (context, i) {
                                 final r = _reports![i];

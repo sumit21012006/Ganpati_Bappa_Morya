@@ -1,9 +1,11 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '@/context/AppContext';
 import { submitCitizenComplaint } from '@/lib/api';
-import { MOCK_BUSINESSES } from '@/lib/constants';
+import { searchBusinesses } from '@/lib/api/businesses';
+import { Business, Complaint } from '@/types';
+import { VIOLATION_CATEGORIES } from '@/lib/constants';
 import { 
   ShieldCheck, 
   Award, 
@@ -38,9 +40,10 @@ export const MAHARASHTRA_CITIES = [
 
 interface CitizenComplaintFormProps {
   isDarkMode?: boolean;
+  onComplaintSubmitted?: (complaint: Complaint) => void;
 }
 
-export default function CitizenComplaintForm({ isDarkMode = true }: CitizenComplaintFormProps) {
+export default function CitizenComplaintForm({ isDarkMode = true, onComplaintSubmitted }: CitizenComplaintFormProps) {
   const { setRewardPointsBalance, user, setCitizenTab } = useApp();
   
   // Active Step Highlight State (1 = Merchant/City, 2 = Statement of Fact, 3 = Evidence Upload & AI)
@@ -60,16 +63,34 @@ export default function CitizenComplaintForm({ isDarkMode = true }: CitizenCompl
   // Form Field States
   const [channel, setChannel] = useState<'OFFLINE_STORE' | 'ECOMMERCE_PLATFORM'>('OFFLINE_STORE');
   const [selectedCity, setSelectedCity] = useState<string>('Mumbai Suburban');
+  const [selectedCategory, setSelectedCategory] = useState<string>(VIOLATION_CATEGORIES[0]);
   const [retailerSearch, setRetailerSearch] = useState<string>('');
-  const [selectedRetailer, setSelectedRetailer] = useState<typeof MOCK_BUSINESSES[0] | null>(null);
+  const [selectedRetailer, setSelectedRetailer] = useState<Business | null>(null);
+  const [businessResults, setBusinessResults] = useState<Business[]>([]);
+  const [isSearching, setIsSearching] = useState<boolean>(false);
 
-  // Image Upload State (4 to 6 photos)
-  const [uploadedPhotos, setUploadedPhotos] = useState<Array<{ name: string; type: string; url?: string }>>([
-    { name: 'front_mrp_label.jpg', type: 'Front (MRP)' },
-    { name: 'mandatory_back_panel.jpg', type: 'Declarations' },
-    { name: 'scale_reading_weight.jpg', type: 'Scale Reading' },
-    { name: 'retail_purchase_bill.jpg', type: 'Retail Bill (Optional)' },
-  ]);
+  // Debounced backend business search
+  useEffect(() => {
+    if (!retailerSearch.trim() || selectedRetailer) {
+      setBusinessResults([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      setIsSearching(true);
+      try {
+        const results = await searchBusinesses(retailerSearch);
+        setBusinessResults(results);
+      } catch {
+        setBusinessResults([]);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [retailerSearch, selectedRetailer]);
+
+  // Image Upload State — stores file info + DataURL for backend transmission
+  const [uploadedPhotos, setUploadedPhotos] = useState<Array<{ name: string; type: string; url?: string; dataUrl?: string }>>([]);
 
   // Statement of Fact
   const [statementOfFact, setStatementOfFact] = useState<string>(
@@ -84,26 +105,71 @@ export default function CitizenComplaintForm({ isDarkMode = true }: CitizenCompl
   const citizenMobile = user?.mobile || '+91 98450 XXXXX';
   const citizenUpiVpa = user?.upiVpa || (user?.name ? `${user.name.toLowerCase().replace(/\s+/g, '.')}@upi` : 'citizen@upi');
 
-  const handleSelectRetailer = (b: typeof MOCK_BUSINESSES[0]) => {
+  const handleSelectRetailer = (b: Business) => {
     setSelectedRetailer(b);
     setRetailerSearch(b.name);
+    setBusinessResults([]);
     setActiveStep(1);
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setActiveStep(3); // Shift step to Photo Upload
+    setActiveStep(3);
     if (!e.target.files) return;
     const files = Array.from(e.target.files);
-    
-    const newPhotos = files.map((file) => ({
-      name: file.name,
-      type: file.name.includes('bill') || file.name.includes('invoice') ? 'Retail Bill (Optional)' : 'Additional Evidence',
-      url: URL.createObjectURL(file)
-    }));
 
-    setUploadedPhotos((prev) => {
-      const combined = [...prev, ...newPhotos];
-      return combined.slice(0, 6);
+    // Helper to compress image client-side to max 1280px and 0.8 JPEG quality
+    const compressImage = (file: File): Promise<string> => {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const MAX_DIM = 1280;
+            let { width, height } = img;
+            if (width > height && width > MAX_DIM) {
+              height = Math.round((height * MAX_DIM) / width);
+              width = MAX_DIM;
+            } else if (height > MAX_DIM) {
+              width = Math.round((width * MAX_DIM) / height);
+              height = MAX_DIM;
+            }
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+              ctx.drawImage(img, 0, 0, width, height);
+              resolve(canvas.toDataURL('image/jpeg', 0.8));
+            } else {
+              resolve(event.target?.result as string);
+            }
+          };
+          img.onerror = () => resolve(event.target?.result as string);
+          img.src = event.target?.result as string;
+        };
+        reader.onerror = () => resolve('');
+        reader.readAsDataURL(file);
+      });
+    };
+
+    // Read and compress each file for swift backend transmission
+    files.forEach(async (file) => {
+      const dataUrl = await compressImage(file);
+      setUploadedPhotos((prev) => {
+        if (prev.length >= 6) return prev;
+        return [
+          ...prev,
+          {
+            name: file.name,
+            type:
+              file.name.includes('bill') || file.name.includes('invoice')
+                ? 'Retail Bill (Optional)'
+                : 'Additional Evidence',
+            url: URL.createObjectURL(file),
+            dataUrl,
+          },
+        ];
+      });
     });
   };
 
@@ -111,26 +177,48 @@ export default function CitizenComplaintForm({ isDarkMode = true }: CitizenCompl
     setUploadedPhotos((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+  const handleSubmit = async (e?: React.FormEvent | React.MouseEvent) => {
+    if (e && e.preventDefault) e.preventDefault();
     setIsSubmitting(true);
-    setActiveStep(3);
+    setSubmitError(null);
+
+    // Collect DataURLs from uploaded photos for backend
+    const photoUrls = uploadedPhotos
+      .map((p) => p.dataUrl || p.url || '')
+      .filter(Boolean);
 
     try {
+      console.log('[complaint] Submitting to backend...');
       const res = await submitCitizenComplaint({
-        retailerNameText: selectedRetailer ? selectedRetailer.name : retailerSearch || 'QuickMart Supermarket Pvt Ltd',
-        retailerAddressText: selectedRetailer ? selectedRetailer.address : `${selectedCity}, Maharashtra`,
-        channel,
-        statementOfFact,
+        citizenId: user?.id || 'citizen_web',
         citizenName,
         citizenMobile,
         citizenUpiVpa,
+        retailerNameText: selectedRetailer ? selectedRetailer.name : retailerSearch || 'Unknown Retailer',
+        retailerAddressText: selectedRetailer
+          ? selectedRetailer.address
+          : `${selectedCity}, Maharashtra`,
+        businessId: selectedRetailer?.id,
+        channel,
+        category: selectedCategory || 'General Metrology Violation',
+        statementOfFact,
+        photoUrls,
       });
 
+      console.log('[complaint] Submission successful, ID:', res.id);
       setSubmittedToken(res.id);
       setRewardPointsBalance((prev) => prev + 500);
-    } catch (err) {
-      console.error('Error submitting complaint:', err);
+      if (onComplaintSubmitted) {
+        onComplaintSubmitted(res);
+      }
+      if (typeof window !== 'undefined') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    } catch (err: any) {
+      console.error('[complaint] Error submitting complaint:', err);
+      setSubmitError(err.message || 'Failed to submit complaint. Please check network connection.');
     } finally {
       setIsSubmitting(false);
     }
@@ -306,20 +394,26 @@ export default function CitizenComplaintForm({ isDarkMode = true }: CitizenCompl
                 className={`w-full ${bgInput} rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-amber-500`}
               />
 
+              {/* Business Search Dropdown (Live from NestJS Backend) */}
               {retailerSearch && !selectedRetailer && (
-                <div className={`absolute left-0 right-0 top-full mt-1 ${isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-white border-slate-200'} border rounded-lg shadow-xl z-20 max-h-40 overflow-y-auto`}>
-                  {MOCK_BUSINESSES.filter((b) =>
-                    b.name.toLowerCase().includes(retailerSearch.toLowerCase())
-                  ).map((b) => (
-                    <div
-                      key={b.id}
-                      onClick={() => handleSelectRetailer(b)}
-                      className={`p-2.5 ${isDarkMode ? 'hover:bg-slate-900 border-slate-900' : 'hover:bg-slate-50 border-slate-100'} cursor-pointer border-b text-xs`}
-                    >
-                      <div className="font-bold">{b.name}</div>
-                      <div className={`text-[10px] ${textSub}`}>{b.address}</div>
-                    </div>
-                  ))}
+                <div className={`absolute left-0 right-0 top-full mt-1 ${isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-white border-slate-200'} border rounded-lg shadow-xl z-20 max-h-48 overflow-y-auto`}>
+                  {isSearching ? (
+                    <div className="p-3 text-xs text-slate-400 animate-pulse">Searching business registry…</div>
+                  ) : businessResults.length > 0 ? (
+                    businessResults.map((b) => (
+                      <div
+                        key={b.id}
+                        onClick={() => handleSelectRetailer(b)}
+                        className={`p-2.5 ${isDarkMode ? 'hover:bg-slate-900 border-slate-900' : 'hover:bg-slate-50 border-slate-100'} cursor-pointer border-b text-xs`}
+                      >
+                        <div className="font-bold">{b.name}</div>
+                        <div className={`text-[10px] ${textSub}`}>{b.address}</div>
+                        {b.gstin && <div className="text-[10px] font-mono text-amber-500/70">GSTIN: {b.gstin}</div>}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-2.5 text-xs text-slate-400">No registered businesses found. Enter retailer name manually.</div>
+                  )}
                 </div>
               )}
             </div>
@@ -639,10 +733,39 @@ export default function CitizenComplaintForm({ isDarkMode = true }: CitizenCompl
               </div>
             </div>
 
+            {/* Submit Error Message */}
+            {submitError && (
+              <div className="bg-rose-950/80 border border-rose-600 rounded-xl p-3.5 text-xs text-rose-200 flex items-center space-x-2">
+                <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+                <span>{submitError}</span>
+              </div>
+            )}
+
+            {/* Inline Confirmation Card when submitted */}
+            {submittedToken && (
+              <div className="bg-emerald-950/90 border border-emerald-500 rounded-xl p-4 text-emerald-200 space-y-2 shadow-lg">
+                <div className="flex items-center space-x-2">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+                  <span className="font-bold text-sm">Complaint Registered Successfully!</span>
+                </div>
+                <p className="text-xs text-emerald-300">
+                  Tracking Token ID: <strong className="font-mono text-white">{submittedToken}</strong> • +500 Reward Points added.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setCitizenTab('MY_COMPLAINTS')}
+                  className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold py-2 rounded-lg transition-all cursor-pointer"
+                >
+                  Track in My Complaints →
+                </button>
+              </div>
+            )}
+
             {/* Submit Action Button */}
             <button
               type="submit"
               disabled={isSubmitting}
+              onClick={(e) => handleSubmit(e)}
               className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black py-3.5 rounded-xl shadow-xl shadow-amber-500/20 flex items-center justify-center space-x-2 text-sm transition-all cursor-pointer"
             >
               {isSubmitting ? (

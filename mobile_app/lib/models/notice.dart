@@ -1,15 +1,14 @@
 import 'user.dart';
 import 'violation.dart';
 
-enum NoticeType { improvement, seizure, compounding, panchanama, other }
+enum NoticeType { improvement, seizure, compounding, panchanama }
 
 extension NoticeTypeX on NoticeType {
   String get label => switch (this) {
         NoticeType.improvement => 'Improvement Notice',
-        NoticeType.seizure => 'Seizure Notice',
+        NoticeType.seizure => 'Seizure Notice / Bill',
         NoticeType.compounding => 'Compounding Order',
         NoticeType.panchanama => 'Panchanama Document',
-        NoticeType.other => 'Official Notice',
       };
 }
 
@@ -62,6 +61,22 @@ class NoticeSection {
   final String? description;
   final bool isAddedByInspector;
 
+  factory NoticeSection.fromJson(Map<String, dynamic> json) => NoticeSection(
+        id: json['id'] as String,
+        citation: json['citation'] as String,
+        title: json['title'] as String,
+        description: json['description'] as String?,
+        isAddedByInspector: json['isAddedByInspector'] as bool? ?? false,
+      );
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'citation': citation,
+        'title': title,
+        if (description != null) 'description': description,
+        'isAddedByInspector': isAddedByInspector,
+      };
+
   NoticeSection copyWith({bool? isAddedByInspector}) => NoticeSection(
         id: id,
         citation: citation,
@@ -89,8 +104,15 @@ class Notice {
     this.penaltyAmount,
     this.bodyText,
     this.inspectorRemark,
-    this.pdfUrl,
-    this.docxUrl,
+    this.pdfPath,
+    this.selectedTypes = const {},
+    this.individualPdfPaths = const {},
+    this.relatedNotices,
+    this.batchNumber,
+    this.netQuantity,
+    this.mrp,
+    this.manufacturerName,
+    this.businessAddress,
   });
 
   final String id;
@@ -116,8 +138,15 @@ class Notice {
   /// NLP-generated body text; editable by the inspector.
   final String? bodyText;
   final String? inspectorRemark;
-  final String? pdfUrl;
-  final String? docxUrl;
+  final String? pdfPath;
+  final Set<NoticeType> selectedTypes;
+  final Map<NoticeType, String> individualPdfPaths;
+  final List<Notice>? relatedNotices;
+  final String? batchNumber;
+  final String? netQuantity;
+  final String? mrp;
+  final String? manufacturerName;
+  final String? businessAddress;
 
   bool get requiresAction =>
       status == NoticeStatus.issued || status == NoticeStatus.delivered;
@@ -139,8 +168,15 @@ class Notice {
     double? penaltyAmount,
     String? bodyText,
     String? inspectorRemark,
-    String? pdfUrl,
-    String? docxUrl,
+    String? pdfPath,
+    Set<NoticeType>? selectedTypes,
+    Map<NoticeType, String>? individualPdfPaths,
+    List<Notice>? relatedNotices,
+    String? batchNumber,
+    String? netQuantity,
+    String? mrp,
+    String? manufacturerName,
+    String? businessAddress,
   }) {
     return Notice(
       id: id ?? this.id,
@@ -159,27 +195,49 @@ class Notice {
       penaltyAmount: penaltyAmount ?? this.penaltyAmount,
       bodyText: bodyText ?? this.bodyText,
       inspectorRemark: inspectorRemark ?? this.inspectorRemark,
-      pdfUrl: pdfUrl ?? this.pdfUrl,
-      docxUrl: docxUrl ?? this.docxUrl,
+      pdfPath: pdfPath ?? this.pdfPath,
+      selectedTypes: selectedTypes ?? this.selectedTypes,
+      individualPdfPaths: individualPdfPaths ?? this.individualPdfPaths,
+      relatedNotices: relatedNotices ?? this.relatedNotices,
+      batchNumber: batchNumber ?? this.batchNumber,
+      netQuantity: netQuantity ?? this.netQuantity,
+      mrp: mrp ?? this.mrp,
+      manufacturerName: manufacturerName ?? this.manufacturerName,
+      businessAddress: businessAddress ?? this.businessAddress,
     );
   }
 }
 
-/// Request body for notice generation through backend.
+/// Request body for notice generation through NestJS (which delegates to
+/// Member 4's NLP service). Flutter does not compose legal text itself.
 class GenerateNoticeRequest {
   const GenerateNoticeRequest({
     required this.inspectionId,
     required this.noticeType,
-    this.noticeTypes,
     required this.confirmedViolations,
+    this.noticeTypes,
     this.remarks,
+    this.productName,
+    this.businessName,
+    this.businessAddress,
+    this.manufacturerName,
+    this.batchNumber,
+    this.mrp,
+    this.netQuantity,
   });
 
   final String inspectionId;
   final NoticeType noticeType;
-  final List<NoticeType>? noticeTypes;
+  final Set<NoticeType>? noticeTypes;
   final List<Violation> confirmedViolations;
   final String? remarks;
+  final String? productName;
+  final String? businessName;
+  final String? businessAddress;
+  final String? manufacturerName;
+  final String? batchNumber;
+  final String? mrp;
+  final String? netQuantity;
 }
 
 // ---------------------------------------------------------------------------

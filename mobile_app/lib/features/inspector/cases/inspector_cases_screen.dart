@@ -77,13 +77,13 @@ class _InspectorCasesScreenState extends ConsumerState<InspectorCasesScreen> {
                       : ListView.separated(
                           padding: const EdgeInsets.all(AppSpacing.lg),
                           itemCount: _cases!.length,
-                          separatorBuilder: (_, _) =>
+                          separatorBuilder: (_, __) =>
                               const SizedBox(height: AppSpacing.md),
                           itemBuilder: (context, i) {
                             final c = _cases![i];
                             return Card(
                               child: ListTile(
-                                onTap: () => context.go(caseDetailPath(c.id)),
+                                onTap: () => context.push(caseDetailPath(c.id)),
                                 contentPadding: const EdgeInsets.symmetric(
                                   horizontal: AppSpacing.lg,
                                   vertical: AppSpacing.sm + 2,

@@ -30,14 +30,14 @@ AppException mapException(Object error) {
         return _mapStatusCode(error.response);
       case DioExceptionType.unknown:
       case DioExceptionType.transformTimeout:
-        return const UnknownException();
+        return UnknownException(error.message ?? error.error?.toString() ?? 'Network communication error');
     }
   }
 
   if (error is FormatException) {
     return const ServerException('The server returned an unexpected response.');
   }
-  return const UnknownException();
+  return UnknownException(error.toString());
 }
 
 AppException _mapStatusCode(Response<dynamic>? response) {

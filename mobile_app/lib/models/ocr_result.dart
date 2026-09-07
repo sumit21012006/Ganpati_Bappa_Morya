@@ -18,6 +18,10 @@ library;
 
 /// Canonical declaration keys the backend is expected to return.
 /// Labels are display strings; keys are stable contract identifiers.
+///
+/// NOTE: The FastAPI OCR backend returns lowercase snake_case keys
+/// ("product_name", "mrp", "consumer_care"). Field lookups MUST be
+/// case-insensitive and normalised — see [_normalizeKey].
 abstract final class OcrFieldKeys {
   static const productName = 'PRODUCT_NAME';
   static const genericName = 'GENERIC_NAME';
@@ -31,7 +35,41 @@ abstract final class OcrFieldKeys {
   static const countryOfOrigin = 'COUNTRY_OF_ORIGIN';
   static const consumerCare = 'CONSUMER_CARE';
   static const batchOrLot = 'BATCH_LOT';
+  static const fssaiLicense = 'FSSAI_LICENSE';
+  static const unitSalePrice = 'UNIT_SALE_PRICE';
   static const other = 'OTHER';
+
+  /// Normalise a raw key from JSON into uppercase with underscores.
+  /// "product_name" → "PRODUCT_NAME", "manufacturerNameAddress" → "MANUFACTURERNAMEADDRESS"
+  static String normalise(String raw) =>
+      raw.toUpperCase().replaceAll('-', '_');
+
+  /// Alias map: alternate backend keys that map to canonical keys.
+  static const Map<String, String> _aliases = {
+    'MANUFACTURER_NAME_ADDRESS': 'MANUFACTURER',
+    'MANUFACTURER_NAME': 'MANUFACTURER',
+    'PACKER_NAME_ADDRESS': 'PACKER',
+    'PACKER_NAME': 'PACKER',
+    'DATE_OF_MANUFACTURE': 'MANUFACTURING_DATE',
+    'MFG_DATE': 'MANUFACTURING_DATE',
+    'DATE_OF_EXPIRY': 'EXPIRY_USE_BY',
+    'BEST_BEFORE': 'EXPIRY_USE_BY',
+    'EXPIRY_DATE': 'EXPIRY_USE_BY',
+    'CONSUMER_CARE_DETAILS': 'CONSUMER_CARE',
+    'CUSTOMER_CARE': 'CONSUMER_CARE',
+    'BATCH_NUMBER': 'BATCH_LOT',
+    'LOT_NUMBER': 'BATCH_LOT',
+    'FSSAI': 'FSSAI_LICENSE',
+    'FSSAI_NO': 'FSSAI_LICENSE',
+    'UNIT_PRICE': 'UNIT_SALE_PRICE',
+    'COMMODITY_NAME': 'PRODUCT_NAME',
+  };
+
+  /// Resolve a raw JSON key to its canonical OcrFieldKeys constant.
+  static String resolve(String raw) {
+    final norm = normalise(raw);
+    return _aliases[norm] ?? norm;
+  }
 }
 
 enum OcrStatus { pending, processing, completed, failed }
@@ -106,16 +144,21 @@ class ExtractedField {
     );
   }
 
-  factory ExtractedField.fromJson(Map<String, dynamic> json) => ExtractedField(
-        key: json['key'] as String,
-        label: (json['label'] as String?) ?? json['key'] as String,
-        value: (json['value'] as String?) ?? '',
-        confidence: (json['confidence'] as num?)?.toDouble() ?? 0,
-        isMissing: json['isMissing'] as bool? ?? false,
-        isCorrected: json['isCorrected'] as bool? ?? false,
-        sourceImageId: json['sourceImageId'] as String?,
-        unit: json['unit'] as String?,
-      );
+  factory ExtractedField.fromJson(Map<String, dynamic> json) {
+    // Resolve backend key (may be snake_case / camelCase) to canonical UPPER form.
+    final rawKey = json['key'] as String? ?? '';
+    final resolvedKey = OcrFieldKeys.resolve(rawKey);
+    return ExtractedField(
+      key: resolvedKey,
+      label: (json['label'] as String?) ?? rawKey,
+      value: (json['value'] as String?) ?? '',
+      confidence: (json['confidence'] as num?)?.toDouble() ?? 0,
+      isMissing: json['isMissing'] as bool? ?? false,
+      isCorrected: json['isCorrected'] as bool? ?? false,
+      sourceImageId: json['sourceImageId'] as String?,
+      unit: json['unit'] as String?,
+    );
+  }
 }
 
 /// Full OCR analysis result for one package/product.
@@ -146,6 +189,37 @@ class OcrResult {
 
   bool get isCompleted => status == OcrStatus.completed;
   bool get isFailed => status == OcrStatus.failed;
+
+  /// Returns the value for [key], case-insensitively matching both the
+  /// canonical key (e.g. "MRP") and any backend alias.
+  String? getFieldValue(String key) {
+    final canonical = OcrFieldKeys.resolve(key);
+    try {
+      final match = fields.firstWhere(
+        (f) =>
+            (OcrFieldKeys.resolve(f.key) == canonical ||
+                f.key.toUpperCase() == canonical ||
+                f.label.toUpperCase() == canonical) &&
+            !f.isMissing &&
+            f.value.trim().isNotEmpty,
+      );
+      return match.value.trim();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  String? get productName => getFieldValue(OcrFieldKeys.productName);
+  String? get genericName => getFieldValue(OcrFieldKeys.genericName);
+  String? get manufacturerDetails => getFieldValue(OcrFieldKeys.manufacturer);
+  String? get batchNumber => getFieldValue(OcrFieldKeys.batchOrLot);
+  String? get mrp => getFieldValue(OcrFieldKeys.mrp);
+  String? get netQuantity => getFieldValue(OcrFieldKeys.netQuantity);
+  String? get manufacturingDate => getFieldValue(OcrFieldKeys.manufacturingDate);
+  String? get expiryDate => getFieldValue(OcrFieldKeys.expiryOrUseBy);
+  String? get consumerCare => getFieldValue(OcrFieldKeys.consumerCare);
+  String? get fssaiNumber => getFieldValue(OcrFieldKeys.fssaiLicense);
+  String? get unitSalePrice => getFieldValue(OcrFieldKeys.unitSalePrice);
 
   OcrResult copyWith({
     String? jobId,

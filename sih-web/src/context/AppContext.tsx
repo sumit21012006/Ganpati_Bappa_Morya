@@ -57,6 +57,7 @@ interface AppContextType {
   setActiveAlert: (alert: string | null) => void;
   rewardPointsBalance: number;
   setRewardPointsBalance: React.Dispatch<React.SetStateAction<number>>;
+  isAuthChecking: boolean;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -302,6 +303,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setActiveAlert,
         rewardPointsBalance,
         setRewardPointsBalance,
+        isAuthChecking,
       }}
     >
       {children}

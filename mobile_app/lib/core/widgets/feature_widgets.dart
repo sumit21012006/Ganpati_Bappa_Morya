@@ -69,10 +69,7 @@ class ViolationCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 6),
-          Wrap(
-            spacing: 8,
-            runSpacing: 4,
-            crossAxisAlignment: WrapCrossAlignment.center,
+          Row(
             children: [
               StatusChip(
                 label: violation.status.label,
@@ -83,9 +80,12 @@ class ViolationCard extends StatelessWidget {
                         ? Icons.auto_awesome
                         : null,
               ),
-              if (violation.confidence != null)
+              if (violation.confidence != null) ...[
+                const SizedBox(width: 8),
                 AIConfidenceIndicator(confidence: violation.confidence!),
-              if (violation.isAiGenerated)
+              ],
+              if (violation.isAiGenerated) ...[
+                const SizedBox(width: 8),
                 const Text(
                   'AI finding',
                   style: TextStyle(
@@ -94,6 +94,7 @@ class ViolationCard extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
+              ],
             ],
           ),
           const SizedBox(height: AppSpacing.md),
@@ -276,8 +277,6 @@ class NoticeCard extends StatelessWidget {
                       children: [
                         Text(
                           notice.type.label,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w700,
@@ -285,8 +284,6 @@ class NoticeCard extends StatelessWidget {
                         ),
                         Text(
                           'Case ${notice.caseId}',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
                             fontSize: 12.5,
                             color: AppColors.textSecondary,

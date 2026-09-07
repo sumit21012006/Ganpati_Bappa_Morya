@@ -453,19 +453,25 @@ class MockBackend {
       caseId: 'LM/2026/${_random.nextInt(9000) + 1000}',
       type: request.noticeType,
       status: NoticeStatus.draft,
-      productName: inspection.products.isNotEmpty
-          ? inspection.products.first.name
-          : 'Assorted packaged commodities',
+      productName: request.productName ??
+          (inspection.products.isNotEmpty
+              ? inspection.products.first.name
+              : 'Assorted packaged commodities'),
       issuedDate: DateTime.now(),
       inspectionId: inspection.id,
       businessId: inspection.business.id,
-      businessName: inspection.business.name,
+      businessName: request.businessName ?? inspection.business.name,
       deadline: DateTime.now().add(const Duration(days: 15)),
       sections: _sectionsForViolations(request.confirmedViolations),
       violations: List.of(request.confirmedViolations),
       isAiDraft: true, // AI-generated draft until inspector finalises
-      bodyText: _nlpBodyText(inspection.business.name, request.noticeType),
+      bodyText: _nlpBodyText(request.businessName ?? inspection.business.name, request.noticeType),
       inspectorRemark: request.remarks,
+      batchNumber: request.batchNumber,
+      netQuantity: request.netQuantity,
+      mrp: request.mrp,
+      manufacturerName: request.manufacturerName,
+      businessAddress: request.businessAddress,
     );
     _notices.insert(0, draft);
     return draft;

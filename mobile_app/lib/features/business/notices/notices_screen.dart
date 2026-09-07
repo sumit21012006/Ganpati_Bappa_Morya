@@ -63,13 +63,16 @@ class _BusinessNoticesScreenState extends ConsumerState<BusinessNoticesScreen> {
                       : ListView.separated(
                           padding: const EdgeInsets.all(AppSpacing.lg),
                           itemCount: _notices!.length,
-                          separatorBuilder: (_, _) =>
+                          separatorBuilder: (_, __) =>
                               const SizedBox(height: AppSpacing.md),
                           itemBuilder: (context, i) => NoticeCard(
                             notice: _notices![i],
-                            onTap: () => context.go(
-                              businessNoticeDetailPath(_notices![i].id),
-                            ),
+                            onTap: () async {
+                              await context.push(
+                                businessNoticeDetailPath(_notices![i].id),
+                              );
+                              _load();
+                            },
                           ),
                         ),
                 ),
