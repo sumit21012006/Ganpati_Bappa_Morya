@@ -5,7 +5,6 @@ import { useApp } from '@/context/AppContext';
 import { 
   LayoutDashboard, 
   ShieldAlert, 
-  FileCheck, 
   GitMerge, 
   MapPin, 
   Package, 
@@ -22,7 +21,6 @@ export default function Sidebar() {
       items: [
         { label: 'Command Dashboard', tabKey: 'COMMAND_DASHBOARD', icon: LayoutDashboard },
         { label: 'Case Queue & Compounding', tabKey: 'COMPOUNDING_QUEUE', icon: ShieldAlert },
-        { label: 'Panchanama & Seizures', tabKey: 'PANCHANAMA', icon: FileCheck },
       ],
     },
     {

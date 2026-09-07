@@ -23,11 +23,12 @@ This system solves these challenges via an integrated **4-Persona Ecosystem** (C
 │                                             1. USER & PRESENTATION LAYER                                         │
 ├──────────────────────────┬──────────────────────────┬────────────────────────────┬───────────────────────────────┤
 │    CITIZEN / CONSUMER    │   BUSINESS / RETAILERS   │    INSPECTOR (ON-GROUND)   │     CENTRAL CONTROLLER        │
-│     [Next.js 14 Web]     │  [Flutter App & Web]     │       [Flutter App]        │       [Next.js 14 Web]        │
-│ • File E-commerce Lead   │ • Self-Compliance Check  │ • Multi-angle Packaging OCR│ • Statewide Heatmaps & BI     │
-│ • Invoice & Pack Upload  │ • Pre-market Guidance    │ • 1st vs 2nd Offence Check │ • Cross-district Dispatch     │
-│ • Case & Bounty Tracking │ • Respond to Notices     │ • 4-Stage Notice Generator │ • Approve Compounding Orders  │
-│ • Metrology Awareness    │ • GRAS Penalty Payment   │ • Digital Panchanama & Wit │ • Supply-Chain Graph Query    │
+│  [Next.js 16 (Turbopack)]│     [Flutter Mobile]     │       [Flutter Mobile]     │  [Next.js 16 (Turbopack)]     │
+│ • File Geo-tagged Lead   │ • Self-Compliance Check  │ • Multi-angle Packaging OCR│ • Command Dashboard & Radar   │
+│ • Invoice & Pack Upload  │ • Pre-market Guidance    │ • 1st vs 2nd Offence Check │ • Case Queue & Compounding    │
+│ • Live Case & Reward Log │ • Respond to Notices     │ • 4-Stage Notice Generator │   ↳ Stacked Notices (u/s 48)  │
+│ • PFMS / UPI Bounty Sync │ • Razorpay Compounding   │ • Digital Panchanama & Wit │ • Upstream Traceback & Raids  │
+│ • National Helpline 1915 │ • Proof Rectification    │ • Bluetooth Scale & Geotag │ • Real-time Audit Trail Log   │
 └────────────┬─────────────┴────────────┬─────────────┴──────────────┬─────────────┴───────────────┬───────────────┘
              │                          │                            │                             │
 ═════════════╪══════════════════════════╪════════════════════════════╪═════════════════════════════╪═══════════════
@@ -35,19 +36,20 @@ This system solves these challenges via an integrated **4-Persona Ecosystem** (C
 ┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
 │                                       2. API GATEWAY & SECURITY LAYER                                            │
 ├──────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
-│  • Keycloak / JWT Authentication & Role-Based Access Control (RBAC)                                              │
-│  • Reverse Proxy (CORS, Rate Limiting, Request Logging, Offline Sync Buffer)                                     │
-│  • External Connectors: eMudhra Digital Signatures, Razorpay (GRAS 0435), WhatsApp / SMS Notification Gateway    │
+│  • JWT Authentication, PBKDF2 Password Hashing & Role-Based Tenant Isolation (CITIZEN, BUSINESS, INSPECTOR, CTRL)│
+│  • Centralized Reverse Proxy (CORS, Rate Limiting, Request Logging, Error Handling)                             │
+│  • External Connectors: eMudhra / DocuSign Class 3 DSC Signatures, Razorpay Gateway, SMS / WhatsApp Alert Hooks │
 └────────────────────────────────────────────────┬─────────────────────────────────────────────────────────────────┘
                                                  │
                                                  ▼
 ┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
 │                                        3. CORE BACKEND SERVICES (FastAPI)                                        │
 ├──────────────────────────┬──────────────────────────┬────────────────────────────┬───────────────────────────────┤
-│   CASE & COMPLAINT SVC   │    INSPECTION SERVICE    │     NOTICE & LEGAL SVC     │     INTELLIGENCE & GRAPH      │
-│ • Citizen lead intake    │ • Offline sync buffer    │ • Statutory Section Mapper │ • Repeat offender discovery   │
-│ • Evidence validation    │ • Geo-tagging & route    │ • 4-stage Notice Engine    │ • Supply chain node link      │
-│ • Bounty escrow queue    │ • Seizure record lock    │ • eMudhra Digital Signer   │ • Retailer ➔ Importer chain   │
+│   CASE & COMPLAINT SVC   │    INSPECTION SERVICE    │     NOTICE & LEGAL SVC     │  SUPPLY CHAIN & SURVEILLANCE  │
+│ • Citizen lead intake    │ • Offline sync buffer    │ • Statutory Section Mapper │ • Upstream Traceback Engine   │
+│ • Evidence validation    │ • Geo-tagging & route    │ • 4-stage Notice Engine    │ • Automated GSTN Node Linking │
+│ • Bounty escrow queue    │ • Seizure record lock    │ • eMudhra / DocuSign Stmp  │ • Field Raid Dispatch & Assign│
+│ • PFMS DBT integration   │ • Witness Panchanama     │ • Dynamic PDF Generator    │ • Inspector Jurisdiction Map  │
 └────────────┬─────────────┴────────────┬─────────────┴──────────────┬─────────────┴───────────────┬───────────────┘
              │                          │                            │                             │
              ▼                          ▼                            ▼                             ▼
@@ -64,12 +66,110 @@ This system solves these challenges via an integrated **4-Persona Ecosystem** (C
 ┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
 │                                     5. DATA PERSISTENCE & STORAGE LAYER                                          │
 ├──────────────────────────┬──────────────────────────┬────────────────────────────┬───────────────────────────────┤
-│   POSTGRESQL + POSTGIS   │       NEO4J GRAPH        │        MINIO / S3          │         RABBITMQ              │
-│ • Users, Roles, Audits   │ • Supply-chain graph:    │ • Raw packaging photos     │ • Async OCR extraction jobs   │
-│ • Inspections & Cases    │   (Mfr ➔ Dist ➔ Retail) │ • Eye-witness audio/video  │ • PDF rendering queue         │
-│ • Legal Rules & Fines    │ • Counterfeit clusters   │ • Digitally signed PDFs    │ • WhatsApp / SMS alerts       │
+│   POSTGRESQL (100% LIVE) │   IMMUTABLE AUDIT LOG    │      GENERATED STORAGE     │         PAYMENTS & RAIDS      │
+│ • Users, Roles & Tenants │ • SHA-256 Block-chained  │ • python-docx Notice Engine│ • Razorpay Order State Store  │
+│ • Inspections & Seizures │   Vigilance Audit Trail  │ • Official PDF Binaries    │ • SupplyChainLinkModel Postgre│
+│ • Statutory Notices      │ • Notice Issuance Events │   (Notices_Template/gen/)  │ • Direct Raid Mandate Assign  │
+│ • Citizen Complaints     │ • Compounding DSC Stamps │ • Seized Evidence Photos   │ • Multi-district Jurisdiction │
 └──────────────────────────┴──────────────────────────┴────────────────────────────┴───────────────────────────────┘
 ```
+
+### 2.1 Interactive Component & Flow Diagram (Mermaid Architecture)
+
+```mermaid
+flowchart TD
+    subgraph PRESENTATION["1. Presentation Layer"]
+        CitizenWeb["🌐 Citizen Portal (Next.js 16)
+• Complaint Registration
+• Real-Time Ledger
+• Bounty Tracker"]
+        MerchantApp["📱 Merchant App (Flutter)
+• Self-Compliance AI
+• Notice Response & Proof
+• Razorpay Compounding"]
+        InspectorApp["📱 Field Inspector (Flutter)
+• Live OCR Packaging Scan
+• Form V Seizures & Witnesses
+• Instant Notice Issuance"]
+        ControllerWeb["🖥️ Controller Command HQ (Next.js 16)
+• Regional Radar & SLA Telemetry
+• Case Queue & Stacked Notices
+• Supply Chain Raid Dispatch"]
+    end
+
+    subgraph GATEWAY["2. Security & API Gateway Layer (FastAPI)"]
+        AuthRouter["🔐 JWT Auth & Tenant Scoping
+(Citizen, Business, Inspector, Controller)"]
+        RateLimiter["🛡️ CORS, Security & Error Middleware"]
+    end
+
+    subgraph SERVICES["3. Core Microservices Layer"]
+        ComplaintSvc["📋 Complaint Service
+(Citizen Intake, Verification, Bounty Queue)"]
+        InspectionSvc["🔍 Inspection Service
+(Form V Seizures, Witnesses, Geo-Stamps)"]
+        NoticeSvc["⚖️ Notice & Legal Engine
+(Improvement, Seizure, Panchanama, Compounding)"]
+        SupplyChainSvc["🔗 Supply Chain Surveillance
+(GSTN Upstream Match, Raid Assignment)"]
+        AuditSvc["📜 Immutable Audit Trail
+(SHA-256 Hash Chain of Enforcement Actions)"]
+    end
+
+    subgraph AI_ENGINE["4. AI & OCR Inference Engine"]
+        RapidOCR["🧠 Multilingual RapidOCR ONNX
+(Rule 6 Declarations Extraction)"]
+        RulesEngine["📐 Statutory Rulebook Engine
+(Schedule II Standard Weights, Rule 26 Bulk)"]
+    end
+
+    subgraph INTEGRATIONS["5. External Government & Fintech Gateways"]
+        DocuSign["✍️ eMudhra / DocuSign
+(Class 3 DSC Signatures)"]
+        Razorpay["💳 Razorpay Gateway
+(Compounding Settlement Head 0435)"]
+        PDFGen["📄 python-docx & PDF Gen
+(Statutory Gazette & Notice Forms)"]
+    end
+
+    subgraph DATABASE["6. Persistence Layer (PostgreSQL)"]
+        PG_Users[("👤 Users Table")]
+        PG_Complaints[("📝 Complaints Table")]
+        PG_Inspections[("🔎 Inspections Table")]
+        PG_Notices[("📜 Notices Table")]
+        PG_SupplyChain[("⛓️ Supply Chain Links Table")]
+        PG_AuditLogs[("🔒 Audit Logs Table")]
+    end
+
+    %% Presentation to Gateway
+    CitizenWeb --> AuthRouter
+    MerchantApp --> AuthRouter
+    InspectorApp --> AuthRouter
+    ControllerWeb --> AuthRouter
+
+    %% Gateway to Services
+    AuthRouter --> ComplaintSvc
+    AuthRouter --> InspectionSvc
+    AuthRouter --> NoticeSvc
+    AuthRouter --> SupplyChainSvc
+    AuthRouter --> AuditSvc
+
+    %% Services interactions
+    ComplaintSvc --> PG_Complaints
+    InspectionSvc --> AI_ENGINE
+    AI_ENGINE --> RapidOCR
+    RapidOCR --> RulesEngine
+    InspectionSvc --> PG_Inspections
+    NoticeSvc --> DocuSign
+    NoticeSvc --> PDFGen
+    NoticeSvc --> PG_Notices
+    SupplyChainSvc --> PG_SupplyChain
+    AuditSvc --> PG_AuditLogs
+    MerchantApp --> Razorpay
+    Razorpay --> NoticeSvc
+    ControllerWeb -.->|Stacked Notices 1-below-other| NoticeSvc
+    ControllerWeb -.->|Assign Raid Officer| SupplyChainSvc
+``````
 
 ---
 
@@ -113,9 +213,16 @@ This system solves these challenges via an integrated **4-Persona Ecosystem** (C
 ---
 
 ### 3.4 Central Controller Flow (Governance & Supply Chain Intelligence)
-1. **Statewide Governance:** The Controller dashboard visualizes all district inspections, pending compounding orders, and revenue realization.
-2. **Compounding Order Approval:** Compounding orders prepared by inspectors are reviewed and digitally stamped by the Controller.
-3. **Cross-Jurisdiction Supply Chain Tracing:** When Retailer A in District 1 states they bought illegal packages from Distributor B in District 2, the Controller's Neo4j graph engine automatically triggers a cross-district inspection directive to the District 2 inspectorate.
+1. **Statewide Governance:** The Controller Command Dashboard visualizes live divisional caseloads via an interactive Regional Radar (`stats.regionalRadar`), monitoring real-time SLA metrics, notice volumes, and recovered revenue.
+2. **Compounding Adjudication Desk (Stacked Notice Inspection):**
+   - When reviewing any establishment or compounding case, the controller immediately sees **all statutory notices generated for that case stacked sequentially (one below the other)**.
+   - Each generated notice presents its full statutory form: DIN, Case ID, Accused Merchant details, Non-Compliance Violations Table, Official Legal Recital, Class 3 DSC Cryptographic Hash (`SHA-256`), and a direct link to download the generated PDF.
+   - The Controller can record statutory adjudication directives and execute judicial compounding orders (**Approve Compounded Order**, **Reject**, or **Escalate to Prosecution**).
+3. **Upstream Supply Chain Surveillance & Raid Mandate Dispatch:**
+   - When field inspectors encounter illicit packaging and declare upstream source manufacturers/distributors at Step 6, the system records verified upstream links in PostgreSQL (`SupplyChainLinkModel`).
+   - The Controller reviews contraband nodes and assigns targeted raid warrants to specific jurisdictional inspectors (`usr-insp-sumit`, `usr-insp-mihir`, `usr-insp-rohit`).
+   - The assigned inspector immediately receives the inspection warrant in their mobile field app.
+4. **Immutable Vigilance Audit Trail:** All enforcement actions (complaint registration, inspection dispatch, notice issuance, compounding approval) append cryptographically hashed events to the immutable audit trail (`GET /api/v1/audit-logs`).
 
 ---
 

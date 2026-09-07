@@ -4,11 +4,11 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { UserRole, AuthUser } from '@/types';
 import { authDb } from '@/lib/db';
 import { loginToBackend, registerToBackend, getAuthMe } from '@/lib/api/auth';
-import { clearAuthToken } from '@/lib/apiClient';
+import { clearAuthToken, apiGet } from '@/lib/apiClient';
 
 
 export type CitizenTab = 'FILE_COMPLAINT' | 'MY_COMPLAINTS';
-export type ControllerTab = 'COMMAND_DASHBOARD' | 'COMPOUNDING_QUEUE' | 'SUPPLY_CHAIN' | 'JURISDICTION' | 'PANCHANAMA';
+export type ControllerTab = 'COMMAND_DASHBOARD' | 'COMPOUNDING_QUEUE' | 'SUPPLY_CHAIN' | 'JURISDICTION';
 
 export interface AppNotification {
   id: string;
@@ -117,7 +117,54 @@ export function AppProvider({ children }: { children: ReactNode }) {
     },
   ]);
 
-  const [notificationCount, setNotificationCount] = useState<number>(3);
+  const [notificationCount, setNotificationCount] = useState<number>(0);
+
+  
+  // Load real immutable audit logs for notification drawer
+  useEffect(() => {
+    async function loadLiveAuditNotifications() {
+      try {
+        const logs = await apiGet<any[]>('/api/v1/audit-logs');
+        if (Array.isArray(logs) && logs.length > 0) {
+          const mapped: AppNotification[] = logs.slice(0, 10).map((l, idx) => {
+            let title = 'Vigilance Audit Event';
+            let type: AppNotification['type'] = 'WHISTLEBLOWER';
+            const act = (l.action || '').toUpperCase();
+            if (act.includes('NOTICE')) {
+              title = 'Statutory Notice Issued';
+              type = 'SEIZURE';
+            } else if (act.includes('RAID') || act.includes('ASSIGN')) {
+              title = 'Raid Assignment Dispatched';
+              type = 'RAID';
+            } else if (act.includes('INSPECT')) {
+              title = 'Field Inspection Logged';
+              type = 'PANCHANAMA';
+            } else if (act.includes('COMPLAINT')) {
+              title = 'Citizen Complaint Registered';
+              type = 'WHISTLEBLOWER';
+            }
+
+            const timeStr = l.createdAt ? new Date(l.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recently';
+            const detail = typeof l.payload === 'object' && l.payload ? (l.payload.businessName || l.payload.commodity || l.payload.rule || `Entity: ${l.entityId || l.id}`) : `Action: ${l.action}`;
+
+            return {
+              id: l.id || `notif_${idx}`,
+              title,
+              message: String(detail),
+              timestamp: timeStr,
+              type,
+              unread: idx < 2,
+            };
+          });
+          setNotifications(mapped);
+        }
+      } catch {
+        // Fall back to empty array
+        setNotifications([]);
+      }
+    }
+    loadLiveAuditNotifications();
+  }, []);
 
   // Revalidate session with backend GET /api/v1/auth/me on initial app load
   useEffect(() => {

@@ -103,6 +103,17 @@ export interface OcrResult {
   offenceTier: 'FIRST_OFFENCE' | 'SECOND_OFFENCE';
 }
 
+export interface NoticeViolationItem {
+  id?: string;
+  inspectionId?: string;
+  type?: string;
+  description?: string;
+  severity?: string;
+  ruleSection?: string;
+  ruleTitle?: string;
+  confidence?: number;
+}
+
 export interface Notice {
   id: string;
   caseId: string;
@@ -122,6 +133,11 @@ export interface Notice {
   pdfUrl?: string;
   signatureUrl?: string;
   offenceTier: 'FIRST_OFFENCE' | 'SECOND_OFFENCE';
+  inspectionId?: string;
+  businessId?: string;
+  bodyText?: string;
+  inspectorRemark?: string;
+  violations?: NoticeViolationItem[];
   forensicEvidence?: {
     originalMrp: string;
     overwrittenMrp: string;

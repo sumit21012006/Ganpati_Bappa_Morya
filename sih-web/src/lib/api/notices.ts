@@ -30,6 +30,19 @@ interface BackendNotice {
   paymentStatus?: string;
   digital_signature_hash?: string;
   digitalSignatureHash?: string;
+  inspectionId?: string;
+  bodyText?: string;
+  inspectorRemark?: string;
+  violations?: Array<{
+    id?: string;
+    inspectionId?: string;
+    type?: string;
+    description?: string;
+    severity?: string;
+    ruleSection?: string;
+    ruleTitle?: string;
+    confidence?: number;
+  }>;
 }
 
 function mapNoticeType(t: string | undefined): NoticeType {
@@ -69,6 +82,11 @@ function normalizeNotice(b: BackendNotice): Notice {
     rewardPointsAllocated: Math.round((b.penaltyAmount || 25000) * 0.1),
     pdfUrl: b.pdfUrl,
     offenceTier: 'FIRST_OFFENCE',
+    inspectionId: b.inspectionId,
+    businessId: b.businessId,
+    bodyText: b.bodyText,
+    inspectorRemark: b.inspectorRemark,
+    violations: b.violations,
   };
 }
 

@@ -62,87 +62,9 @@ import {
   PieChart,
   Printer,
   Building2,
-  Plus
+  Plus,
+  GitMerge
 } from 'lucide-react';
-
-const HISTORICAL_CASES = [
-  {
-    id: 'LM-2024-MH-0842',
-    date: '12 Oct 2024',
-    product: 'Surf Excel Liquid 500ml',
-    brandSub: 'HUL • E-Com SKU',
-    entityName: 'Blinkit Dark Store',
-    entityAddress: 'Powai Hub, Mumbai',
-    channelType: 'QUICK_COMMERCE' as const,
-    category: 'Rule 16(1) Dual MRP',
-    status: '8. Compounded',
-    statusType: 'RESOLVED' as const,
-    inspector: 'V. K. Patil',
-    inspectorZone: 'LMO Zone 4',
-    rewardStatus: '₹5,000 Credited',
-    rewardType: 'CREDITED' as const,
-    penalty: '₹50,000 Imposed',
-    statement: 'Affixed adhesive MRP sticker ₹210 over printed MRP ₹165.',
-    isNewLive: false,
-  },
-  {
-    id: 'LM-2024-MH-9122',
-    date: '20 Oct 2024',
-    product: 'Basmati Rice Premium 5kg',
-    brandSub: 'Fortune • Batch B-42',
-    entityName: 'Radha Krishna Supermarket',
-    entityAddress: 'Andheri West, Mumbai',
-    channelType: 'OFFLINE' as const,
-    category: 'Sec 36 Net Qty Deficit (130g)',
-    status: 'Raid Scheduled',
-    statusType: 'ACTIVE' as const,
-    inspector: 'S. R. Kulkarni',
-    inspectorZone: 'LMO Zone 3',
-    rewardStatus: 'Pending Compounding',
-    rewardType: 'PENDING' as const,
-    penalty: 'Pending Raid',
-    statement: 'Gross bag weight 4.87kg against statutory mandatory 5.00kg.',
-    isNewLive: false,
-  },
-  {
-    id: 'LM-2024-MH-9340',
-    date: '02 Nov 2024',
-    product: 'Almonds California 250g',
-    brandSub: 'Happilo Foods',
-    entityName: 'Zepto Fulfilment Centre',
-    entityAddress: 'BKC Hub, Mumbai',
-    channelType: 'QUICK_COMMERCE' as const,
-    category: 'Rule 6 Missing Unit Sale Price',
-    status: 'Verification Pending',
-    statusType: 'ACTIVE' as const,
-    inspector: 'A. G. Deshmukh',
-    inspectorZone: 'LMO Zone 7',
-    rewardStatus: 'Under Verification',
-    rewardType: 'PENDING' as const,
-    penalty: 'Under Review',
-    statement: 'Missing Unit Sale Price declaration on outer pouch.',
-    isNewLive: false,
-  },
-  {
-    id: 'LM-2024-MH-0119',
-    date: '18 Aug 2024',
-    product: 'Mineral Water Bottle 1000ml',
-    brandSub: 'Kinley • Dual MRP at Cinemas',
-    entityName: 'Cinepolis Multiplex',
-    entityAddress: 'Viviana Mall, Thane',
-    channelType: 'OFFLINE' as const,
-    category: 'Rule 18(2) Overcharging MRP ₹60',
-    status: 'Settled',
-    statusType: 'RESOLVED' as const,
-    inspector: 'M. T. Jadhav',
-    inspectorZone: 'LMO Thane Div',
-    rewardStatus: '₹2,750 Credited',
-    rewardType: 'CREDITED' as const,
-    penalty: '₹27,500 Recovered',
-    statement: 'Overcharged ₹60 for bottle with standard MRP ₹20.',
-    isNewLive: false,
-  },
-];
 
 export default function UnifiedPortalPage() {
   const { 
@@ -152,6 +74,7 @@ export default function UnifiedPortalPage() {
     citizenTab, 
     setCitizenTab,
     controllerTab, 
+    setControllerTab,
     activeAlert, 
     rewardPointsBalance, 
     setRewardPointsBalance,
@@ -193,15 +116,11 @@ export default function UnifiedPortalPage() {
 
   // Interactive Modals & Controls State
   const [activeModal, setActiveModal] = useState<
-    | 'RAID_DISPATCH' 
-    | 'PANCHANAMA_STREAM' 
-    | 'DSC_SIGN' 
-    | 'PROSECUTION' 
-    | 'DISTRICT_LEDGER' 
-    | 'AUTO_ASSIGNMENT' 
-    | 'ZONAL_DIRECTIVE' 
-    | 'MERCHANT_AUDIT' 
-    | 'FILTER_RADAR' 
+    | 'RAID_DISPATCH'
+    | 'DSC_SIGN'
+    | 'PROSECUTION'
+    | 'DISTRICT_LEDGER'
+    | 'FILTER_RADAR'
     | 'DETAILED_DOSSIER_PDF'
     | 'LEAFLET_MAP'
     | null
@@ -227,23 +146,27 @@ export default function UnifiedPortalPage() {
   const [searchDinQuery, setSearchDinQuery] = useState<string>('');
   const [dscPin, setDscPin] = useState<string>('849201');
   const [prosecutionCourt, setProsecutionCourt] = useState<string>('Chief Metropolitan Magistrate Court, Esplanade Mumbai');
-  const [directiveTitle, setDirectiveTitle] = useState<string>('Special Verification Drive on Packaged Edible Oils & Ghee');
-  const [directiveBody, setDirectiveBody] = useState<string>('All Zonal Inspectors are directed under Section 29 to inspect wholesale markets for net quantity compliance and missing MRP declarations.');
-  const [auditProgress, setAuditProgress] = useState<number>(0);
-  const [isAuditing, setIsAuditing] = useState<boolean>(false);
-
+        
   // Regional Radar Filter State
   const [radarAlertFilter, setRadarAlertFilter] = useState<'ALL' | 'High Alert' | 'Moderate Watch' | 'Compliant'>('ALL');
   const [tempRadarFilter, setTempRadarFilter] = useState<'ALL' | 'High Alert' | 'Moderate Watch' | 'Compliant'>('ALL');
 
-  const allRadarRegions = [
-    { region: 'Mumbai Suburban (Zones 1-4)', alertLevel: 'High Alert' as const, alertColor: 'bg-rose-500', badgeColor: 'bg-rose-100 text-rose-700 border-rose-300', inspections: '4,120', violations: 620, recoveryRupees: '2.10 Cr', slaRatePercent: '94.2%', violationColor: 'text-rose-600' },
-    { region: 'Pune Metro & Pimpri-Chinchwad', alertLevel: 'Moderate Watch' as const, alertColor: 'bg-amber-500', badgeColor: 'bg-amber-100 text-amber-800 border-amber-300', inspections: '3,210', violations: 480, recoveryRupees: '1.60 Cr', slaRatePercent: '91.8%', violationColor: 'text-rose-600' },
-    { region: 'Nagpur & Vidarbha Hub', alertLevel: 'Compliant' as const, alertColor: 'bg-emerald-500', badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-300', inspections: '1,840', violations: 210, recoveryRupees: '82.0 L', slaRatePercent: '96.5%', violationColor: 'text-emerald-600' },
-    { region: 'Nashik & Sambhajinagar Belt', alertLevel: 'Compliant' as const, alertColor: 'bg-emerald-500', badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-300', inspections: '1,420', violations: 165, recoveryRupees: '54.5 L', slaRatePercent: '98.1%', violationColor: 'text-emerald-600' },
-  ];
+  const radarRegions = (stats?.regionalRadar || []).map((r) => {
+    const alertLevel = r.alertLevel || 'Compliant';
+    const alertColor = alertLevel === 'High Alert' ? 'bg-rose-500' : alertLevel === 'Moderate Watch' ? 'bg-amber-500' : 'bg-emerald-500';
+    const badgeColor = alertLevel === 'High Alert' ? 'bg-rose-100 text-rose-700 border-rose-300' : alertLevel === 'Moderate Watch' ? 'bg-amber-100 text-amber-800 border-amber-300' : 'bg-emerald-100 text-emerald-800 border-emerald-300';
+    const violationColor = alertLevel === 'High Alert' ? 'text-rose-600' : alertLevel === 'Moderate Watch' ? 'text-amber-600' : 'text-emerald-600';
+    return {
+      ...r,
+      alertColor,
+      badgeColor,
+      violationColor,
+      inspections: typeof r.inspections === 'number' ? r.inspections.toLocaleString() : r.inspections,
+      slaRatePercent: typeof r.slaRatePercent === 'number' ? `${r.slaRatePercent}%` : r.slaRatePercent,
+    };
+  });
 
-  const displayedRadarRegions = allRadarRegions.filter(
+  const displayedRadarRegions = radarRegions.filter(
     (r) => radarAlertFilter === 'ALL' || r.alertLevel === radarAlertFilter
   );
   const [selectedRaidTarget, setSelectedRaidTarget] = useState<SupplyChainLink | null>(null);
@@ -253,6 +176,19 @@ export default function UnifiedPortalPage() {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 4000);
   };
+
+  const handleDownloadNoticePdf = (notice?: Notice | null) => {
+    const target = notice || activeNotice;
+    if (!target) return;
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
+    if (target.pdfUrl) {
+      const url = target.pdfUrl.startsWith('http') ? target.pdfUrl : `${baseUrl}${target.pdfUrl}`;
+      window.open(url, '_blank');
+    } else {
+      showToast(`Statutory Notice PDF for ${target.dinNumber || target.id} is being generated...`);
+    }
+  };
+
 
   useEffect(() => {
     fetchDashboardStats().then(setStats);
@@ -314,9 +250,16 @@ export default function UnifiedPortalPage() {
     };
   });
 
-  const allDisplayComplaints = [...liveComplaintRows, ...HISTORICAL_CASES];
+  const allDisplayComplaints = liveComplaintRows;
   const activeNotice = notices.find((n) => n.id === selectedNoticeId) || notices[0];
-  const spotlightCase = complaints.find((c) => c.id === 'LM-2024-MH-0842') || complaints[0];
+  const caseNotices = notices.filter(
+    (n) =>
+      (activeNotice?.inspectionId && n.inspectionId && n.inspectionId === activeNotice.inspectionId) ||
+      (activeNotice?.caseId && n.caseId && n.caseId === activeNotice.caseId) ||
+      n.id === activeNotice?.id
+  );
+  const displayedNotices = caseNotices.length > 0 ? caseNotices : (activeNotice ? [activeNotice] : []);
+  const spotlightCase = complaints[0] || null;
 
   const filteredNotices = notices.filter((n) => 
     searchDinQuery === '' ||
@@ -409,22 +352,6 @@ export default function UnifiedPortalPage() {
     } finally {
       setActiveModal(null);
     }
-  };
-
-  const handleTriggerMerchantAudit = () => {
-    setIsAuditing(true);
-    setAuditProgress(10);
-    setActiveModal('MERCHANT_AUDIT');
-    const interval = setInterval(() => {
-      setAuditProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setIsAuditing(false);
-          return 100;
-        }
-        return prev + 18;
-      });
-    }, 400);
   };
 
   const handleDeployRaid = async () => {
@@ -533,7 +460,7 @@ export default function UnifiedPortalPage() {
 
                 <div className="flex items-center space-x-3">
                   <button 
-                    onClick={() => showToast('Citizen Ledger PDF download initiated.')}
+                    onClick={() => showToast('Live Citizen Redressal Ledger exported to CSV/PDF.')}
                     className="bg-[#081427] hover:bg-blue-800 border border-blue-700 text-xs px-3.5 py-2 rounded-lg text-white flex items-center space-x-1.5 font-bold cursor-pointer transition-all shadow"
                   >
                     <Download className="w-3.5 h-3.5" />
@@ -582,7 +509,7 @@ export default function UnifiedPortalPage() {
                     <span className="bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded text-[9px] font-bold">PFMS Direct</span>
                   </div>
                   <div className="text-2xl font-black text-amber-400 font-mono">
-                    ₹2,750 <span className="text-xs font-normal text-blue-200">/ 2,750 Points</span>
+                    ₹{(user?.rewardPoints || 0).toLocaleString()} <span className="text-xs font-normal text-blue-200">/ {(user?.rewardPoints || 0).toLocaleString()} Points</span>
                   </div>
                   <div className="text-[10px] text-blue-200 flex items-center justify-between pt-1 border-t border-amber-500/20">
                     <span>Net In-Flight: ₹5,000</span>
@@ -655,17 +582,17 @@ export default function UnifiedPortalPage() {
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-100 pb-3">
                     <div className="flex items-center space-x-3">
                       <span className="bg-slate-900 text-white font-mono font-bold text-xs px-2.5 py-1 rounded">
-                        Case #LM-2024-MH-0842
+                        Case #{spotlightCase.id}
                       </span>
                       <span className="bg-rose-100 text-rose-700 border border-rose-200 text-[10px] font-bold px-2.5 py-0.5 rounded">
-                        ⚠️ Rule 16(1) Dual MRP Violation
+                        ⚠️ {spotlightCase.category || 'Statutory Non-Compliance'}
                       </span>
                       <span className="bg-slate-100 text-slate-700 text-[10px] font-semibold px-2 py-0.5 rounded">
-                        Quick Commerce
+                        {spotlightCase.channel === 'ECOMMERCE_PLATFORM' ? 'E-Commerce Platform' : 'Offline Retail Store'}
                       </span>
                     </div>
                     <div className="text-[11px] text-amber-700 font-bold flex items-center gap-1 font-mono">
-                      <Clock className="w-3.5 h-3.5 text-amber-600" /> Resolution SLA: Target Met (10 Days)
+                      <Clock className="w-3.5 h-3.5 text-amber-600" /> Status: {spotlightCase.status}
                     </div>
                   </div>
 
@@ -673,23 +600,23 @@ export default function UnifiedPortalPage() {
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs bg-slate-50 p-3.5 rounded-xl border border-slate-200">
                     <div>
                       <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">ACCUSED MERCHANT / ENTITY</div>
-                      <div className="font-bold text-slate-900 mt-0.5">Blinkit Dark Store Hub</div>
-                      <div className="text-[10px] text-slate-500">SuperStore Retailers LLP, Hiranandani Powai, Mumbai</div>
+                      <div className="font-bold text-slate-900 mt-0.5">{spotlightCase.retailerNameText || 'Retail Store'}</div>
+                      <div className="text-[10px] text-slate-500">{spotlightCase.retailerAddressText || 'Premises Recorded'}</div>
                     </div>
                     <div>
-                      <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">VIOLATING COMMODITY</div>
-                      <div className="font-bold text-slate-900 mt-0.5">Surf Excel Matic 500ml</div>
-                      <div className="text-[10px] text-slate-500">Sticker MRP ₹210 vs Original Debossed MRP ₹165</div>
+                      <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">VIOLATING COMMODITY / CATEGORY</div>
+                      <div className="font-bold text-slate-900 mt-0.5">{spotlightCase.category || 'Packaged Commodity'}</div>
+                      <div className="text-[10px] text-slate-500">Statutory verification in progress</div>
                     </div>
                     <div>
                       <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">JURISDICTION & OFFICER</div>
-                      <div className="font-bold text-amber-700 mt-0.5">Inspector V. K. Patil</div>
-                      <div className="text-[10px] text-slate-500">Legal Metrology Officer (LMO), Zone 4, Mumbai Central</div>
+                      <div className="font-bold text-amber-700 mt-0.5">{spotlightCase.status === 'RESOLVED' ? 'Inspector V. K. Patil' : 'Divisional Flying Squad'}</div>
+                      <div className="text-[10px] text-slate-500">Legal Metrology Division</div>
                     </div>
                     <div>
                       <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">STATUTORY PENAL OUTCOME</div>
-                      <div className="font-black text-emerald-600 text-sm mt-0.5">₹50,000 Imposed</div>
-                      <div className="text-[10px] text-slate-500">Compounded under Sec. 36(1) PCR 2011</div>
+                      <div className="font-black text-emerald-600 text-sm mt-0.5">{spotlightCase.status === 'RESOLVED' ? '₹50,000 Imposed' : 'Under Investigation'}</div>
+                      <div className="text-[10px] text-slate-500">Incentive: ₹{spotlightCase.estimatedRewardPoints || 5000}</div>
                     </div>
                   </div>
 
@@ -778,7 +705,7 @@ export default function UnifiedPortalPage() {
                         </div>
 
                         <p className="text-slate-700 text-xs leading-relaxed font-mono bg-slate-50 p-3.5 rounded-xl border border-slate-200">
-                          &quot;On 15-10-2024 at 14:30 hours, the undersigned conducted a surprise statutory inspection at Blinkit SuperStore Retailers LLP, Powai Hub pursuant to complaint #LM-2024-MH-0842. Verification of ready-for-dispatch packages revealed deliberate tampering of standard declared MRP on <strong className="text-slate-900 font-bold">Surf Excel Matic Front Load Liquid 500ml</strong>. An adhesive opaque paper sticker printed with MRP ₹210.00 (inclusive of all taxes) was affixed directly concealing the original manufacturer&apos;s screen-printed declaration of MRP ₹165.00.&quot;
+                          &quot;{spotlightCase.statementOfFact || 'Statutory inspection and consumer complaint filed under Legal Metrology (Packaged Commodities) Rules, 2011. Verified by electronic signature and state enforcement record.'}&quot;
                         </p>
 
                         <div className="flex items-center space-x-2 text-[10px] text-slate-500 pt-2 border-t border-slate-100">
@@ -836,6 +763,15 @@ export default function UnifiedPortalPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
+                      {allDisplayComplaints.length === 0 && (
+                        <tr>
+                          <td colSpan={7} className="p-8 text-center text-slate-500">
+                            <FileText className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                            <div className="font-bold text-slate-700">No citizen complaints recorded yet</div>
+                            <div className="text-[11px] text-slate-400 mt-0.5">Statutory complaints filed via the form above will appear here in real time.</div>
+                          </td>
+                        </tr>
+                      )}
                       {allDisplayComplaints.filter((item) => {
                         const matchesSearch = 
                           complaintSearchText === '' ||
@@ -894,7 +830,7 @@ export default function UnifiedPortalPage() {
                           </td>
                           <td className="p-3 text-right space-x-1.5">
                             <button 
-                              onClick={() => showToast(`Downloading statutory PDF dossier for case #${row.id}...`)} 
+                              onClick={() => showToast(`Initiated statutory digital record export for #${row.id}`)} 
                               className="p-1.5 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded transition-all cursor-pointer" 
                               title="Download Case PDF"
                             >
@@ -942,9 +878,9 @@ export default function UnifiedPortalPage() {
                   <button onClick={() => showToast('Displaying Whistleblower Protection Rules...')} className="bg-[#081427] hover:bg-blue-800 border border-blue-700 text-xs px-3 py-2 rounded-lg text-white font-bold cursor-pointer">
                     Statutory Reward Rules
                   </button>
-                  <button onClick={() => showToast('Connecting to LMO Whistleblower Helpline...')} className="bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs px-3 py-2 rounded-lg font-black cursor-pointer">
-                    Contact LMO Helpline
-                  </button>
+                  <a href="tel:1915" className="bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs px-3 py-2 rounded-lg font-black flex items-center gap-1 cursor-pointer">
+                    National Consumer Helpline 1915
+                  </a>
                 </div>
               </div>
             </div>
@@ -1342,13 +1278,10 @@ export default function UnifiedPortalPage() {
                                 <div className="text-xs text-slate-600 font-semibold">
                                   Assigned Officer: <strong className="text-slate-900 font-bold">{link.assignedInspectorName || 'Inspector Rajesh Shinde'}</strong>
                                 </div>
-                                <button 
-                                  onClick={() => setActiveModal('PANCHANAMA_STREAM')}
-                                  className="bg-blue-50 hover:bg-blue-100 border border-blue-300 text-blue-900 font-bold text-xs px-3.5 py-1.5 rounded-lg shadow-sm flex items-center space-x-1.5 transition-all cursor-pointer"
-                                >
-                                  <Radio className="w-3.5 h-3.5 text-rose-600 animate-pulse" />
-                                  <span>View Live Field Panchnama Stream</span>
-                                </button>
+                                <span className="bg-emerald-50 border border-emerald-300 text-emerald-800 font-bold text-xs px-3.5 py-1.5 rounded-lg shadow-xs flex items-center space-x-1.5">
+                                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                                  <span>Warrant Issued • Raid Mandate Active</span>
+                                </span>
                               </>
                             ) : (
                               <>
@@ -1385,13 +1318,10 @@ export default function UnifiedPortalPage() {
                   {/* Footer link matching Image 1 */}
                   <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
                     <span className="text-slate-500 text-[11px]">Automatic upstream matching powered by GSTN & Legal Metrology e-Registry</span>
-                    <button 
-                      onClick={() => setActiveModal('AUTO_ASSIGNMENT')}
-                      className="text-amber-700 font-bold hover:text-amber-800 hover:underline flex items-center gap-1 text-[11px] cursor-pointer"
-                    >
-                      <span>Configure Auto-Assignment Rules</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </button>
+                    <span className="text-slate-500 font-semibold text-[11px] flex items-center gap-1">
+                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Rule 6 GSTN Automated Cross-Verification Active</span>
+                    </span>
                   </div>
                 </div>
 
@@ -1534,27 +1464,18 @@ export default function UnifiedPortalPage() {
 
                 <div className="flex flex-wrap items-center gap-3">
                   <button 
-                    onClick={() => setActiveModal('ZONAL_DIRECTIVE')}
+                    onClick={() => setControllerTab('COMPOUNDING_QUEUE')}
+                    className="bg-[#0D1F3C] hover:bg-[#081427] text-amber-400 font-black text-xs px-4 py-2 rounded-lg shadow-md flex items-center space-x-2 transition-all cursor-pointer"
+                  >
+                    <ShieldAlert className="w-4 h-4 text-amber-400" />
+                    <span>Open Case Queue ({notices.length})</span>
+                  </button>
+                  <button 
+                    onClick={() => setControllerTab('SUPPLY_CHAIN')}
                     className="bg-white hover:bg-slate-50 border border-slate-300 text-slate-800 font-bold text-xs px-4 py-2 rounded-lg shadow-sm flex items-center space-x-1.5 transition-all cursor-pointer"
                   >
-                    <Send className="w-3.5 h-3.5 text-blue-600" />
-                    <span>Issue Zonal Directive</span>
-                  </button>
-
-                  <button 
-                    onClick={() => showToast('Exporting State Compliance Gazette (PDF)...')}
-                    className="bg-white hover:bg-slate-50 border border-slate-300 text-slate-800 font-bold text-xs px-4 py-2 rounded-lg shadow-sm flex items-center space-x-1.5 transition-all cursor-pointer"
-                  >
-                    <FileCode className="w-3.5 h-3.5 text-slate-600" />
-                    <span>Export Compliance Gazette</span>
-                  </button>
-
-                  <button 
-                    onClick={handleTriggerMerchantAudit}
-                    className="bg-rose-700 hover:bg-rose-800 text-white font-black text-xs px-5 py-2 rounded-lg shadow-md flex items-center space-x-2 transition-all cursor-pointer"
-                  >
-                    <Zap className="w-4 h-4 fill-current" />
-                    <span>Trigger Automated Merchant Audit</span>
+                    <GitMerge className="w-3.5 h-3.5 text-amber-600" />
+                    <span>Upstream Traceback</span>
                   </button>
                 </div>
               </div>
@@ -1725,14 +1646,23 @@ export default function UnifiedPortalPage() {
                 </div>
               </div>
 
-              {/* Right Main Column: Statutory Dossier Summary + View Detailed Dossier PDF Button */}
+              {/* Right Main Column: Generated Statutory Notices (1 below other) + Case Adjudication */}
               {activeNotice && (
-                <div className="lg:col-span-8 bg-white border border-slate-200/80 rounded-xl p-6 space-y-6 shadow-sm">
-                  {/* Header Bar with Badge & View Detailed Dossier PDF Button */}
-                  <div className="border-b border-slate-100 pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="lg:col-span-8 space-y-5">
+                  {/* Case Level Dossier Header */}
+                  <div className="bg-white border border-slate-200/80 rounded-xl p-5 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
-                      <h2 className="text-lg font-black text-slate-900">Statutory Dossier: Case #{activeNotice.id}</h2>
-                      <p className="text-xs text-slate-500">{activeNotice.businessName} • GSTIN: {activeNotice.gstin}</p>
+                      <div className="flex items-center space-x-2">
+                        <span className="bg-[#0D1F3C] text-amber-400 font-mono font-bold text-xs px-2.5 py-1 rounded">
+                          Case #{activeNotice.caseId || activeNotice.id}
+                        </span>
+                        <span className="bg-blue-100 text-blue-900 border border-blue-200 text-xs font-bold px-2.5 py-0.5 rounded">
+                          {displayedNotices.length} Statutory Notice{displayedNotices.length > 1 ? 's' : ''} Generated
+                        </span>
+                      </div>
+                      <h2 className="text-base font-black text-slate-900 mt-1">
+                        {activeNotice.businessName} <span className="text-xs font-normal text-slate-500">• GSTIN: {activeNotice.gstin || 'N/A'}</span>
+                      </h2>
                     </div>
 
                     <div className="flex items-center space-x-2">
@@ -1743,133 +1673,244 @@ export default function UnifiedPortalPage() {
                       }`}>
                         {(activeNotice.paymentStatus === 'PAID' || activeNotice.status === 'PAID') ? 'STATUS: PAID' : 'STATUS: UNPAID'}
                       </span>
-                      <span className={`text-xs font-bold px-3 py-1 rounded border ${
-                        activeNotice.digitalSignatureHash
-                          ? 'bg-teal-100 text-teal-900 border-teal-300'
-                          : 'bg-slate-100 text-slate-700 border-slate-300'
-                      }`}>
-                        {activeNotice.digitalSignatureHash
-                          ? `DSC: ${activeNotice.digitalSignatureHash.substring(0, 12)}…`
-                          : 'DSC: PENDING'}
-                      </span>
-
-                      {/* View Detailed Dossier (PDF) Button requested by user */}
                       <button
                         onClick={() => setActiveModal('DETAILED_DOSSIER_PDF')}
                         className="bg-[#0D1F3C] hover:bg-[#081427] text-white font-bold text-xs px-3.5 py-1.5 rounded-lg shadow transition-all flex items-center space-x-1.5 cursor-pointer"
-                        title="View Full Statutory Case Dossier & Inspection Report PDF"
+                        title="View Full Statutory Case Dossier PDF"
                       >
                         <FileText className="w-3.5 h-3.5 text-amber-400" />
-                        <span>View Detailed Dossier (PDF)</span>
+                        <span>View Dossier (PDF)</span>
                         <Eye className="w-3 h-3 text-emerald-400" />
                       </button>
                     </div>
                   </div>
 
-                  {/* High-Visibility Digital Signature Certificate (DSC) & DocuSign Cryptographic Seal Box for Judges */}
-                  <div className="bg-gradient-to-r from-teal-50 via-emerald-50 to-teal-50 p-4 rounded-xl border border-teal-300 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3">
-                    <div className="flex items-start gap-3">
-                      <div className="p-2.5 bg-[#0D9488] rounded-xl text-white shadow-sm mt-0.5">
-                        <FileCheck className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-black text-teal-950 uppercase tracking-wide">
-                            Statutory Digital Signature Verified
-                          </span>
-                          <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded border border-emerald-300">
-                            IT Act 2000 Sec 3 Compliant
-                          </span>
-                          <span className="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded border border-blue-300">
-                            DocuSign / eMudhra Class 3
-                          </span>
-                        </div>
-                        <p className="text-[11px] text-teal-800 mt-1">
-                          Certifying Authority: <strong>eMudhra CCA Sub-CA 2026 / DocuSign Trust Services</strong> • Statutory Notice Form LM-4
-                        </p>
-                        <div className="mt-2 flex flex-wrap items-center gap-2">
-                          <span className="text-[10px] text-slate-500 font-bold uppercase">Cryptographic Document SHA-256 Hash:</span>
-                          <span className="text-[11px] font-mono font-bold bg-[#0F172A] text-[#34D399] px-2.5 py-0.5 rounded select-all shadow-inner">
-                            {activeNotice.digitalSignatureHash || '790b4860b9fb0d3deba6eb4c89685df4570d0a3061801b8cb2a6f6467c59f883'}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-right flex md:flex-col justify-between items-end gap-1.5 border-t md:border-t-0 pt-2 md:pt-0 border-teal-200">
-                      <span className="text-[10px] text-slate-600 font-mono font-bold">
-                        DIN: DIN-2026-MH-{(activeNotice.id || '9041').substring(Math.max(0, (activeNotice.id || '9041').length - 4)).toUpperCase()}
-                      </span>
-                      <span className="text-[10px] text-emerald-800 font-bold bg-white px-2.5 py-1 rounded-md border border-emerald-300 shadow-xs">
-                        Court Evidentiary Status: ADMISSIBLE
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Summary Display Box 1: Forensic Seizure Evidence Comparison */}
-                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
-                        <Camera className="w-4 h-4 text-amber-600" />
-                        <span>Forensic Seizure Evidence Comparison</span>
+                  {/* Section Title: Generated Notices Stacking 1 Below Other */}
+                  <div className="flex items-center justify-between pt-1">
+                    <div className="flex items-center space-x-2">
+                      <FileText className="w-4 h-4 text-amber-600" />
+                      <h3 className="text-sm font-black text-slate-900 uppercase tracking-wide">
+                        Statutory Notices Generated for this Case ({displayedNotices.length})
                       </h3>
-                      <span className="text-[10px] text-emerald-700 font-bold bg-emerald-100 px-2 py-0.5 rounded border border-emerald-300">
-                        E-Evidence Sec 65B Certified
-                      </span>
                     </div>
+                    <span className="text-[11px] font-mono text-slate-500">
+                      Enforcement u/s 15 & 48 Legal Metrology Act, 2009
+                    </span>
+                  </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                      <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-1">
-                        <div className="font-bold text-slate-500">Original Manufacturer Stamped MRP</div>
-                        <div className="font-black text-emerald-600 text-base">₹320.00</div>
-                        <div className="text-[10px] text-slate-400 font-mono">Factory Batch Print: S.No SB-4402 • Mfd: 09/2024</div>
-                      </div>
-                      <div className="bg-white p-3 rounded-lg border border-rose-200 space-y-1">
-                        <div className="font-bold text-rose-600 flex items-center justify-between">
-                          <span>Illegal Sticker Overwriting</span>
-                          <span className="bg-rose-600 text-white text-[9px] px-1.5 py-0.5 rounded">TAMPER CONFIRMED</span>
+                  {/* Notices List: Displayed 1 below other */}
+                  <div className="space-y-5">
+                    {displayedNotices.map((notice, nIdx) => (
+                      <div key={notice.id || nIdx} className="bg-white border-2 border-slate-200 hover:border-slate-300 transition-colors rounded-2xl p-6 space-y-5 shadow-sm font-sans relative">
+                        {/* Notice Masthead & Title */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-4">
+                          <div className="flex items-start space-x-3">
+                            <div className={`p-2.5 rounded-xl text-white shadow-sm mt-0.5 ${
+                              notice.type === 'COMPOUNDED' ? 'bg-[#0D1F3C]' :
+                              notice.type === 'SEIZURE' ? 'bg-rose-700' :
+                              notice.type === 'PANCHANAMA' ? 'bg-indigo-700' :
+                              'bg-amber-600'
+                            }`}>
+                              {notice.type === 'COMPOUNDED' ? <Gavel className="w-5 h-5 text-amber-400" /> :
+                               notice.type === 'SEIZURE' ? <ShieldAlert className="w-5 h-5 text-white" /> :
+                               <FileText className="w-5 h-5 text-white" />}
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className={`text-xs font-black px-2.5 py-0.5 rounded uppercase tracking-wider border ${
+                                  notice.type === 'COMPOUNDED' ? 'bg-[#0D1F3C] text-amber-400 border-amber-500/40' :
+                                  notice.type === 'SEIZURE' ? 'bg-rose-100 text-rose-800 border-rose-300' :
+                                  notice.type === 'PANCHANAMA' ? 'bg-indigo-100 text-indigo-800 border-indigo-300' :
+                                  'bg-amber-100 text-amber-900 border-amber-300'
+                                }`}>
+                                  {notice.type === 'COMPOUNDED' ? 'Statutory Compounding Order u/s 48' :
+                                   notice.type === 'SEIZURE' ? 'Seizure Inventory Memo (Form V) u/s 15' :
+                                   notice.type === 'PANCHANAMA' ? 'Spot Witness Panchanama Record' :
+                                   'Statutory Improvement Notice u/s 15'}
+                                </span>
+                                <span className="text-[10px] text-slate-500 font-mono font-bold">
+                                  Notice {nIdx + 1} of {displayedNotices.length}
+                                </span>
+                              </div>
+                              <h3 className="text-base font-black text-slate-900 mt-1">
+                                {notice.violatingProduct} — Notice #{notice.id}
+                              </h3>
+                              <p className="text-[11px] text-slate-500 font-mono">
+                                DIN: {notice.dinNumber} • Case Ref: {notice.caseId} • Section 36(1) PCR 2011
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center space-x-2 shrink-0">
+                            <span className={`text-[11px] font-bold px-2.5 py-1 rounded border ${
+                              (notice.paymentStatus === 'PAID' || notice.status === 'PAID')
+                                ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                                : 'bg-amber-50 text-amber-800 border-amber-300'
+                            }`}>
+                              {(notice.paymentStatus === 'PAID' || notice.status === 'PAID') ? 'SETTLED / PAID' : 'COMPLIANCE PENDING'}
+                            </span>
+
+                            <button
+                              onClick={() => handleDownloadNoticePdf(notice)}
+                              className="bg-[#0D1F3C] hover:bg-[#081427] text-white font-bold text-xs px-3.5 py-1.5 rounded-lg shadow transition-all flex items-center space-x-1.5 cursor-pointer"
+                              title="Download Official Notice PDF"
+                            >
+                              <Download className="w-3.5 h-3.5 text-amber-400" />
+                              <span>Download PDF</span>
+                            </button>
+                          </div>
                         </div>
-                        <div className="font-black text-rose-600 text-base">₹399.00 (+₹79 Hike)</div>
-                        <div className="text-[10px] text-rose-700 font-mono">Thermal sticker applied at retail shelf</div>
+
+                        {/* Notice Key Parameters Grid */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+                          <div>
+                            <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">ACCUSED ESTABLISHMENT</div>
+                            <div className="font-bold text-slate-900 mt-0.5">{notice.businessName}</div>
+                            <div className="text-[10px] text-slate-500 font-mono">GSTIN: {notice.gstin || 'N/A'}</div>
+                          </div>
+                          <div>
+                            <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">VIOLATING COMMODITY</div>
+                            <div className="font-bold text-slate-900 mt-0.5">{notice.violatingProduct}</div>
+                            <div className="text-[10px] text-slate-500">Packaged Commodity Standard Breach</div>
+                          </div>
+                          <div>
+                            <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">STATUTORY TIMELINE</div>
+                            <div className="font-bold text-slate-800 mt-0.5">Issued: {new Date(notice.issuedDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
+                            <div className="text-[10px] text-rose-700 font-bold">Due by: {new Date(notice.deadlineDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
+                          </div>
+                          <div>
+                            <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">PENALTY AMOUNT</div>
+                            <div className="font-black text-emerald-600 text-sm mt-0.5">₹{(notice.penaltyAmount || 25000).toLocaleString('en-IN')}.00</div>
+                            <div className="text-[10px] text-slate-500 font-mono">Statutory Compounding Tariff</div>
+                          </div>
+                        </div>
+
+                        {/* Violations Table */}
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between text-xs font-bold text-slate-900">
+                            <span className="flex items-center gap-1.5">
+                              <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
+                              <span>Statutory Non-Compliance & Detected Violations</span>
+                            </span>
+                            <span className="text-[10px] text-slate-500 font-mono">Legal Metrology Act, 2009 Section 36(1)</span>
+                          </div>
+
+                          {notice.violations && notice.violations.length > 0 ? (
+                            <div className="border border-slate-200 rounded-xl overflow-hidden text-xs">
+                              <table className="w-full text-left">
+                                <thead className="bg-slate-100 text-slate-600 font-bold text-[10px] uppercase border-b border-slate-200">
+                                  <tr>
+                                    <th className="p-2.5">Rule / Section</th>
+                                    <th className="p-2.5">Violation Title</th>
+                                    <th className="p-2.5">Statutory Defect Description</th>
+                                    <th className="p-2.5 text-right">Severity</th>
+                                  </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100 bg-white">
+                                  {notice.violations.map((v, vIdx) => (
+                                    <tr key={v.id || vIdx} className="hover:bg-slate-50">
+                                      <td className="p-2.5 font-mono font-bold text-rose-700">{v.ruleSection || 'Rule 6 & Sec 36(1)'}</td>
+                                      <td className="p-2.5 font-bold text-slate-900">{v.ruleTitle || 'Mandatory Declaration Missing'}</td>
+                                      <td className="p-2.5 text-slate-600">{v.description || 'Statutory declaration non-compliant'}</td>
+                                      <td className="p-2.5 text-right">
+                                        <span className={`text-[9px] font-bold px-2 py-0.5 rounded border uppercase ${
+                                          (v.severity || '').toLowerCase() === 'high' ? 'bg-rose-100 text-rose-800 border-rose-300' :
+                                          (v.severity || '').toLowerCase() === 'medium' ? 'bg-amber-100 text-amber-800 border-amber-300' :
+                                          'bg-slate-100 text-slate-800 border-slate-300'
+                                        }`}>
+                                          {v.severity || 'HIGH'}
+                                        </span>
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          ) : (
+                            <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 text-xs text-slate-700 flex items-center justify-between">
+                              <span>Section Cited: <strong>{notice.sectionRefs?.join(', ') || 'Rule 6 read with Section 36(1)'}</strong></span>
+                              <span className="text-[10px] text-slate-500 font-mono">Rule 6 Mandatory Package Declarations Non-Compliance</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Official Notice Body Text */}
+                        <div className="bg-amber-50/50 border border-amber-200/80 rounded-xl p-3.5 text-xs text-slate-800 space-y-1">
+                          <div className="text-[10px] font-bold uppercase tracking-wider text-amber-900 flex items-center gap-1.5">
+                            <FileText className="w-3 h-3 text-amber-700" />
+                            <span>Official Statutory Directive Text</span>
+                          </div>
+                          <p className="text-slate-700 leading-relaxed font-mono text-[11px]">
+                            {notice.bodyText || `Official statutory notice issued under Legal Metrology Act, 2009 for non-compliance in ${notice.violatingProduct}. The establishment is directed to correct package declarations or settle compounding penalty.`}
+                          </p>
+                          {notice.inspectorRemark && (
+                            <div className="text-[10px] text-slate-600 pt-1 border-t border-amber-200/60 font-sans">
+                              <strong>Field Inspector Finding:</strong> {notice.inspectorRemark}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Cryptographic Digital Signature Strip */}
+                        <div className="bg-gradient-to-r from-teal-50 via-emerald-50 to-teal-50 p-3 rounded-xl border border-teal-300 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                          <div className="flex items-center space-x-2.5">
+                            <ShieldCheck className="w-4 h-4 text-teal-700 shrink-0" />
+                            <div>
+                              <div className="text-teal-950 font-black text-[11px]">
+                                IT Act 2000 Section 3 Cryptographically Signed Notice
+                              </div>
+                              <div className="text-[9px] text-teal-800 font-mono">
+                                Certifying Authority: eMudhra CCA Sub-CA 2026 / DocuSign Trust Services
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-[9px] text-slate-500 font-mono font-bold">SHA-256 HASH:</div>
+                            <div className="text-[10px] font-mono text-emerald-900 font-bold bg-white px-2 py-0.5 rounded border border-emerald-300">
+                              {(notice.digitalSignatureHash || '790b4860b9fb0d3deba6eb4c89685df4570d0a3061801b8cb2a6f6467c59f883').substring(0, 24)}…
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                    </div>
+                    ))}
                   </div>
 
-                  {/* Summary Display Box 2: Controller Adjudication Remarks */}
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
-                      <span>Controller Adjudication Remarks & Directive</span>
-                      <span className="text-[10px] text-slate-500 font-mono">Included in Form LM-4 Order</span>
-                    </label>
-                    <textarea 
-                      rows={3}
-                      value={remarks}
-                      onChange={(e) => setRemarks(e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-xs text-slate-900 font-mono focus:outline-none focus:border-amber-500"
-                    />
-                  </div>
-
-                  {/* Summary Display Box 3: Total Compounding Payable & Actions */}
-                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div>
-                      <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">TOTAL COMPOUNDING PAYABLE</div>
-                      <div className="text-2xl font-black text-emerald-600 font-mono">₹{(activeNotice.penaltyAmount || 25000).toLocaleString('en-IN')}.00</div>
-                      <div className="text-[10px] text-slate-500">Merchant must deposit via Bharatkosh Challan within 15 days</div>
+                  {/* Controller Adjudication Remarks & Final Action Bar */}
+                  <div className="bg-white border border-slate-200/80 rounded-2xl p-6 space-y-5 shadow-sm">
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
+                        <span>Controller Adjudication Remarks & Directive</span>
+                        <span className="text-[10px] text-slate-500 font-mono">Included in Form LM-4 Order</span>
+                      </label>
+                      <textarea 
+                        rows={3}
+                        value={remarks}
+                        onChange={(e) => setRemarks(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-xs text-slate-900 font-mono focus:outline-none focus:border-amber-500"
+                      />
                     </div>
-                    <div className="flex flex-wrap items-center gap-3">
-                      <button 
-                        onClick={handleEscalateNotice} 
-                        className="bg-rose-700 hover:bg-rose-800 text-white font-bold text-xs px-4 py-2.5 rounded-lg shadow cursor-pointer flex items-center space-x-1.5"
-                      >
-                        <ShieldAlert className="w-4 h-4" />
-                        <span>Escalate to Prosecution</span>
-                      </button>
-                      <button 
-                        onClick={handleApproveNotice} 
-                        className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs px-5 py-2.5 rounded-lg shadow cursor-pointer flex items-center space-x-1.5"
-                      >
-                        <CheckCircle2 className="w-4 h-4" />
-                        <span>Approve Compounded Order (DSC)</span>
-                      </button>
+
+                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div>
+                        <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">TOTAL COMPOUNDING PAYABLE</div>
+                        <div className="text-2xl font-black text-emerald-600 font-mono">₹{(activeNotice.penaltyAmount || 25000).toLocaleString('en-IN')}.00</div>
+                        <div className="text-[10px] text-slate-500">Merchant must deposit via Bharatkosh Challan within 15 days</div>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-3">
+                        <button 
+                          onClick={handleEscalateNotice} 
+                          className="bg-rose-700 hover:bg-rose-800 text-white font-bold text-xs px-4 py-2.5 rounded-lg shadow cursor-pointer flex items-center space-x-1.5"
+                        >
+                          <ShieldAlert className="w-4 h-4" />
+                          <span>Escalate to Prosecution</span>
+                        </button>
+                        <button 
+                          onClick={handleApproveNotice} 
+                          className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs px-5 py-2.5 rounded-lg shadow cursor-pointer flex items-center space-x-1.5"
+                        >
+                          <CheckCircle2 className="w-4 h-4" />
+                          <span>Approve Compounded Order (DSC)</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1885,12 +1926,10 @@ export default function UnifiedPortalPage() {
                   <h2 className="text-lg font-black text-slate-900">Supply Chain Upstream Traceback Graph</h2>
                   <p className="text-xs text-slate-500">Automated e-Way Bill & GSTN Ingestion Rule Engine</p>
                 </div>
-                <button 
-                  onClick={() => setActiveModal('AUTO_ASSIGNMENT')}
-                  className="bg-[#0D1F3C] hover:bg-[#081427] text-white text-xs font-bold px-4 py-2 rounded-lg shadow cursor-pointer"
-                >
-                  Configure Rules Engine
-                </button>
+                <span className="bg-emerald-100 border border-emerald-300 text-emerald-800 text-[11px] font-bold px-3 py-1.5 rounded-lg shadow-xs flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>E-Way Bill & GSTN Surveillance Active</span>
+                </span>
               </div>
 
               <div className="space-y-3">
@@ -1995,45 +2034,7 @@ export default function UnifiedPortalPage() {
             </div>
           )}
 
-          {/* Controller Panchanama & Seizures Tab */}
-          {isController && controllerTab === 'PANCHANAMA' && (
-            <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-4 shadow-sm max-w-7xl mx-auto font-sans">
-              <div className="flex justify-between items-center border-b border-slate-100 pb-3">
-                <div>
-                  <h2 className="text-lg font-black text-slate-900">Panchanama & Field Seizures Command Desk</h2>
-                  <p className="text-xs text-slate-500">Live Electronic Seizure Records & Form V Impounded Inventory Logs</p>
-                </div>
-                <button
-                  onClick={() => showToast('Opening Field Inspector App Live Stream...')}
-                  className="bg-[#0D1F3C] text-white text-xs font-bold px-4 py-2 rounded-lg shadow flex items-center space-x-1.5 cursor-pointer"
-                >
-                  <Radio className="w-3.5 h-3.5 text-rose-400 animate-pulse" />
-                  <span>View Live Field Stream</span>
-                </button>
-              </div>
 
-              <div className="space-y-3">
-                {[
-                  { id: 'PAN-2024-8841', location: 'Phoenix Marketcity, Kurla, Mumbai', officer: 'Insp. S. Kadam (#MH-LM-412)', items: '42 Units Impounded (Surf Super Wash 2kg)', status: 'SEIZURE MEMO GENERATED' },
-                  { id: 'PAN-2024-8839', location: 'APMC Market Yard, Vashi, Navi Mumbai', officer: 'Insp. R. Deshmukh (#MH-LM-902)', items: '180 Sacks Impounded (Golden Harvest Rice 5kg)', status: 'FORM V EXECUTED' },
-                  { id: 'PAN-2024-8835', location: 'Western Highway Fueling Station, Panvel', officer: 'Insp. V. Patil (#MH-LM-118)', items: '2 Nozzles Sealed (High-Speed Diesel Dispenser)', status: 'LABORATORY CALIBRATION PENDING' },
-                ].map((p) => (
-                  <div key={p.id} className="p-4 bg-slate-50 border border-slate-200 rounded-xl flex flex-col sm:flex-row justify-between sm:items-center gap-3">
-                    <div>
-                      <div className="flex items-center space-x-2">
-                        <span className="font-mono text-xs font-black text-amber-800">{p.id}</span>
-                        <span className="text-xs font-bold text-slate-900">{p.location}</span>
-                      </div>
-                      <div className="text-[11px] text-slate-500 mt-0.5">{p.items} • Officer: {p.officer}</div>
-                    </div>
-                    <span className="bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs font-bold px-3 py-1 rounded w-fit">
-                      {p.status}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </main>
       </div>
 
@@ -2089,57 +2090,7 @@ export default function UnifiedPortalPage() {
       )}
 
       {/* 2. Live Field Panchnama Stream Modal */}
-      {activeModal === 'PANCHANAMA_STREAM' && (
-        <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-[#081427] text-white border border-blue-800 rounded-2xl max-w-2xl w-full p-6 space-y-4 shadow-2xl">
-            <div className="flex justify-between items-center border-b border-blue-800 pb-3">
-              <div className="flex items-center space-x-2">
-                <Radio className="w-5 h-5 text-rose-500 animate-pulse" />
-                <h3 className="text-base font-black text-white">Live Field Panchnama Inspection Stream</h3>
-              </div>
-              <button onClick={() => setActiveModal(null)} className="text-slate-400 hover:text-white">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Video Box Player Simulation */}
-            <div className="relative bg-slate-950 border border-slate-800 rounded-xl h-64 overflow-hidden flex flex-col justify-between p-4">
-              <div className="flex justify-between items-center text-xs">
-                <span className="bg-rose-600/90 text-white text-[10px] font-black px-2.5 py-0.5 rounded flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-white animate-ping"></span>
-                  LIVE 1080P STREAM
-                </span>
-                <span className="font-mono text-slate-400 text-[10px]">GPS: 19.1197° N, 72.8464° E</span>
-              </div>
-
-              <div className="text-center space-y-2 my-auto">
-                <div className="w-16 h-16 rounded-full bg-slate-900/80 border border-amber-500/50 flex items-center justify-center mx-auto text-amber-400">
-                  <Camera className="w-8 h-8" />
-                </div>
-                <div className="text-xs text-slate-300 font-bold">{activeStreamCamera}</div>
-                <div className="text-[10px] text-slate-500 font-mono">Modern Supermarket, Andheri Lokhandwala Counter #3</div>
-              </div>
-
-              <div className="flex justify-between items-center text-[10px] text-slate-400 border-t border-slate-800/80 pt-2">
-                <span>Inspector: Insp. S. Kadam (#MH-LM-412)</span>
-                <span className="text-emerald-400 font-mono font-bold">DSC Stream Encrypted (AES-256)</span>
-              </div>
-            </div>
-
-            <div className="flex justify-between items-center pt-2">
-              <button onClick={() => showToast('Downloading Stream Audit Transcript (PDF)...')} className="bg-[#0D1F3C] text-white text-xs px-3.5 py-2 rounded-lg font-bold flex items-center space-x-1.5">
-                <Download className="w-3.5 h-3.5" />
-                <span>Export Stream Transcript</span>
-              </button>
-              <button onClick={() => setActiveModal(null)} className="bg-amber-500 text-slate-950 font-bold text-xs px-4 py-2 rounded-lg">
-                Close Stream
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 3. DSC Compounding Signature Modal */}
+            {/* 3. DSC Compounding Signature Modal */}
       {activeModal === 'DSC_SIGN' && (
         <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl">
@@ -2253,22 +2204,7 @@ export default function UnifiedPortalPage() {
                       <td className="p-2.5 font-bold text-emerald-600">{r.slaRatePercent}%</td>
                     </tr>
                   ))}
-                  <tr className="hover:bg-slate-50">
-                    <td className="p-2.5 font-bold text-slate-900">Kolhapur & Sangli Belt</td>
-                    <td className="p-2.5"><span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded">Compliant</span></td>
-                    <td className="p-2.5 font-semibold">1,120</td>
-                    <td className="p-2.5 font-bold text-emerald-600">88</td>
-                    <td className="p-2.5 font-bold text-amber-700 font-mono">₹38.2 L</td>
-                    <td className="p-2.5 font-bold text-emerald-600">97.4%</td>
-                  </tr>
-                  <tr className="hover:bg-slate-50">
-                    <td className="p-2.5 font-bold text-slate-900">Aurangabad & Jalna Circle</td>
-                    <td className="p-2.5"><span className="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded">Moderate Watch</span></td>
-                    <td className="p-2.5 font-semibold">1,640</td>
-                    <td className="p-2.5 font-bold text-rose-600">214</td>
-                    <td className="p-2.5 font-bold text-amber-700 font-mono">₹62.0 L</td>
-                    <td className="p-2.5 font-bold text-emerald-600">93.1%</td>
-                  </tr>
+
                 </tbody>
               </table>
             </div>
@@ -2283,143 +2219,6 @@ export default function UnifiedPortalPage() {
       )}
 
       {/* 6. Auto-Assignment Rules Modal */}
-      {activeModal === 'AUTO_ASSIGNMENT' && (
-        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl">
-            <div className="flex justify-between items-center border-b border-slate-100 pb-3">
-              <h3 className="text-base font-black text-slate-900">Configure Upstream Auto-Assignment Rules</h3>
-              <button onClick={() => setActiveModal(null)} className="text-slate-400 hover:text-slate-600">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="space-y-3 text-xs">
-              <label className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200 cursor-pointer">
-                <span>Auto-bind GSTN Manufacturer Address on OCR Scan</span>
-                <input type="checkbox" defaultChecked className="accent-amber-600 w-4 h-4" />
-              </label>
-
-              <label className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200 cursor-pointer">
-                <span>Auto-raise Zonal Raid Warrant when deficit &gt; 10%</span>
-                <input type="checkbox" defaultChecked className="accent-amber-600 w-4 h-4" />
-              </label>
-
-              <label className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200 cursor-pointer">
-                <span>Cross-Border Inter-State Protocol Trigger</span>
-                <input type="checkbox" defaultChecked className="accent-amber-600 w-4 h-4" />
-              </label>
-
-              <label className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200 cursor-pointer">
-                <span>Whistleblower 10% Escrow Auto-Lock</span>
-                <input type="checkbox" defaultChecked className="accent-amber-600 w-4 h-4" />
-              </label>
-            </div>
-
-            <div className="flex justify-end space-x-3 pt-2">
-              <button onClick={() => {
-                showToast('Upstream Auto-Assignment Rules Saved Successfully!');
-                setActiveModal(null);
-              }} className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs px-5 py-2 rounded-lg shadow">
-                Save Rule Engine Config
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 7. Zonal Directive Modal */}
-      {activeModal === 'ZONAL_DIRECTIVE' && (
-        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white border border-slate-200 rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl">
-            <div className="flex justify-between items-center border-b border-slate-100 pb-3">
-              <h3 className="text-base font-black text-slate-900">Issue Zonal Executive Directive</h3>
-              <button onClick={() => setActiveModal(null)} className="text-slate-400 hover:text-slate-600">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="space-y-3">
-              <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">Directive Subject / Title</label>
-                <input 
-                  type="text"
-                  value={directiveTitle}
-                  onChange={(e) => setDirectiveTitle(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-xs font-bold text-slate-900"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">Directive Content (Mandatory Compliance Order)</label>
-                <textarea 
-                  rows={4}
-                  value={directiveBody}
-                  onChange={(e) => setDirectiveBody(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-xs text-slate-900 font-mono"
-                />
-              </div>
-            </div>
-
-            <div className="flex justify-end space-x-3 pt-2">
-              <button onClick={() => setActiveModal(null)} className="bg-slate-100 text-slate-700 font-bold text-xs px-4 py-2 rounded-lg">
-                Cancel
-              </button>
-              <button onClick={() => {
-                showToast('Executive Directive Broadcasted to 1,428 Active Field Officers!');
-                setActiveModal(null);
-              }} className="bg-blue-600 hover:bg-blue-700 text-white font-black text-xs px-5 py-2 rounded-lg shadow">
-                Broadcast Directive
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 8. Merchant Audit Modal */}
-      {activeModal === 'MERCHANT_AUDIT' && (
-        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-[#0D1F3C] text-white border border-blue-900 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl">
-            <div className="flex justify-between items-center border-b border-blue-800 pb-3">
-              <div className="flex items-center space-x-2 text-amber-400">
-                <Zap className="w-5 h-5 fill-current" />
-                <h3 className="text-base font-black text-white">Automated Merchant Audit Engine</h3>
-              </div>
-              <button onClick={() => setActiveModal(null)} className="text-slate-400 hover:text-white">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="space-y-3">
-              <div className="flex justify-between text-xs font-bold text-blue-200">
-                <span>Scanning GSTN & LMO Trade Database...</span>
-                <span className="text-amber-400 font-mono">{auditProgress}%</span>
-              </div>
-
-              <div className="w-full bg-[#081427] rounded-full h-3 overflow-hidden border border-blue-800">
-                <div className="bg-amber-500 h-full transition-all duration-300" style={{ width: `${auditProgress}%` }}></div>
-              </div>
-
-              <div className="bg-[#081427] p-3 rounded-lg border border-blue-800 font-mono text-[11px] space-y-1 text-blue-200/90">
-                <div>[INFO] Cross-checking 14,892 inspection records...</div>
-                <div>[INFO] Matching Rule 6 declaration compliance...</div>
-                {auditProgress > 50 && <div className="text-amber-400">[FLAGGED] 342 repeat offenders identified in Section 36(2) tier.</div>}
-                {auditProgress === 100 && <div className="text-emerald-400 font-bold">[COMPLETE] Audit finished. 100% Registry sync complete.</div>}
-              </div>
-            </div>
-
-            <div className="flex justify-end pt-2">
-              <button 
-                onClick={() => setActiveModal(null)} 
-                disabled={isAuditing}
-                className="bg-amber-500 text-slate-950 font-black text-xs px-5 py-2 rounded-lg shadow disabled:opacity-50"
-              >
-                Done
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* 9. District Radar Options Modal */}
       {activeModal === 'FILTER_RADAR' && (
         <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -2490,7 +2289,7 @@ export default function UnifiedPortalPage() {
                   <span className="hidden sm:inline">Print</span>
                 </button>
                 <button 
-                  onClick={() => showToast('Downloading High-Resolution Statutory Dossier PDF...')} 
+                  onClick={() => handleDownloadNoticePdf(activeNotice)} 
                   className="bg-[#0D1F3C] hover:bg-[#081427] text-white text-xs px-3.5 py-1.5 rounded-lg font-bold flex items-center space-x-1.5 transition-all cursor-pointer"
                 >
                   <Download className="w-3.5 h-3.5 text-amber-400" />
@@ -2526,15 +2325,15 @@ export default function UnifiedPortalPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                 <div className="bg-white p-3.5 rounded-lg border border-slate-200 space-y-1">
                   <div className="text-[10px] text-slate-500 font-bold uppercase">ACCUSED ENTITY / MERCHANT</div>
-                  <div className="font-black text-slate-900 text-sm">Apex Retailers & Mart LLP</div>
-                  <div className="text-slate-600">Gala No 14, Phoenix Marketcity Wing R, LBS Marg, Kurla West, Mumbai 400070</div>
+                  <div className="font-black text-slate-900 text-sm">{activeNotice?.businessName || 'Regulated Establishment'}</div>
+                  <div className="text-slate-600">Commodity: {activeNotice?.violatingProduct || 'Packaged Commodity'}</div>
                 </div>
 
                 <div className="bg-white p-3.5 rounded-lg border border-slate-200 space-y-1 font-mono">
-                  <div className="text-[10px] text-slate-500 font-bold uppercase font-sans">STATUTORY TAX & LICENSE IDS</div>
-                  <div><strong className="text-slate-700 font-sans">GSTIN:</strong> 27AABCU9603R1ZN</div>
-                  <div><strong className="text-slate-700 font-sans">PAN:</strong> AABCU9603R</div>
-                  <div><strong className="text-slate-700 font-sans">LMO Retail Reg:</strong> MH-RET-2022-81190</div>
+                  <div className="text-[10px] text-slate-500 font-bold uppercase font-sans">STATUTORY REFERENCE & CASE</div>
+                  <div><strong className="text-slate-700 font-sans">DIN:</strong> {activeNotice?.dinNumber || activeNotice?.id}</div>
+                  <div><strong className="text-slate-700 font-sans">Case ID:</strong> {activeNotice?.caseId || activeNotice?.id}</div>
+                  <div><strong className="text-slate-700 font-sans">Section:</strong> {activeNotice?.sectionRefs?.join(', ') || 'Section 36(1)'}</div>
                 </div>
               </div>
 
@@ -2636,7 +2435,7 @@ export default function UnifiedPortalPage() {
 
             {/* Modal Actions */}
             <div className="flex justify-between items-center pt-2">
-              <span className="text-[11px] text-slate-500 font-mono">Ready for Teammate PDF Generation Backend Integration</span>
+              <span className="text-[11px] text-slate-500 font-mono">Official Adjudication Dossier • Legal Metrology Enforcement Directorate</span>
               <button 
                 onClick={() => setActiveModal(null)} 
                 className="bg-slate-900 text-white font-bold text-xs px-5 py-2 rounded-lg shadow cursor-pointer"
