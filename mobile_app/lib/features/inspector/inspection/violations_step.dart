@@ -110,9 +110,8 @@ class _ViolationsStepState extends ConsumerState<ViolationsStep> {
       _replace(updated);
       widget.onAnyConfirmed();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Statutory violation confirmed by inspector')),
-        );
+        // Dismiss any active notification immediately so it never overlaps the Continue button
+        ScaffoldMessenger.of(context).clearSnackBars();
       }
     } finally {
       setState(() => _busy.remove(v.id));
@@ -200,7 +199,14 @@ class _ViolationsStepState extends ConsumerState<ViolationsStep> {
 
   void _showError(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.only(bottom: 80, left: 16, right: 16),
+      ),
+    );
   }
 
   @override
