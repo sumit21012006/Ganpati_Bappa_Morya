@@ -1250,6 +1250,7 @@ def format_notice_for_client(n: NoticeModel) -> Dict[str, Any]:
         "bodyText": f"Official statutory notice issued under Legal Metrology Act, 2009 for non-compliance in {prod_name}.",
         "inspectorRemark": "Statutory rectification order issued with 15 days compliance window.",
         "pdfUrl": pdf_url,
+        "pdfPath": pdf_url,
         "wordUrl": word_url,
         "sections": [
             {
@@ -2114,6 +2115,7 @@ async def generate_notice(req: GenerateNoticeRequest, db: Session = Depends(get_
             "download_url": pdf_url,
             "docx_download_url": docx_url,
             "pdfUrl": pdf_url,
+            "pdfPath": pdf_url,
             "docxUrl": docx_url
         }
         generated_notices.append(notice_dict)
@@ -2205,7 +2207,12 @@ async def issue_notice(
         "productName": product_name,
         "issuedDate": datetime.utcnow().isoformat(),
         "pdfUrl": pdf_url,
+        "pdfPath": pdf_url,
         "wordUrl": docx_url,
+        "isAiDraft": False,
+        "businessId": "BIZ-UNKNOWN",
+        "businessName": product_name,
+        "inspectionId": notice_id,
         "sections": [],
         "violations": []
     }
