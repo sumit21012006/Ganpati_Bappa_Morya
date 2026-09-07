@@ -53,9 +53,12 @@ class _NoticeStepState extends ConsumerState<NoticeStep> {
 
   String _resolveUrl(String path) {
     if (path.startsWith('http://') || path.startsWith('https://')) return path;
-    final base = AppConstants.apiBaseUrl.contains('/api/v1')
-        ? AppConstants.apiBaseUrl.split('/api/v1').first
-        : AppConstants.apiBaseUrl;
+    var base = AppConstants.apiBaseUrl;
+    if (base.contains('/api/v1')) {
+      base = base.split('/api/v1').first;
+    } else if (base.contains('/api/v')) {
+      base = base.split('/api/v').first;
+    }
     final cleanBase = base.endsWith('/') ? base.substring(0, base.length - 1) : base;
     final cleanPath = path.startsWith('/') ? path : '/$path';
     return '$cleanBase$cleanPath';

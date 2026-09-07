@@ -47,35 +47,64 @@ class AuthController extends StateNotifier<AuthState> {
   /// Restores the persisted session at startup (splash phase).
   Future<void> _restoreSession() async {
     try {
-      final accessToken = await _tokenStorage.readAccessToken();
-      final userId = await _tokenStorage.readUserId();
+      final accessToken = await _tokenStorage
+          .readAccessToken()
+          .timeout(const Duration(seconds: 2));
+      final userId = await _tokenStorage
+          .readUserId()
+          .timeout(const Duration(seconds: 2));
       User? user;
 
       if (accessToken != null && accessToken.isNotEmpty) {
-        user = await _authRepository.currentUser();
-        // Fallback to cached user id when /me is unavailable (mock mode).
-        user ??= userId == null ? null : User(id: userId, name: '', role: UserRole.business);
+        user = await _authRepository
+            .currentUser()
+            .timeout(const Duration(seconds: 3));
+        // Fallback to cached user id when /me is unavailable.
+        user ??= userId == null
+            ? null
+            : User(id: userId, name: 'User', role: UserRole.business);
       }
 
       if (user != null) {
-        state = AuthState(status: AuthStatus.authenticated, user: user, isRestoring: false);
+        state = AuthState(
+            status: AuthStatus.authenticated, user: user, isRestoring: false);
       } else {
-        state = AuthState(status: AuthStatus.unauthenticated, isRestoring: false);
+        state = const AuthState(
+            status: AuthStatus.unauthenticated, isRestoring: false);
       }
     } catch (_) {
-      state = AuthState(status: AuthStatus.unauthenticated, isRestoring: false);
+      state = const AuthState(
+          status: AuthStatus.unauthenticated, isRestoring: false);
     }
   }
 
   Future<void> login(String username, String password) async {
-    state = state.copyWith(status: AuthStatus.initial);
-    final result = await _authRepository.login(username: username, password: password);
-    await _tokenStorage.saveTokens(
-      accessToken: result.accessToken,
-      refreshToken: result.refreshToken,
-    );
-    await _tokenStorage.saveUserId(result.user.id);
-    state = AuthState(status: AuthStatus.authenticated, user: result.user, isRestoring: false);
+    try {
+      final result = await _authRepository.login(
+        username: username,
+        password: password,
+      );
+      await _tokenStorage
+          .saveTokens(
+            accessToken: result.accessToken,
+            refreshToken: result.refreshToken,
+          )
+          .timeout(const Duration(seconds: 2));
+      await _tokenStorage
+          .saveUserId(result.user.id)
+          .timeout(const Duration(seconds: 2));
+      state = AuthState(
+        status: AuthStatus.authenticated,
+        user: result.user,
+        isRestoring: false,
+      );
+    } catch (e) {
+      state = const AuthState(
+        status: AuthStatus.unauthenticated,
+        isRestoring: false,
+      );
+      rethrow;
+    }
   }
 
   Future<void> registerBusinessAccount({

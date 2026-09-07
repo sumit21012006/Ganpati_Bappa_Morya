@@ -2,7 +2,7 @@ import os
 import uuid
 from datetime import datetime, timedelta
 from typing import List, Optional, Dict, Any
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Depends
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
@@ -35,6 +35,23 @@ app = FastAPI(
 @app.on_event("startup")
 def on_startup():
     init_db()
+
+# Rewrite /api/v/ and duplicate /api/v1/api/v1/ paths gracefully
+@app.middleware("http")
+async def rewrite_api_v_path(request: Request, call_next):
+    path = request.scope.get("path", "")
+    while "/api/v1/api/v1/" in path:
+        path = path.replace("/api/v1/api/v1/", "/api/v1/")
+    while "/api/v/api/v1/" in path:
+        path = path.replace("/api/v/api/v1/", "/api/v1/")
+    while "/api/v1/api/v/" in path:
+        path = path.replace("/api/v1/api/v/", "/api/v1/")
+    while "/api/v/api/v/" in path:
+        path = path.replace("/api/v/api/v/", "/api/v1/")
+    if path.startswith("/api/v/"):
+        path = "/api/v1/" + path[len("/api/v/"):]
+    request.scope["path"] = path
+    return await call_next(request)
 
 # CORS configuration for Web and Mobile
 app.add_middleware(
@@ -139,11 +156,12 @@ PAYMENTS_STORE: Dict[str, Any] = {}
 # ==============================================================================
 
 @app.post("/api/v1/auth/login")
+@app.post("/api/v/auth/login")
 def auth_login(data: Dict[str, Any], db: Session = Depends(get_db)):
     username = (data.get("username") or "").strip().lower()
     
     # Check if business user
-    if "biz" in username or "business" in username or "retail" in username:
+    if "biz" in username or "business" in username or "retail" in username or "anita" in username or "trader" in username or "abc" in username:
         user_data = {
             "id": "usr-biz-001",
             "name": "Suman Mahila Gruh Udhyog",
@@ -1804,6 +1822,10 @@ def confirm_notice(notice_id: str, data: Optional[Dict[str, Any]] = None):
     }
 
 @app.get("/api/v1/notices/download/{filename}")
+@app.get("/api/v/notices/download/{filename}")
+@app.get("/notices/download/{filename}")
+@app.get("/api/v1/api/v1/notices/download/{filename}")
+@app.get("/api/v/api/v1/notices/download/{filename}")
 async def download_notice(filename: str):
     file_path = os.path.join("Notices_Template", "generated", filename)
     if not os.path.exists(file_path):
