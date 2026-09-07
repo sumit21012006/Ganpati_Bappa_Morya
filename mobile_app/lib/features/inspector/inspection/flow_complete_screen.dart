@@ -163,6 +163,7 @@ class FlowCompleteScreen extends StatelessWidget {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primary,
                         foregroundColor: Colors.white,
+                        minimumSize: const Size(0, 36),
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       ),
                       icon: const Icon(Icons.visibility, size: 16),

@@ -453,6 +453,10 @@ class _NoticeStepState extends ConsumerState<NoticeStep> {
                   ),
                 ),
                 OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size(0, 36),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  ),
                   onPressed: () async {
                     final file = File(notice.pdfPath!);
                     if (file.existsSync()) {

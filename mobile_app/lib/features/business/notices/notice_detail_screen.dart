@@ -355,6 +355,10 @@ class _BusinessNoticeDetailScreenState
                               ),
                             ),
                             OutlinedButton.icon(
+                              style: OutlinedButton.styleFrom(
+                                minimumSize: const Size(0, 36),
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              ),
                               icon: const Icon(Icons.visibility, size: 16),
                               label: const Text('View / Print'),
                               onPressed: () async {
