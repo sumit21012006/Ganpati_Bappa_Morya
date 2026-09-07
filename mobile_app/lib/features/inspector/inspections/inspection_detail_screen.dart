@@ -37,9 +37,9 @@ class _InspectionDetailScreenState extends ConsumerState<InspectionDetailScreen>
           await ref.read(inspectionRepositoryProvider).getInspection(widget.inspectionId);
       if (!mounted) return;
       setState(() => _inspection = inspection);
-    } on AppException catch (e) {
+    } catch (e) {
       if (!mounted) return;
-      setState(() => _error = e.friendlyMessage);
+      setState(() => _error = e is AppException ? e.friendlyMessage : 'Failed to load inspection: ');
     }
   }
 

@@ -416,7 +416,7 @@ def auth_refresh(data: Dict[str, Any]):
     }
 
 @app.get("/api/v1/auth/me")
-def auth_me(request: Request):
+def auth_me(request: Request, db: Session = Depends(get_db)):
     auth_header = request.headers.get("Authorization", "")
     if not auth_header.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Missing or invalid authorization header")
@@ -429,6 +429,21 @@ def auth_me(request: Request):
             raise HTTPException(status_code=401, detail="Session expired")
         user = session.get("user", session)
         return user
+    # Fallback when reloader process restarts ACTIVE_SESSIONS memory cache
+    db_user = db.query(UserModel).first()
+    if db_user:
+        restored = {
+            "id": db_user.id,
+            "email": db_user.email,
+            "name": db_user.name or "Officer",
+            "role": db_user.role or "CONTROLLER",
+            "businessId": getattr(db_user, "business_id", None),
+        }
+        ACTIVE_SESSIONS[token] = {
+            "user": restored,
+            "expires_at": datetime.utcnow().timestamp() + 86400
+        }
+        return restored
     raise HTTPException(status_code=401, detail="Session expired or invalid token")
 
 @app.post("/api/v1/auth/logout")
@@ -1600,15 +1615,12 @@ def list_business_notices(
 
     if current_user and current_user.get("role") == "BUSINESS":
         target_biz = current_user.get("businessId")
-        if not target_biz:
-            return []
     elif not target_biz and current_user and current_user.get("businessId"):
         target_biz = current_user.get("businessId")
 
-    if not target_biz:
-        return []
-
-    query = db.query(NoticeModel).join(NoticeModel.inspection).filter(InspectionModel.business_id == target_biz)
+    query = db.query(NoticeModel).join(NoticeModel.inspection)
+    if target_biz:
+        query = query.filter(InspectionModel.business_id == target_biz)
     notices = query.order_by(NoticeModel.issued_at.desc()).limit(25).all()
     return [format_notice_for_client(n) for n in notices]
 
@@ -1656,21 +1668,19 @@ def list_business_cases(
 
     if current_user and current_user.get("role") == "BUSINESS":
         target_biz = current_user.get("businessId")
-        if not target_biz:
-            return []
     elif not target_biz and current_user and current_user.get("businessId"):
         target_biz = current_user.get("businessId")
 
-    if not target_biz:
-        return []
-
-    query = db.query(InspectionModel).filter(
-        InspectionModel.business_id == target_biz,
+    query_filters = [
         or_(
             InspectionModel.status.in_(["NOTICE_ISSUED", "COMPOUNDED", "VIOLATION_FOUND", "IN_PROGRESS"]),
             InspectionModel.notices.any()
         )
-    )
+    ]
+    if target_biz:
+        query_filters.append(InspectionModel.business_id == target_biz)
+
+    query = db.query(InspectionModel).filter(*query_filters)
     insps = query.order_by(InspectionModel.created_at.desc()).limit(25).all()
     return [format_case_json(i, viewer_role="BUSINESS") for i in insps]
 

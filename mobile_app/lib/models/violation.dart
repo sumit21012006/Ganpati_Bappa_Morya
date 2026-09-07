@@ -104,7 +104,7 @@ class Violation {
   bool get isConfirmed => status.isConfirmed;
 
   factory Violation.fromJson(Map<String, dynamic> json) => Violation(
-        id: json['id'] as String,
+        id: (json['id'] as String?) ?? 'viol-unknown',
         type: ViolationType.values.firstWhere(
           (t) => t.name == (json['type'] as String?),
           orElse: () => ViolationType.other,

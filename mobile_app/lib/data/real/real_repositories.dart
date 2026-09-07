@@ -729,28 +729,27 @@ class RealNoticeRepository implements NoticeRepository {
           .toList();
     }
     return Notice(
-        id: json['id'] as String,
-        caseId: json['caseId'] as String,
+        id: (json['id'] as String?) ?? 'not-unknown',
+        caseId: (json['caseId'] as String?) ?? 'CASE-UNKNOWN',
         type: NoticeType.values.firstWhere(
-          (t) => t.name == (json['type'] as String?),
+          (t) => t.name.toLowerCase() == (json['type'] as String? ?? '').toLowerCase(),
           orElse: () => NoticeType.improvement,
         ),
         status: NoticeStatus.values.firstWhere(
-          (s) => s.name == (json['status'] as String?),
+          (s) => s.name.toLowerCase() == (json['status'] as String? ?? '').toLowerCase(),
           orElse: () => NoticeStatus.draft,
         ),
         productName: json['productName'] as String? ?? '',
         issuedDate:
             DateTime.tryParse(json['issuedDate'] as String? ?? '') ?? DateTime.now(),
         sections: _list(json['sections'])
-            .map((s) => NoticeSection(
-                  id: s['id'] as String,
-                  citation: s['citation'] as String,
-                  title: s['title'] as String,
-                  description: s['description'] as String?,
-                ))
+            .whereType<Map>()
+            .map((s) => NoticeSection.fromJson(Map<String, dynamic>.from(s)))
             .toList(),
-        violations: _list(json['violations']).map(Violation.fromJson).toList(),
+        violations: _list(json['violations'])
+            .whereType<Map>()
+            .map((v) => Violation.fromJson(Map<String, dynamic>.from(v)))
+            .toList(),
         isAiDraft: json['isAiDraft'] as bool? ?? false,
         inspectionId: json['inspectionId'] as String? ?? '',
         businessId: json['businessId'] as String? ?? '',
@@ -759,6 +758,7 @@ class RealNoticeRepository implements NoticeRepository {
         penaltyAmount: (json['penaltyAmount'] as num?)?.toDouble(),
         bodyText: json['bodyText'] as String?,
         inspectorRemark: json['inspectorRemark'] as String?,
+        pdfPath: (json['pdfPath'] as String?) ?? (json['pdfUrl'] as String?) ?? (json['download_url'] as String?),
         batchNumber: json['batchNumber'] as String?,
         netQuantity: json['netQuantity'] as String?,
         mrp: json['mrp'] as String?,

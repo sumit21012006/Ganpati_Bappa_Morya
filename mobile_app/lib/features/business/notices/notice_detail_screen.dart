@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'package:printing/printing.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -43,9 +45,9 @@ class _BusinessNoticeDetailScreenState
       final notice = await ref.read(businessCaseRepositoryProvider).getNotice(widget.noticeId);
       if (!mounted) return;
       setState(() => _notice = notice);
-    } on AppException catch (e) {
+    } catch (e) {
       if (!mounted) return;
-      setState(() => _error = e.friendlyMessage);
+      setState(() => _error = e is AppException ? e.friendlyMessage : 'Failed to load notice: ');
     }
   }
 
@@ -324,6 +326,62 @@ class _BusinessNoticeDetailScreenState
                           ),
                       ],
                     ),
+                    if (notice.pdfPath != null && notice.pdfPath!.isNotEmpty) ...[
+                      const SizedBox(height: AppSpacing.md),
+                      Container(
+                        padding: const EdgeInsets.all(AppSpacing.md),
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: BorderRadius.circular(AppRadius.md),
+                          border: Border.all(color: AppColors.primary.withValues(alpha: 0.5)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.picture_as_pdf, color: Colors.red, size: 28),
+                            const SizedBox(width: AppSpacing.md),
+                            const Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Official Statutory PDF Document',
+                                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                                  ),
+                                  Text(
+                                    'Issued by Legal Metrology Organisation',
+                                    style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            OutlinedButton.icon(
+                              icon: const Icon(Icons.visibility, size: 16),
+                              label: const Text('View / Print'),
+                              onPressed: () async {
+                                final path = notice.pdfPath!;
+                                final file = File(path);
+                                if (file.existsSync()) {
+                                  final bytes = await file.readAsBytes();
+                                  if (!context.mounted) return;
+                                  await Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) => Scaffold(
+                                        appBar: AppBar(title: Text(notice.type.label)),
+                                        body: PdfPreview(
+                                          build: (_) => bytes,
+                                          canChangeOrientation: false,
+                                          canChangePageFormat: false,
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                }
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: AppSpacing.lg),
                     if (notice.bodyText != null)
                       Container(

@@ -62,9 +62,9 @@ class NoticeSection {
   final bool isAddedByInspector;
 
   factory NoticeSection.fromJson(Map<String, dynamic> json) => NoticeSection(
-        id: json['id'] as String,
-        citation: json['citation'] as String,
-        title: json['title'] as String,
+        id: (json['id'] as String?) ?? 'sec-1',
+        citation: (json['citation'] as String?) ?? 'Section 36(1)',
+        title: (json['title'] as String?) ?? 'Statutory Declaration',
         description: json['description'] as String?,
         isAddedByInspector: json['isAddedByInspector'] as bool? ?? false,
       );
