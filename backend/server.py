@@ -1304,7 +1304,10 @@ def record_supply_chain_declaration(inspection_id: str, data: Dict[str, Any], db
 
     # Match against existing businesses
     matched_biz = None
-    if supplier_gstin:
+    supplier_biz_id = (data.get("businessId") or data.get("supplierBusinessId") or "").strip()
+    if supplier_biz_id:
+        matched_biz = db.query(BusinessModel).filter(BusinessModel.id == supplier_biz_id).first()
+    if not matched_biz and supplier_gstin:
         matched_biz = db.query(BusinessModel).filter(func.lower(BusinessModel.gstin) == supplier_gstin.lower()).first()
     if not matched_biz and supplier_name:
         matched_biz = db.query(BusinessModel).filter(func.lower(BusinessModel.trade_name) == supplier_name.lower()).first()
@@ -1530,8 +1533,11 @@ def format_case_json(insp: InspectionModel, viewer_role: str = "INSPECTOR") -> D
     if insp.products and insp.products[0].violations:
         viols_summary = "; ".join([v.description or v.title for v in insp.products[0].violations[:2]])
 
+    case_display_id = insp.id if (insp.id.startswith("insp-sc-") or insp.id.startswith("insp-")) else f"CASE-{insp.id[:8].upper()}"
     return {
-        "id": f"CASE-{insp.id[:8].upper()}",
+        "id": case_display_id,
+        "caseId": case_display_id,
+        "inspectionId": insp.id,
         "productName": prod_name,
         "status": case_status,
         "openedAt": to_iso_ist(insp.created_at),
@@ -1892,9 +1898,13 @@ def list_business_cases(
 def get_case_by_id(case_id: str, db: Session = Depends(get_db)):
     """Returns single case details for Inspector or Business."""
     clean_id = case_id.replace("CASE-", "").lower()
-    insp = db.query(InspectionModel).filter(InspectionModel.id.startswith(clean_id)).first()
-    if not insp:
-        insp = db.query(InspectionModel).first()
+    insp = db.query(InspectionModel).filter(
+        or_(
+            InspectionModel.id == case_id,
+            InspectionModel.id == clean_id,
+            InspectionModel.id.startswith(clean_id)
+        )
+    ).first()
     if not insp:
         raise HTTPException(status_code=404, detail="Case not found")
     return format_case_json(insp, viewer_role="INSPECTOR")

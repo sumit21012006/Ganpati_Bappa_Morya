@@ -50,6 +50,7 @@ class SupplierDeclarationRequest {
     required this.inspectionId,
     required this.supplierName,
     required this.supplierType,
+    this.businessId,
     this.supplierGstin,
     this.supplierAddress,
     this.purchaseBill,
@@ -59,6 +60,7 @@ class SupplierDeclarationRequest {
   final String inspectionId;
   final String supplierName;
   final String supplierType;
+  final String? businessId;
   final String? supplierGstin;
   final String? supplierAddress;
   final PurchaseBill? purchaseBill;

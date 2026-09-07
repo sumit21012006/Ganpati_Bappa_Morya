@@ -1217,6 +1217,7 @@ class RealSupplyChainRepository implements SupplyChainRepository {
         data: {
           'supplierName': request.supplierName,
           'supplierType': request.supplierType,
+          if (request.businessId != null) 'businessId': request.businessId,
           'supplierGstin': request.supplierGstin,
           'supplierAddress': request.supplierAddress,
           if (request.purchaseBill != null)
